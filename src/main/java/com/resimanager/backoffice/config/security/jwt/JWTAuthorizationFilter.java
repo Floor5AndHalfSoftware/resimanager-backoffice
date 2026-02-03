@@ -2,6 +2,7 @@ package com.resimanager.backoffice.config.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +16,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
+import javax.crypto.SecretKey;
 
 import static com.resimanager.backoffice.utils.Constants.HEADER_AUTHORIZACION_KEY;
 import static com.resimanager.backoffice.utils.Constants.SUPER_SECRET_KEY;
@@ -25,6 +29,17 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     public JWTAuthorizationFilter(AuthenticationManager authManager) {
         super(authManager);
+    }
+
+    private static SecretKey getSigningKey() {
+        try {
+            // Generar una clave de 64 bytes usando SHA-512
+            MessageDigest digest = MessageDigest.getInstance("SHA-512");
+            byte[] hash = digest.digest(SUPER_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+            return Keys.hmacShaKeyFor(hash);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating signing key", e);
+        }
     }
 
     @Override
@@ -57,10 +72,12 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
             // Se procesa el token y se recupera el usuario.
             token = token.replace(TOKEN_BEARER_PREFIX, "");
             try {
+                SecretKey key = getSigningKey();
                 String user = Jwts.parser()
-                        .setSigningKey(SUPER_SECRET_KEY.getBytes())
-                        .parseClaimsJws(token)
-                        .getBody()
+                        .verifyWith(key)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload()
                         .getSubject();
                 if (user != null) {
                     return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());

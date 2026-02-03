@@ -17,7 +17,12 @@ spring:
     show-sql: true
   sql:
     init:
-      mode: always
+      mode: never
+  flyway:
+    enabled: true
+    locations: classpath:migrations
+    baseline-on-migrate: true
+    baseline-version: 0
   web:
     resources:
       add-mappings: true

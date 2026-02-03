@@ -5,7 +5,7 @@ spring:
     location: classpath:banner.txt
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST}/${DB_NAME}?sslmode=require
+    url: jdbc:postgresql://${DB_HOST}/${DB_NAME}?${DB_PARAMS}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
@@ -17,7 +17,12 @@ spring:
     show-sql: true
   sql:
     init:
-      mode: always
+      mode: never
+  flyway:
+    enabled: true
+    locations: classpath:migrations
+    baseline-on-migrate: true
+    baseline-version: 0
   web:
     resources:
       add-mappings: true
