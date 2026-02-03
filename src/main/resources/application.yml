@@ -3,3 +3,29 @@ server:
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    try-it-out-enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+    docExpansion: none
+    displayRequestDuration: true
+    showExtensions: true
+    showCommonExtensions: true
+  show-actuator: true
+  use-management-port: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,swagger-ui
+  endpoint:
+    health:
+      show-details: always

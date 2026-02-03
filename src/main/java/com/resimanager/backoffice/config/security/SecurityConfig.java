@@ -36,10 +36,16 @@ public class SecurityConfig {
     private CustomAuthenticationProvider customAuthenticationProvider;
 
     private final String[] WHITE_LIST = {
+            "/swagger-ui/**",
+            "/swagger-ui.html",
             "/swagger*/**",
             "/v3/api-docs/**",
+            "/v3/api-docs",
+            "/api-docs/**",
+            "/webjars/**",
             "/console/**",
             "/error",
+            "/favicon.ico",
             API_VERSION_PATH + LOGIN_PATH
     };
 
