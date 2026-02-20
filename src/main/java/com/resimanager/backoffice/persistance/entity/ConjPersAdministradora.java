@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "ConjPersAdministradora")
+@Table(name = "\"ConjPersAdministradora\"")
 public class ConjPersAdministradora {
     @EmbeddedId
     private ConjPersAdministradoraId id;
@@ -28,46 +28,46 @@ public class ConjPersAdministradora {
     @MapsId("cpaConjid")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "CPA_ConjID", nullable = false)
+    @JoinColumn(name = "cpa_conj_id", nullable = false)
     private Conjunto cpaConjid;
 
     @NotNull
-    @Column(name = "CPAID", nullable = false)
+    @Column(name = "cpaid", nullable = false)
     private Integer cpaid;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "CPASts", nullable = false, length = 1)
+    @Column(name = "cpa_sts", nullable = false, length = 1)
     private String cPASts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "CPA_UsrCrea", nullable = false)
+    @JoinColumn(name = "cpa_usr_crea", nullable = false)
     private Persona cpaUsrcrea;
 
     @NotNull
-    @Column(name = "CPAFchHorCrea", nullable = false)
+    @Column(name = "cpa_fch_hor_crea", nullable = false)
     private OffsetDateTime cPAFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "CPAEstCrea", nullable = false, length = 40)
+    @Column(name = "cpa_est_crea", nullable = false, length = 40)
     private String cPAEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "CPA_UsrMod", nullable = false)
+    @JoinColumn(name = "cpa_usr_mod", nullable = false)
     private Persona cpaUsrmod;
 
     @NotNull
-    @Column(name = "CPAFchHorMod", nullable = false)
+    @Column(name = "cpa_fch_hor_mod", nullable = false)
     private OffsetDateTime cPAFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "CPAEstMod", nullable = false, length = 40)
+    @Column(name = "cpa_est_mod", nullable = false, length = 40)
     private String cPAEstMod;
 
 }

@@ -1,46 +1,77 @@
 package com.resimanager.backoffice.service;
 
 import com.resimanager.backoffice.exception.ServiceException;
+import com.resimanager.backoffice.persistance.entity.Persona;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.resimanager.backoffice.dto.AuthDto;
-import com.resimanager.backoffice.persistance.repository.UserRepository;
-import org.springframework.stereotype.Repository;
+import com.resimanager.backoffice.persistance.repository.PersonaRepository;
+import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
-@Repository
+@Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final PersonaRepository personaRepository;
+    private final ContextoService contextoService;
 
+    /**
+     * Load user by username or email for authentication
+     * @param username Username or email to search
+     * @return AuthDto with user credentials and authorities
+     */
     public AuthDto loadUserByUsername(String username) {
-
-        //TODO quemamos aqui el usuario para que no falle el login pero se debe obtener de la base de datos
-        var pass = new String(Base64.getDecoder().decode("JDJhJDEwJGtoQmg0cE9FSHpJS0M3VTZNc1A5dmUyTU9hYkpFTFpzS0N3dG9YWkUyRDVzNFBJakRYdVdt"));
-        return AuthDto.builder()
-                .username("test@test.com")
-                .password(pass)
-                .authorities(new HashSet<>(List.of("ROLE_ADMIN")))
-                .build();
-
-//        final Set<String> authorities = new HashSet<>();
-//
-//        try {
-//            var user = userRepository.findByEmail(username);
-//
-//            authorities.add("ROLE_" + user.getRole());
-//            var pass = Arrays.toString(Base64.getDecoder().decode(user.getPassword()));
-//
-//            return new AuthDto(user.getEmail(), pass, authorities);
-//        } catch (Exception e) {
-//            return null;
-//        }
+        log.debug("Loading user by username: {}", username);
+        
+        try {
+            // Search by username OR email (allows login with either)
+            var persona = personaRepository.findByPerUsuarioOrPerEMail(username, username)
+                    .orElseThrow(() -> new ServiceException("User not found: " + username, 404));
+            
+            // Check if user is active
+            if (!"A".equals(persona.getPerSts())) {
+                log.warn("Inactive user attempted login: {}", username);
+                throw new ServiceException("User account is inactive", 403);
+            }
+            
+            // Get roles from user's profiles in database
+            List<String> roles = contextoService.getRolesFromProfiles(persona.getId());
+            Set<String> authorities = new HashSet<>(roles);
+            
+            log.info("User loaded successfully: {} (ID: {}) with {} roles", 
+                    persona.getPerUsuario(), persona.getId(), authorities.size());
+            log.debug("User {} authorities: {}", persona.getPerUsuario(), authorities);
+            
+            return AuthDto.builder()
+                    .userId(persona.getId())
+                    .username(persona.getPerUsuario())
+                    .password(persona.getPerClave())  // SHA-256 hash from database
+                    .authorities(authorities)
+                    .build();
+                    
+        } catch (ServiceException e) {
+            log.error("Error loading user: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error loading user: {}", e.getMessage(), e);
+            throw new ServiceException("Error loading user: " + e.getMessage(), 500);
+        }
+    }
+    
+    /**
+     * Get user entity by username
+     * @param username Username to search
+     * @return Optional containing the Persona entity if found
+     */
+    public Optional<Persona> getUserByUsername(String username) {
+        log.debug("Getting user entity by username: {}", username);
+        return personaRepository.findByPerUsuarioOrPerEMail(username, username);
     }
 
 }

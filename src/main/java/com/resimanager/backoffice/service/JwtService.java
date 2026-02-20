@@ -1,5 +1,7 @@
 package com.resimanager.backoffice.service;
 
+import com.resimanager.backoffice.dto.ContextoActualDTO;
+import com.resimanager.backoffice.dto.UserInfoDTO;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.Authentication;
@@ -38,6 +40,22 @@ public class JwtService {
 
         return buildToken(auth, cal);
     }
+    
+    public String generateTokenWithUserInfo(Authentication auth, UserInfoDTO userInfo) {
+        var cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + TOKEN_EXPIRATION_TIME_IN_MINUTES);
+
+        return buildTokenWithUserInfo(auth, userInfo, null, cal);
+    }
+    
+    public String generateTokenWithContext(Authentication auth, UserInfoDTO userInfo, ContextoActualDTO contexto) {
+        var cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + TOKEN_EXPIRATION_TIME_IN_MINUTES);
+
+        return buildTokenWithUserInfo(auth, userInfo, contexto, cal);
+    }
 
     private static String buildToken(Authentication auth, Calendar cal) {
         SecretKey key = getSigningKey();
@@ -48,6 +66,41 @@ public class JwtService {
                 .expiration(cal.getTime())
                 .signWith(key);
         preToken.claim("roles", auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
+        return preToken.compact();
+    }
+    
+    private static String buildTokenWithUserInfo(Authentication auth, UserInfoDTO userInfo, ContextoActualDTO contexto, Calendar cal) {
+        SecretKey key = getSigningKey();
+        var preToken = Jwts.builder()
+                .issuedAt(new Date())
+                .issuer(ISSUER_INFO)
+                .subject(auth.getName())
+                .expiration(cal.getTime())
+                .signWith(key);
+        
+        // Add roles
+        preToken.claim("roles", auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()));
+        
+        // Add user info
+        if (userInfo != null) {
+            preToken.claim("userId", userInfo.getId());
+            preToken.claim("nombre", userInfo.getNombre());
+            preToken.claim("apellido", userInfo.getApellido());
+            preToken.claim("email", userInfo.getEmail());
+            preToken.claim("documento", userInfo.getDocumento());
+        }
+        
+        // Add context info
+        if (contexto != null) {
+            preToken.claim("contextoTipo", contexto.getTipo());
+            preToken.claim("contextoEntidadId", contexto.getEntidadId());
+            preToken.claim("contextoEntidadNombre", contexto.getEntidadNombre());
+            preToken.claim("contextoPerfilId", contexto.getPerfilId());
+            preToken.claim("contextoPerfilNombre", contexto.getPerfilNombre());
+        }
+        
         return preToken.compact();
     }
 }

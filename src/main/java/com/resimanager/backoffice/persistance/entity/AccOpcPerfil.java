@@ -19,48 +19,48 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "AccOpcPerfil")
+@Table(name = "\"AccOpcPerfil\"")
 public class AccOpcPerfil {
     @EmbeddedId
     private AccOpcPerfilId id;
 
     @NotNull
-    @Column(name = "AOPID", nullable = false)
+    @Column(name = "aopid", nullable = false)
     private Integer aopid;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "AOPSts", nullable = false, length = 1)
+    @Column(name = "aop_sts", nullable = false, length = 1)
     private String aOPSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "AOP_UsrCrea", nullable = false)
+    @JoinColumn(name = "aop_usr_crea", nullable = false)
     private Persona aopUsrcrea;
 
     @NotNull
-    @Column(name = "AOPFchHorCrea", nullable = false)
+    @Column(name = "aop_fch_hor_crea", nullable = false)
     private OffsetDateTime aOPFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "AOPEstCrea", nullable = false, length = 40)
+    @Column(name = "aop_est_crea", nullable = false, length = 40)
     private String aOPEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "AOP_UsrMod", nullable = false)
+    @JoinColumn(name = "aop_usr_mod", nullable = false)
     private Persona aopUsrmod;
 
     @NotNull
-    @Column(name = "AOPFchHorMod", nullable = false)
+    @Column(name = "aop_fch_hor_mod", nullable = false)
     private OffsetDateTime aOPFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "AOPEstMod", nullable = false, length = 40)
+    @Column(name = "aop_est_mod", nullable = false, length = 40)
     private String aOPEstMod;
 
 }

@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "Opcion")
+@Table(name = "\"Opcion\"")
 public class Opcion {
     @EmbeddedId
     private OpcionId id;

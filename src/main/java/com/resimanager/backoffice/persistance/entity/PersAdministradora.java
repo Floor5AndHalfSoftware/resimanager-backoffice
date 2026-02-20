@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "PersAdministradora")
+@Table(name = "\"PersAdministradora\"")
 public class PersAdministradora {
     @EmbeddedId
     private PersAdministradoraId id;
@@ -28,46 +28,46 @@ public class PersAdministradora {
     @MapsId("paPerid")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PA_PerID", nullable = false)
+    @JoinColumn(name = "pa_per_id", nullable = false)
     private Persona paPerid;
 
     @NotNull
-    @Column(name = "PAID", nullable = false)
+    @Column(name = "paid", nullable = false)
     private Integer paid;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "PASts", nullable = false, length = 1)
+    @Column(name = "pa_sts", nullable = false, length = 1)
     private String pASts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PA_UsrCrea", nullable = false)
+    @JoinColumn(name = "pa_usr_crea", nullable = false)
     private Persona paUsrcrea;
 
     @NotNull
-    @Column(name = "PAFchHorCrea", nullable = false)
+    @Column(name = "pa_fch_hor_crea", nullable = false)
     private OffsetDateTime pAFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PAEstCrea", nullable = false, length = 40)
+    @Column(name = "pa_est_crea", nullable = false, length = 40)
     private String pAEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PA_UsrMod", nullable = false)
+    @JoinColumn(name = "pa_usr_mod", nullable = false)
     private Persona paUsrmod;
 
     @NotNull
-    @Column(name = "PAFchHorMod", nullable = false)
+    @Column(name = "pa_fch_hor_mod", nullable = false)
     private OffsetDateTime pAFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PAEstMod", nullable = false, length = 40)
+    @Column(name = "pa_est_mod", nullable = false, length = 40)
     private String pAEstMod;
 
 }

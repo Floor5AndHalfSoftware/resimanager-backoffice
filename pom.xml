@@ -19,6 +19,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.3.0</version>
@@ -67,11 +71,6 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>2.3.232</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-            <version>1.4.8</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -174,18 +173,24 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!-- Flyway Plugin - Only for manual execution -->
+            <!-- Run manually with: mvn flyway:migrate -->
+            <!-- Automatic migrations are handled by Spring Boot on startup -->
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>9.0.0</version>
                 <configuration>
-                    <url>jdbc:h2:mem:demo_db</url>
-                    <user>root</user>
-                    <password>12345</password>
+                    <url>${env.DB_URL}</url>
+                    <driver>${env.DB_DRIVER}</driver>
+                    <user>${env.DB_USERNAME}</user>
+                    <password>${env.DB_PASSWORD}</password>
                     <locations>
                         <location>filesystem:src/main/resources/migrations</location>
                     </locations>
                 </configuration>
+                <!-- Executions commented out - Flyway runs automatically with Spring Boot -->
+                <!--
                 <executions>
                     <execution>
                         <phase>validate</phase>
@@ -194,6 +199,7 @@
                         </goals>
                     </execution>
                 </executions>
+                -->
             </plugin>
         </plugins>
     </build>

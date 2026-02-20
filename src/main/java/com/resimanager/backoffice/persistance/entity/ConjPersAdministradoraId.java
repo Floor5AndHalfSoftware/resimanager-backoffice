@@ -16,15 +16,15 @@ import java.util.Objects;
 public class ConjPersAdministradoraId implements Serializable {
     private static final long serialVersionUID = -5690694376607227416L;
     @NotNull
-    @Column(name = "CPA_AdmID", nullable = false)
+    @Column(name = "cpa_adm_id", nullable = false)
     private Integer cpaAdmid;
 
     @NotNull
-    @Column(name = "CPA_PerID", nullable = false)
+    @Column(name = "cpa_per_id", nullable = false)
     private Integer cpaPerid;
 
     @NotNull
-    @Column(name = "CPA_ConjID", nullable = false)
+    @Column(name = "cpa_conj_id", nullable = false)
     private Integer cpaConjid;
 
     @Override

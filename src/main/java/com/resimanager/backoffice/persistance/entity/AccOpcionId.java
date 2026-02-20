@@ -16,15 +16,15 @@ import java.util.Objects;
 public class AccOpcionId implements Serializable {
     private static final long serialVersionUID = -3956880234697039228L;
     @NotNull
-    @Column(name = "AO_ModID", nullable = false)
+    @Column(name = "ao_mod_id", nullable = false)
     private Integer aoModid;
 
     @NotNull
-    @Column(name = "AO_OpcID", nullable = false)
+    @Column(name = "ao_opc_id", nullable = false)
     private Integer aoOpcid;
 
     @NotNull
-    @Column(name = "AO_AccID", nullable = false)
+    @Column(name = "ao_acc_id", nullable = false)
     private Integer aoAccid;
 
     @Override

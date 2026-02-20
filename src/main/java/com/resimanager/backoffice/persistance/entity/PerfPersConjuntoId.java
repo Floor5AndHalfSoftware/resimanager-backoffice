@@ -16,15 +16,15 @@ import java.util.Objects;
 public class PerfPersConjuntoId implements Serializable {
     private static final long serialVersionUID = 4578922579186688746L;
     @NotNull
-    @Column(name = "PPC_ConjID", nullable = false)
+    @Column(name = "ppc_conj_id", nullable = false)
     private Integer ppcConjid;
 
     @NotNull
-    @Column(name = "PPC_PerID", nullable = false)
+    @Column(name = "ppc_per_id", nullable = false)
     private Integer ppcPerid;
 
     @NotNull
-    @Column(name = "PPC_PrfID", nullable = false)
+    @Column(name = "ppc_prf_id", nullable = false)
     private Integer ppcPrfid;
 
     @Override

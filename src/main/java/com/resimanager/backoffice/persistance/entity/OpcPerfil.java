@@ -21,7 +21,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "OpcPerfil")
+@Table(name = "\"OpcPerfil\"")
 public class OpcPerfil {
     @EmbeddedId
     private OpcPerfilId id;
@@ -29,49 +29,49 @@ public class OpcPerfil {
     @MapsId("id")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumns({
-            @JoinColumn(name = "OP_ModID", referencedColumnName = "Opc_ModID", nullable = false),
-            @JoinColumn(name = "OP_OpcID", referencedColumnName = "OpcID", nullable = false)
+            @JoinColumn(name = "op_mod_id", referencedColumnName = "opc_modid", nullable = false),
+            @JoinColumn(name = "op_opc_id", referencedColumnName = "opcid", nullable = false)
     })
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private Opcion opcion;
 
     @NotNull
-    @Column(name = "OPID", nullable = false)
+    @Column(name = "opid", nullable = false)
     private Integer opid;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "OPSts", nullable = false, length = 1)
+    @Column(name = "op_sts", nullable = false, length = 1)
     private String oPSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "OP_UsrCrea", nullable = false)
+    @JoinColumn(name = "op_usr_crea", nullable = false)
     private Persona opUsrcrea;
 
     @NotNull
-    @Column(name = "OPFchHorCrea", nullable = false)
+    @Column(name = "op_fch_hor_crea", nullable = false)
     private OffsetDateTime oPFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "OPEstCrea", nullable = false, length = 40)
+    @Column(name = "op_est_crea", nullable = false, length = 40)
     private String oPEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "OP_UsrMod", nullable = false)
+    @JoinColumn(name = "op_usr_mod", nullable = false)
     private Persona opUsrmod;
 
     @NotNull
-    @Column(name = "OPFchHorMod", nullable = false)
+    @Column(name = "op_fch_hor_mod", nullable = false)
     private OffsetDateTime oPFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "OPEstMod", nullable = false, length = 40)
+    @Column(name = "op_est_mod", nullable = false, length = 40)
     private String oPEstMod;
 
 }

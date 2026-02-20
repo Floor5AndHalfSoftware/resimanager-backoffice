@@ -16,15 +16,15 @@ import java.util.Objects;
 public class OpcPerfilId implements Serializable {
     private static final long serialVersionUID = -7922848788965152493L;
     @NotNull
-    @Column(name = "OP_PrfID", nullable = false)
+    @Column(name = "op_prf_id", nullable = false)
     private Integer opPrfid;
 
     @NotNull
-    @Column(name = "OP_ModID", nullable = false)
+    @Column(name = "op_mod_id", nullable = false)
     private Integer opModid;
 
     @NotNull
-    @Column(name = "OP_OpcID", nullable = false)
+    @Column(name = "op_opc_id", nullable = false)
     private Integer opOpcid;
 
     @Override

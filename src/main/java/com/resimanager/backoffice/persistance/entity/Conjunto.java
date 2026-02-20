@@ -16,77 +16,73 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "Conjunto")
+@Table(name = "\"Conjunto\"")
 public class Conjunto {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ConjID", nullable = false)
+    @Column(name = "conjid", nullable = false)
     private Integer id;
 
-    @Size(max = 20)
-    @NotNull
-    @Column(name = "ConjDocIdent", nullable = false, length = 20)
+    @Size(max = 50)
+    @Column(name = "conj_doc_ident", length = 50)
     private String conjDocIdent;
 
-    @Size(max = 80)
-    @NotNull
-    @Column(name = "ConjNombre", nullable = false, length = 80)
+    @Size(max = 250)
+    @Column(name = "conj_nombre", length = 250)
     private String conjNombre;
 
     @Size(max = 15)
-    @NotNull
-    @Column(name = "ConjTelefono", nullable = false, length = 15)
+    @Column(name = "conj_telefono", length = 15)
     private String conjTelefono;
 
-    @Size(max = 80)
-    @NotNull
-    @Column(name = "ConjEMail", nullable = false, length = 80)
+    @Size(max = 250)
+    @Column(name = "conj_email", length = 250)
     private String conjEMail;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Conj_PersContacto", nullable = false)
-    private Persona conjPerscontacto;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "ConjSts", nullable = false, length = 1)
+    @Column(name = "conj_sts", nullable = false, length = 1)
     private String conjSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Conj_UsrCrea", nullable = false)
-    private Persona conjUsrcrea;
+    @JoinColumn(name = "conj_pers_contacto", nullable = false)
+    private Persona conjPersContacto;
 
     @NotNull
-    @Column(name = "ConjFchHorCrea", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "conj_usr_crea", nullable = false)
+    private Persona conjUsrCrea;
+
+    @NotNull
+    @Column(name = "conj_fch_hor_crea", nullable = false)
     private OffsetDateTime conjFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "ConjEstCrea", nullable = false, length = 40)
+    @Column(name = "conj_est_crea", nullable = false, length = 40)
     private String conjEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Conj_UsrMod", nullable = false)
-    private Persona conjUsrmod;
+    @JoinColumn(name = "conj_usr_mod", nullable = false)
+    private Persona conjUsrMod;
 
     @NotNull
-    @Column(name = "ConjFchHorMod", nullable = false)
+    @Column(name = "conj_fch_hor_mod", nullable = false)
     private OffsetDateTime conjFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "ConjEstMod", nullable = false, length = 40)
+    @Column(name = "conj_est_mod", nullable = false, length = 40)
     private String conjEstMod;
 
 }
