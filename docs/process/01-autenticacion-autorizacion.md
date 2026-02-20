@@ -338,8 +338,8 @@ Contexto 3: Conjunto Z
 
 **Ejemplo:**
 ```
-Password: "Admin123!"
-Base64: "QWRtaW4xMjMh"
+Password: "Admin2024!"
+Base64: "QWRtaW4yMDI0IQ=="
 SHA-256: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
 ```
 
@@ -374,14 +374,32 @@ Login exitoso: Cache limpiado
 
 ## Uso del Sistema
 
-### 1. Login con Usuario Bootstrap
+### Endpoints de Login por Ambiente
+
+#### Login LOCAL
+```bash
+curl -X 'POST' 'http://localhost:8080/v1/login' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{"username": "admin","password": "QWRtaW4yMDI0IQ=="}'
+```
+
+#### Login DEVELOP (Koyeb)
+```bash
+curl -X 'POST' 'https://chilly-libbey-wtysoftware-aab36281.koyeb.app/v1/login' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{"username": "admin","password": "QWRtaW4yMDI0IQ=="}'
+```
+
+### 1. Login con Usuario Bootstrap (Ejemplo Extendido)
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
-    "password": "QWRtaW4xMjMh"
+    "password": "QWRtaW4yMDI0IQ=="
   }'
 ```
 
@@ -402,7 +420,7 @@ Usar https://jwt.io para inspeccionar el token y verificar claims.
 
 **Usuario Admin:**
 - Username: `admin`
-- Password: `Admin123!` (Base64: `QWRtaW4xMjMh`)
+- Password: `Admin2024!` (Base64: `QWRtaW4yMDI0IQ==`)
 - ID: 1
 - Email: `admin@resimanager.com`
 
