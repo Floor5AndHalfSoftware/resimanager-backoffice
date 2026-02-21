@@ -26,32 +26,27 @@ public interface MenuItemRepository extends JpaRepository<MenuItem, MenuItemId> 
     /**
      * Find menu items accessible by a specific profile
      * This query joins with permission tables to ensure user has access
+     * Items without module/option/action (Dashboard, groupers) are always visible
      * Uses native SQL because MenuItem has complex composite foreign keys
      */
     @Query(value = """
         SELECT DISTINCT mi.*
         FROM menu_item mi
-        INNER JOIN acc_opc_perfil aop ON (
-            aop.aop_modid = mi.mit_modid AND 
-            aop.aop_opcid = mi.mit_opcionid AND 
-            aop.aop_accid = mi.mit_accionid AND 
-            aop.aop_sts = 'A' AND 
-            aop.aop_prfid = :perfilId
-        )
-        INNER JOIN opc_perfil op ON (
-            op.op_modid = mi.mit_modid AND
-            op.op_opcid = mi.mit_opcionid AND
-            op.op_sts = 'A' AND
-            op.op_prfid = :perfilId
-        )
-        INNER JOIN mod_perfil mp ON ( 
-            mp.mp_modid = mi.mit_modid AND 
-            mp.mp_sts = 'A' AND
-            mp.mp_prfid = :perfilId
-        )
-        WHERE mi.mit_tipo = 'O' 
+        WHERE mi.mit_tipo IN ('O', 'A') 
         AND mi.mit_sts = 'A' 
         AND mi.mit_menuid = 1
+        AND (
+            -- Items without module (Dashboard, groupers) are always visible
+            mi.mit_modid IS NULL
+            OR
+            -- Items with module must have permission
+            EXISTS (
+                SELECT 1 FROM "ModPerfil" mp 
+                WHERE mp.mp_mod_id = mi.mit_modid 
+                AND mp.mp_sts = 'A' 
+                AND mp.mp_prf_id = :perfilId
+            )
+        )
         ORDER BY mi.mit_orden
     """, nativeQuery = true)
     List<MenuItem> findMenusByPerfil(@Param("perfilId") Integer perfilId);

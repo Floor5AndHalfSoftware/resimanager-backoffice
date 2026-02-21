@@ -14,11 +14,11 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "\"Modulo\"")
+@Table(name = "modulo")
 public class Modulo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ModID", nullable = false)
+    @Column(name = "modid", nullable = false)
     private Integer modId;
 
     @Size(max = 80)

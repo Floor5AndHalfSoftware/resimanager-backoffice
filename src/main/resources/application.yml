@@ -91,3 +91,9 @@ management:
       enabled: true
     os:
       enabled: true
+
+logging:
+  level:
+    com.resimanager.backoffice: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG

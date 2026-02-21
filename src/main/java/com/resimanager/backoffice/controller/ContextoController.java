@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
+
 /**
  * Controller para manejo de contextos de usuario
  */
 @RestController
-@RequestMapping("/api/v1/contexto")
+@RequestMapping(value = API_VERSION_PATH + "/contexto")
 @RequiredArgsConstructor
 @Slf4j
 public class ContextoController {

@@ -35,6 +35,9 @@ public class ViewsController {
      */
     @GetMapping("/menu/perfil")
     public ResponseEntity<?> menuByPerfil(@RequestHeader(value = "X-Perfil-Id", required = false) Integer perfilId) {
+        log.info("============ MENU ENDPOINT CALLED ============");
+        log.info("Perfil ID received: {}", perfilId);
+        
         if (perfilId == null) {
             log.warn("Menu request without profile ID");
             return ResponseEntity.badRequest().body("Profile ID is required. Please select a context first.");
@@ -42,6 +45,7 @@ public class ViewsController {
         
         log.info("Fetching menu for profile ID: {}", perfilId);
         List<MenuDto> menus = menuService.menusByPerfil(perfilId);
+        log.info("Menu items found: {}", menus.size());
         return ResponseEntity.ok(menus);
     }
 }

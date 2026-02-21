@@ -47,10 +47,18 @@ public class MnuToMnuDtoMapper implements Function<MenuItem, MenuDto> {
         } else {
             menuDto.setIdModulo(menuItem.getModulo().getModId());
             menuDto.setModulo(menuItem.getModulo().getModNombre());
-            menuDto.setIdAccion(menuItem.getAccion().getId());
-            menuDto.setAccion(menuItem.getAccion().getAccNombre());
-            menuDto.setIdOpcion(menuItem.getOpcion().getId().getOpcID());
-            menuDto.setOpcion(menuItem.getOpcion().getOpcNombre());
+            
+            // Accion puede ser null (para separadores o agrupadores)
+            if (menuItem.getAccion() != null) {
+                menuDto.setIdAccion(menuItem.getAccion().getId());
+                menuDto.setAccion(menuItem.getAccion().getAccNombre());
+            }
+            
+            // Opcion puede ser null (para separadores o agrupadores)
+            if (menuItem.getOpcion() != null) {
+                menuDto.setIdOpcion(menuItem.getOpcion().getId().getOpcID());
+                menuDto.setOpcion(menuItem.getOpcion().getOpcNombre());
+            }
         }
 
 

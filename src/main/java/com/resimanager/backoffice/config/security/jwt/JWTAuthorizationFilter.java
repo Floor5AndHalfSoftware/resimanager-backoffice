@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import com.resimanager.backoffice.controller.handler.json.HttpErrorInfoJson;
 import com.resimanager.backoffice.exception.ServiceException;
 import com.resimanager.backoffice.utils.FormatUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +26,7 @@ import static com.resimanager.backoffice.utils.Constants.HEADER_AUTHORIZACION_KE
 import static com.resimanager.backoffice.utils.Constants.SUPER_SECRET_KEY;
 import static com.resimanager.backoffice.utils.Constants.TOKEN_BEARER_PREFIX;
 
+@Slf4j
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     public JWTAuthorizationFilter(AuthenticationManager authManager) {
@@ -45,8 +47,11 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws IOException, ServletException {
+        log.debug("JWT Filter - Request URI: {} {}", req.getMethod(), req.getRequestURI());
+        
         final String header = req.getHeader(HEADER_AUTHORIZACION_KEY);
         if (header == null || !header.startsWith(TOKEN_BEARER_PREFIX)) {
+            log.debug("JWT Filter - No token or invalid prefix, continuing chain");
             chain.doFilter(req, res);
             return;
         }
@@ -55,8 +60,10 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         try {
             authentication = getAuthentication(req);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.debug("JWT Filter - Authentication successful for user: {}", authentication.getName());
             chain.doFilter(req, res);
         } catch (ServiceException ex) {
+            log.error("JWT Filter - Authentication failed: {}", ex.getMessage());
             final ObjectMapper mapper = new ObjectMapper();
             final HttpErrorInfoJson httpErrorInfoDto = FormatUtils.httpErrorInfoFormatted(HttpStatus.UNAUTHORIZED, req, ex);
 

@@ -222,10 +222,15 @@ public class ContextoService {
     private ContextoActualDTO validarContextoAdministradora(Integer personaId, Integer adminId, Integer perfilId) {
         // Verificar que la persona tiene acceso a esta administradora
         List<PersAdministradora> relaciones = persAdministradoraRepository.findActiveByPersonaId(personaId);
+        log.debug("Relaciones de persona {} con administradoras: {}", personaId, 
+            relaciones.stream().map(r -> r.getId().getPaAdmid()).collect(java.util.stream.Collectors.toList()));
+        
         boolean tieneAcceso = relaciones.stream()
                 .anyMatch(pa -> pa.getId().getPaAdmid().equals(adminId));
         
         if (!tieneAcceso) {
+            log.error("Usuario {} NO tiene acceso a administradora {}. Administradoras disponibles: {}", 
+                personaId, adminId, relaciones.stream().map(r -> r.getId().getPaAdmid()).collect(java.util.stream.Collectors.toList()));
             throw new IllegalArgumentException("El usuario no tiene acceso a la administradora especificada");
         }
         
