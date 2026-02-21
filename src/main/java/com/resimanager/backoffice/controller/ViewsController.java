@@ -2,8 +2,15 @@ package com.resimanager.backoffice.controller;
 
 import com.resimanager.backoffice.dto.MenuDto;
 import com.resimanager.backoffice.service.MenuService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +26,7 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @RequestMapping(value = API_VERSION_PATH)
 @Validated
 @Slf4j
+@Tag(name = "Menú", description = "Obtención del menú lateral filtrado por perfil y permisos")
 public class ViewsController {
 
     private final MenuService menuService;
@@ -27,14 +35,30 @@ public class ViewsController {
         this.menuService = menuService;
     }
 
-    /**
-     * Get menus filtered by user's active profile
-     * Requires the profile ID to be passed in the header
-     * @param perfilId Active profile ID from JWT context
-     * @return Filtered menu based on profile permissions
-     */
+    @Operation(
+            summary = "Obtener menú por perfil",
+            description = """
+                    Devuelve el árbol de items del menú lateral **filtrados según los permisos del perfil activo**.
+
+                    Los items se filtran en base a los módulos asignados al perfil (`ModPerfil`).
+                    Los items sin módulo asignado (Dashboard, agrupadores) siempre se incluyen.
+
+                    La respuesta es una lista plana de `MenuDto`. Cada item incluye su lista de `submenus`
+                    construida jerárquicamente por el servicio.
+
+                    **Requiere** el header `X-Perfil-Id` con el ID del perfil activo (obtenido al hacer cambio de contexto).
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de items de menú autorizados para el perfil",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = MenuDto.class)))),
+            @ApiResponse(responseCode = "400", description = "Header X-Perfil-Id ausente"),
+            @ApiResponse(responseCode = "401", description = "Token JWT ausente o expirado")
+    })
     @GetMapping("/menu/perfil")
-    public ResponseEntity<?> menuByPerfil(@RequestHeader(value = "X-Perfil-Id", required = false) Integer perfilId) {
+    public ResponseEntity<?> menuByPerfil(
+            @Parameter(description = "ID del perfil activo del usuario. Se obtiene tras el cambio de contexto.", required = true, example = "2")
+            @RequestHeader(value = "X-Perfil-Id", required = false) Integer perfilId) {
         log.info("============ MENU ENDPOINT CALLED ============");
         log.info("Perfil ID received: {}", perfilId);
         

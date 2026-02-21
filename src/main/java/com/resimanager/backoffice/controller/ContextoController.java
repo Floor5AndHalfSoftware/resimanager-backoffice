@@ -6,6 +6,12 @@ import com.resimanager.backoffice.dto.UserInfoDTO;
 import com.resimanager.backoffice.service.ContextoService;
 import com.resimanager.backoffice.service.JwtService;
 import com.resimanager.backoffice.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,24 +24,44 @@ import java.util.Map;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 
-/**
- * Controller para manejo de contextos de usuario
- */
 @RestController
 @RequestMapping(value = API_VERSION_PATH + "/contexto")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Contexto", description = "Cambio de contexto multi-tenant (Administradora / Conjunto)")
 public class ContextoController {
 
     private final ContextoService contextoService;
     private final UserService userService;
     private final JwtService jwtService;
 
-    /**
-     * Cambia el contexto activo del usuario
-     * @param request Datos del contexto a activar
-     * @return Nuevo token JWT con el contexto actualizado
-     */
+    @Operation(
+            summary = "Cambiar contexto activo",
+            description = """
+                    Activa un contexto específico para el usuario autenticado y devuelve un **nuevo token JWT**
+                    con los claims del contexto seleccionado.
+
+                    El sistema soporta dos tipos de contexto:
+                    - `ADMINISTRADORA` - Contexto de empresa administradora
+                    - `CONJUNTO` - Contexto de conjunto/condominio residencial
+
+                    **Usar el nuevo token** para todas las llamadas posteriores que requieran el contexto activo.
+                    El `perfilId` devuelto debe usarse en el header `X-Perfil-Id` al consultar el menú.
+
+                    Ejemplo de body:
+                    ```json
+                    { "tipo": "ADMINISTRADORA", "entidadId": 1, "perfilId": 2 }
+                    ```
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contexto activado - devuelve nuevo token JWT con claims del contexto",
+                    content = @Content(examples = @ExampleObject(
+                            value = "{\"token\": \"eyJ...\", \"type\": \"Bearer\", \"contexto\": {\"tipo\": \"ADMINISTRADORA\", \"entidadId\": 1, \"perfilId\": 2}}"
+                    ))),
+            @ApiResponse(responseCode = "400", description = "Contexto inválido o el usuario no tiene acceso a ese contexto/perfil"),
+            @ApiResponse(responseCode = "401", description = "Token JWT ausente o expirado")
+    })
     @PostMapping("/cambiar")
     public ResponseEntity<?> cambiarContexto(@Valid @RequestBody CambioContextoRequest request) {
         try {
