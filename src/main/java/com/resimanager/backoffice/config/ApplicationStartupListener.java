@@ -46,7 +46,7 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
                     " ██████╔╝██║  ██║██║  ██║   ██║   \n" +
                     " ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   \n" +
                     "==============================================================================\n" +
-                    "  Application:        DAAT - ResiManager Backoffice\n" +
+                    "  Application:        ResiManager Backoffice\n" +
                     "  Version:            1.0-SNAPSHOT\n" +
                     "  Profile:            " + activeProfile + "\n" +
                     "  Spring Boot:        " + environment.getProperty("spring-boot.version", "3.1.4") + "\n" +

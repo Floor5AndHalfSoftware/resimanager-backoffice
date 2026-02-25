@@ -6,4 +6,4 @@
  ██████╔╝██║  ██║██║  ██║   ██║   
  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
 
-:: DAAT - ResiManager Backoffice :: Spring Boot ${spring-boot.version}
+:: ResiManager Backoffice :: Spring Boot ${spring-boot.version}
