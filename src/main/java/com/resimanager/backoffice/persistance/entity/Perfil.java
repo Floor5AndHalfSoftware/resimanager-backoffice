@@ -43,6 +43,10 @@ public class Perfil {
     private String prfSts;
 
     @NotNull
+    @Column(name = "prf_nivel", nullable = false)
+    private Integer prfNivel;
+
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
     @JoinColumn(name = "prf_usr_crea", nullable = false)

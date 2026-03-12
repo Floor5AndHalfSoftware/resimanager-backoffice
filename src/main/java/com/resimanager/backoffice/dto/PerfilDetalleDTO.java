@@ -7,18 +7,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PerfilDTO {
+public class PerfilDetalleDTO {
     private Integer id;
     private String nombre;
     private String descripcion;
     private String estatus;
     private Integer nivel;
-    private OffsetDateTime fechaCreacion;
+    private List<ModuloDTO> modulos;
     private Long usuariosAsignados;
+    private OffsetDateTime fechaCreacion;
 }

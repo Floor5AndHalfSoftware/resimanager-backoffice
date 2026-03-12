@@ -30,6 +30,10 @@ public class Modulo {
     @Column(name = "mod_descrip", length = 120)
     private String modDescrip;
 
+    @NotNull
+    @Column(name = "mod_nivel", nullable = false)
+    private Integer modNivel;
+
     @Size(max = 1)
     @NotNull
     @Column(name = "mod_sts", nullable = false, length = 1)
