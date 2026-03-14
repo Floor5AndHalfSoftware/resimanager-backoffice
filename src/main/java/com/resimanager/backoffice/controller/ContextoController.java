@@ -116,11 +116,11 @@ public class ContextoController {
             jwtCookie.setSecure(cookieSecure);    // Read from configuration (false for dev/HTTP, true for prod/HTTPS)
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(24 * 60 * 60); // 24 hours
-            jwtCookie.setAttribute("SameSite", "Lax");
+            jwtCookie.setAttribute("SameSite", cookieSecure ? "None" : "Lax");    // None for cross-domain (prod), Lax for same-site (dev)
             response.addCookie(jwtCookie);
             
-            log.info("Contexto cambiado exitosamente para usuario {}: {} (Cookie Secure: {})", 
-                    username, contextoActual, cookieSecure);
+            log.info("Contexto cambiado exitosamente para usuario {}: {} (Cookie Secure: {}, SameSite: {})", 
+                    username, contextoActual, cookieSecure, cookieSecure ? "None" : "Lax");
             
             // Still return token in response for backward compatibility
             return ResponseEntity.ok(Map.of(

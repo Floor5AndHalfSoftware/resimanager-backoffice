@@ -109,10 +109,13 @@ public class LoginController {
             jwtCookie.setSecure(cookieSecure);    // Read from configuration (false for dev/HTTP, true for prod/HTTPS)
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(24 * 60 * 60); // 24 hours
-            jwtCookie.setAttribute("SameSite", "Lax"); // CSRF protection
+            // Use SameSite=None for cross-domain (frontend in Vercel, backend in Koyeb)
+            // Requires Secure=true (HTTPS only)
+            jwtCookie.setAttribute("SameSite", cookieSecure ? "None" : "Lax");
             response.addCookie(jwtCookie);
             
-            log.debug("JWT cookie created with Secure flag: {}", cookieSecure);
+            log.debug("JWT cookie created with Secure={}, SameSite={}", 
+                    cookieSecure, cookieSecure ? "None" : "Lax");
             
             // Get available contexts for the user
             List<ContextoDTO> contextos = contextoService.getContextosDisponibles(persona.getId());
