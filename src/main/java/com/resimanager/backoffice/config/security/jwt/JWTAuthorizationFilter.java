@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.resimanager.backoffice.controller.handler.json.HttpErrorInfoJson;
@@ -49,16 +50,36 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
             throws IOException, ServletException {
         log.debug("JWT Filter - Request URI: {} {}", req.getMethod(), req.getRequestURI());
         
-        final String header = req.getHeader(HEADER_AUTHORIZACION_KEY);
-        if (header == null || !header.startsWith(TOKEN_BEARER_PREFIX)) {
-            log.debug("JWT Filter - No token or invalid prefix, continuing chain");
+        // Try to get token from Authorization header first (backward compatibility)
+        String header = req.getHeader(HEADER_AUTHORIZACION_KEY);
+        String token = null;
+        
+        if (header != null && header.startsWith(TOKEN_BEARER_PREFIX)) {
+            token = header;
+            log.debug("JWT Filter - Token found in Authorization header");
+        } else {
+            // If not in header, try to get from cookie
+            Cookie[] cookies = req.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("jwt".equals(cookie.getName())) {
+                        token = TOKEN_BEARER_PREFIX + cookie.getValue();
+                        log.debug("JWT Filter - Token found in cookie");
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (token == null) {
+            log.debug("JWT Filter - No token found in header or cookie, continuing chain");
             chain.doFilter(req, res);
             return;
         }
 
         final UsernamePasswordAuthenticationToken authentication;
         try {
-            authentication = getAuthentication(req);
+            authentication = getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.debug("JWT Filter - Authentication successful for user: {}", authentication.getName());
             chain.doFilter(req, res);
@@ -73,11 +94,10 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         }
     }
 
-    private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
-        String token = request.getHeader(HEADER_AUTHORIZACION_KEY);
-        if (token != null) {
-            // Se procesa el token y se recupera el usuario.
-            token = token.replace(TOKEN_BEARER_PREFIX, "");
+    private UsernamePasswordAuthenticationToken getAuthentication(String tokenWithPrefix) {
+        if (tokenWithPrefix != null) {
+            // Remove Bearer prefix
+            String token = tokenWithPrefix.replace(TOKEN_BEARER_PREFIX, "");
             try {
                 SecretKey key = getSigningKey();
                 String user = Jwts.parser()
@@ -90,7 +110,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                     return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
                 }
             } catch (Exception exception) {
-                throw new ServiceException("Authentication was not posible: " + exception.getMessage(), 403);
+                throw new ServiceException("Authentication was not possible: " + exception.getMessage(), 403);
             }
 
             return null;

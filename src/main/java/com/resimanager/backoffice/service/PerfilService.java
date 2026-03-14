@@ -3,11 +3,13 @@ package com.resimanager.backoffice.service;
 import com.resimanager.backoffice.dto.*;
 import com.resimanager.backoffice.exception.BadRequestException;
 import com.resimanager.backoffice.exception.ResourceNotFoundException;
+import com.resimanager.backoffice.persistance.entity.AccOpcPerfil;
 import com.resimanager.backoffice.persistance.entity.ModPerfil;
 import com.resimanager.backoffice.persistance.entity.ModPerfilId;
 import com.resimanager.backoffice.persistance.entity.Modulo;
 import com.resimanager.backoffice.persistance.entity.Perfil;
 import com.resimanager.backoffice.persistance.entity.Persona;
+import com.resimanager.backoffice.persistance.repository.AccOpcPerfilRepository;
 import com.resimanager.backoffice.persistance.repository.ModPerfilRepository;
 import com.resimanager.backoffice.persistance.repository.ModuloRepository;
 import com.resimanager.backoffice.persistance.repository.PerfilRepository;
@@ -36,6 +38,7 @@ public class PerfilService {
     private final ModuloRepository moduloRepository;
     private final ModPerfilRepository modPerfilRepository;
     private final PersonaRepository personaRepository;
+    private final AccOpcPerfilRepository accOpcPerfilRepository;
 
     /**
      * Lista perfiles con filtros y paginación
@@ -74,9 +77,9 @@ public class PerfilService {
     }
 
     /**
-     * Obtiene detalle de un perfil específico
+     * Obtiene detalle de un perfil por ID
      * @param id ID del perfil
-     * @return Detalle del perfil con módulos asignados
+     * @return Detalle del perfil
      */
     @Transactional(readOnly = true)
     public PerfilDetalleDTO getPerfilById(Integer id) {
@@ -91,6 +94,10 @@ public class PerfilService {
                 .map(this::toModuloDTO)
                 .collect(Collectors.toList());
         
+        // Obtener permisos agrupados por módulo
+        List<Object[]> permisos = accOpcPerfilRepository.findPermissionsByPerfilId(id);
+        List<PermisoDTO> permisosDTO = groupPermissionsByModule(permisos);
+        
         // Contar usuarios asignados
         Long usuariosAsignados = perfilRepository.countUsuariosAsignados(id);
         
@@ -101,6 +108,7 @@ public class PerfilService {
                 .estatus(perfil.getPrfSts())
                 .nivel(perfil.getPrfNivel())
                 .modulos(modulosDTO)
+                .permisos(permisosDTO)
                 .usuariosAsignados(usuariosAsignados)
                 .fechaCreacion(perfil.getPrfFchHorCrea())
                 .build();
@@ -360,5 +368,34 @@ public class PerfilService {
                 .descripcion(modulo.getModDescrip())
                 .nivel(modulo.getModNivel())
                 .build();
+    }
+    
+    /**
+     * Agrupa los permisos por módulo
+     * @param permisos Lista de permisos del perfil (Object[] con moduloId, moduloNombre, accionNombre)
+     * @return Lista de permisos agrupados por módulo
+     */
+    private List<PermisoDTO> groupPermissionsByModule(List<Object[]> permisos) {
+        // Agrupar por módulo
+        Map<Integer, PermisoDTO> permisosMap = new HashMap<>();
+        
+        for (Object[] permiso : permisos) {
+            Integer moduloId = (Integer) permiso[0];
+            String moduloNombre = (String) permiso[1];
+            String accionNombre = (String) permiso[2];
+            
+            PermisoDTO permisoDTO = permisosMap.get(moduloId);
+            if (permisoDTO == null) {
+                permisoDTO = new PermisoDTO();
+                permisoDTO.setModuloId(moduloId);
+                permisoDTO.setModulo(moduloNombre);
+                permisoDTO.setAcciones(new ArrayList<>());
+                permisosMap.put(moduloId, permisoDTO);
+            }
+            
+            permisoDTO.getAcciones().add(accionNombre);
+        }
+        
+        return new ArrayList<>(permisosMap.values());
     }
 }

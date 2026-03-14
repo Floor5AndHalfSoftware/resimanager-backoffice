@@ -21,6 +21,7 @@ public class PerfilDetalleDTO {
     private String estatus;
     private Integer nivel;
     private List<ModuloDTO> modulos;
+    private List<PermisoDTO> permisos;
     private Long usuariosAsignados;
     private OffsetDateTime fechaCreacion;
 }

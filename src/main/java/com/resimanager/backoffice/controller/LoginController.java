@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +72,9 @@ public class LoginController {
     })
     @SecurityRequirements
     @PostMapping(value = "/login", produces = "application/json", consumes = "application/json")
-    public ResponseEntity<LoginResponseJson> login(@RequestBody @NotNull LoginRequestJson loginRequestJson) {
+    public ResponseEntity<LoginResponseJson> login(
+            @RequestBody @NotNull LoginRequestJson loginRequestJson,
+            HttpServletResponse response) {
         log.info("Login attempt for user: {}", loginRequestJson.getUsername());
         
         Authentication authentication = authenticationManager.authenticate(
@@ -95,12 +99,22 @@ public class LoginController {
             // Generate JWT token with user info in claims
             var token = jwtService.generateTokenWithUserInfo(authentication, userInfo);
             
+            // Create HttpOnly cookie for the JWT token
+            Cookie jwtCookie = new Cookie("jwt", token);
+            jwtCookie.setHttpOnly(true);  // Not accessible via JavaScript
+            jwtCookie.setSecure(false);    // Set to true in production with HTTPS
+            jwtCookie.setPath("/");
+            jwtCookie.setMaxAge(24 * 60 * 60); // 24 hours
+            jwtCookie.setAttribute("SameSite", "Lax"); // CSRF protection
+            response.addCookie(jwtCookie);
+            
             // Get available contexts for the user
             List<ContextoDTO> contextos = contextoService.getContextosDisponibles(persona.getId());
             
             log.info("Login successful for user: {} (ID: {}) with {} contexts", 
                     persona.getPerUsuario(), persona.getId(), contextos.size());
             
+            // Still return token in response for backward compatibility and mobile apps
             return ResponseEntity.ok().body(LoginResponseJson.builder()
                     .token(token)
                     .type("Bearer")

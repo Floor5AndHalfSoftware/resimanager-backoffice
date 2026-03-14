@@ -25,6 +25,6 @@ public class UpdatePerfilRequest {
     private String estatus;
     
     @Min(value = 0, message = "El nivel mínimo es 0")
-    @Max(value = 3, message = "El nivel máximo es 3")
+    @Max(value = 4, message = "El nivel máximo es 4")
     private Integer nivel;
 }

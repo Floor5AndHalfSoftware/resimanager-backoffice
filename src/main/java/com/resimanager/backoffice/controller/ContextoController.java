@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +65,9 @@ public class ContextoController {
             @ApiResponse(responseCode = "401", description = "Token JWT ausente o expirado")
     })
     @PostMapping("/cambiar")
-    public ResponseEntity<?> cambiarContexto(@Valid @RequestBody CambioContextoRequest request) {
+    public ResponseEntity<?> cambiarContexto(
+            @Valid @RequestBody CambioContextoRequest request,
+            HttpServletResponse response) {
         try {
             // Obtener la autenticación actual
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -102,8 +106,18 @@ public class ContextoController {
             // Generar nuevo token con el contexto
             String newToken = jwtService.generateTokenWithContext(auth, userInfo, contextoActual);
             
+            // Update HttpOnly cookie with new token
+            Cookie jwtCookie = new Cookie("jwt", newToken);
+            jwtCookie.setHttpOnly(true);
+            jwtCookie.setSecure(false);    // Set to true in production with HTTPS
+            jwtCookie.setPath("/");
+            jwtCookie.setMaxAge(24 * 60 * 60); // 24 hours
+            jwtCookie.setAttribute("SameSite", "Lax");
+            response.addCookie(jwtCookie);
+            
             log.info("Contexto cambiado exitosamente para usuario {}: {}", username, contextoActual);
             
+            // Still return token in response for backward compatibility
             return ResponseEntity.ok(Map.of(
                     "token", newToken,
                     "type", "Bearer",
