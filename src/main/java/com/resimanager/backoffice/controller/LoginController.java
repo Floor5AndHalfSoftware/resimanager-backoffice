@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -46,6 +47,9 @@ public class LoginController {
     private final ObjectMapper objectMapper;
     private final ContextoService contextoService;
     private final PersonaRepository personaRepository;
+    
+    @Value("${app.security.cookie-secure}")
+    private boolean cookieSecure;
 
     @Operation(
             summary = "Iniciar sesión",
@@ -102,11 +106,13 @@ public class LoginController {
             // Create HttpOnly cookie for the JWT token
             Cookie jwtCookie = new Cookie("jwt", token);
             jwtCookie.setHttpOnly(true);  // Not accessible via JavaScript
-            jwtCookie.setSecure(false);    // Set to true in production with HTTPS
+            jwtCookie.setSecure(cookieSecure);    // Read from configuration (false for dev/HTTP, true for prod/HTTPS)
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(24 * 60 * 60); // 24 hours
             jwtCookie.setAttribute("SameSite", "Lax"); // CSRF protection
             response.addCookie(jwtCookie);
+            
+            log.debug("JWT cookie created with Secure flag: {}", cookieSecure);
             
             // Get available contexts for the user
             List<ContextoDTO> contextos = contextoService.getContextosDisponibles(persona.getId());

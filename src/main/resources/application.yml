@@ -12,6 +12,8 @@ info:
 app:
   api:
     base-url: ${API_BASE_URL:http://localhost:8080}
+  security:
+    cookie-secure: ${SECURITY_COOKIE_SECURE:true}
 
 spring:
   profiles:

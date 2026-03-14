@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +37,9 @@ public class ContextoController {
     private final ContextoService contextoService;
     private final UserService userService;
     private final JwtService jwtService;
+    
+    @Value("${app.security.cookie-secure}")
+    private boolean cookieSecure;
 
     @Operation(
             summary = "Cambiar contexto activo",
@@ -109,13 +113,14 @@ public class ContextoController {
             // Update HttpOnly cookie with new token
             Cookie jwtCookie = new Cookie("jwt", newToken);
             jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(false);    // Set to true in production with HTTPS
+            jwtCookie.setSecure(cookieSecure);    // Read from configuration (false for dev/HTTP, true for prod/HTTPS)
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(24 * 60 * 60); // 24 hours
             jwtCookie.setAttribute("SameSite", "Lax");
             response.addCookie(jwtCookie);
             
-            log.info("Contexto cambiado exitosamente para usuario {}: {}", username, contextoActual);
+            log.info("Contexto cambiado exitosamente para usuario {}: {} (Cookie Secure: {})", 
+                    username, contextoActual, cookieSecure);
             
             // Still return token in response for backward compatibility
             return ResponseEntity.ok(Map.of(
