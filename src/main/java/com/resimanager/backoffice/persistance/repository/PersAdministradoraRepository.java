@@ -25,4 +25,12 @@ public interface PersAdministradoraRepository extends JpaRepository<PersAdminist
         ORDER BY pa.id.paAdmid
     """)
     List<PersAdministradora> findActiveByPersonaId(@Param("personaId") Integer personaId);
+
+    /**
+     * Obtiene todas las personas activas de una administradora
+     * @param admId ID de la administradora
+     * @return Lista de relaciones persona-administradora activas
+     */
+    @Query("SELECT pa FROM PersAdministradora pa WHERE pa.id.paAdmid = :admId AND pa.pASts = 'A' ORDER BY pa.id.paPerid")
+    List<PersAdministradora> findActiveByAdmId(@Param("admId") Integer admId);
 }

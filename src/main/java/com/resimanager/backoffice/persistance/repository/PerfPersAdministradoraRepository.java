@@ -27,4 +27,13 @@ public interface PerfPersAdministradoraRepository extends JpaRepository<PerfPers
         ORDER BY ppa.id.ppaAdmid, perfil.prfNombre
     """)
     List<PerfPersAdministradora> findActiveByPersonaId(@Param("personaId") Integer personaId);
+
+    /**
+     * Obtiene los perfiles activos de una persona en una administradora específica
+     * @param admId ID de la administradora
+     * @param perId ID de la persona
+     * @return Lista de relaciones perfil-persona-administradora activas
+     */
+    @Query("SELECT ppa FROM PerfPersAdministradora ppa JOIN FETCH ppa.ppaPrfid WHERE ppa.id.ppaAdmid = :admId AND ppa.id.ppaPerid = :perId AND ppa.pPASts = 'A'")
+    List<PerfPersAdministradora> findActiveByAdmIdAndPerId(@Param("admId") Integer admId, @Param("perId") Integer perId);
 }

@@ -1,7 +1,11 @@
 package com.resimanager.backoffice.persistance.repository;
 
 import com.resimanager.backoffice.persistance.entity.Persona;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -45,4 +49,20 @@ public interface PersonaRepository extends JpaRepository<Persona, Integer> {
      * @return true if exists
      */
     boolean existsByPerEMail(String email);
+
+    @Query("""
+            SELECT p FROM Persona p
+            WHERE (:estatus IS NULL OR p.perSts = :estatus)
+            AND (:search IS NULL OR
+                 LOWER(p.perNombre) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                 LOWER(p.perApellido) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                 LOWER(p.perDocIdent) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                 LOWER(p.perEMail) LIKE LOWER(CONCAT('%', :search, '%')))
+            ORDER BY p.perNombre, p.perApellido
+            """)
+    Page<Persona> findAllWithFilters(
+            @Param("estatus") String estatus,
+            @Param("search") String search,
+            Pageable pageable
+    );
 }

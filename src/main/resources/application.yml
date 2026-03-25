@@ -52,6 +52,8 @@ spring:
     baseline-version: 0
     clean-on-validation-error: false
     out-of-order: false
+    postgresql:
+      transactional-lock: false
   
   web:
     resources:

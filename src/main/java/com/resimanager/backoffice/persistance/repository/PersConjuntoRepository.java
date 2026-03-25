@@ -25,4 +25,12 @@ public interface PersConjuntoRepository extends JpaRepository<PersConjunto, Pers
         ORDER BY pc.id.pcConjid
     """)
     List<PersConjunto> findActiveByPersonaId(@Param("personaId") Integer personaId);
+
+    /**
+     * Obtiene todas las personas activas de un conjunto
+     * @param conjId ID del conjunto
+     * @return Lista de relaciones persona-conjunto activas
+     */
+    @Query("SELECT pc FROM PersConjunto pc WHERE pc.id.pcConjid = :conjId AND pc.pCSts = 'A' ORDER BY pc.id.pcPerid")
+    List<PersConjunto> findActiveByConjId(@Param("conjId") Integer conjId);
 }
