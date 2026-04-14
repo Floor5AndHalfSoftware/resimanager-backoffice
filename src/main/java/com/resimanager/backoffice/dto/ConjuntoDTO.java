@@ -13,6 +13,7 @@ public class ConjuntoDTO {
     private Integer id;
     private String nombre;
     private String documento;
-    private String direccion;
-    private String tipo;
+    private String email;
+    private String telefono;
+    private String estatus;
 }

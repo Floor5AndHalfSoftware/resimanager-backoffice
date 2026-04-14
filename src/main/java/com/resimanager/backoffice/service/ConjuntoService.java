@@ -1,6 +1,8 @@
 package com.resimanager.backoffice.service;
 
 import com.resimanager.backoffice.dto.AsignarPerfilesRequest;
+import com.resimanager.backoffice.dto.ConjuntoDTO;
+import com.resimanager.backoffice.dto.ConjuntoListResponse;
 import com.resimanager.backoffice.dto.ContextoUsuariosResponse;
 import com.resimanager.backoffice.exception.ResourceNotFoundException;
 import com.resimanager.backoffice.persistance.entity.Conjunto;
@@ -18,6 +20,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +46,36 @@ public class ConjuntoService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    /**
+     * Lista conjuntos con filtros opcionales
+     */
+    @Transactional(readOnly = true)
+    public ConjuntoListResponse getConjuntos(String estatus, String search, Integer page, Integer limit) {
+        String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
+        String estatusParam = (estatus != null && !estatus.isBlank()) ? estatus.trim() : null;
+
+        PageRequest pageable = PageRequest.of(page - 1, limit);
+        Page<Conjunto> result = conjuntoRepository.findAllWithFilters(estatusParam, searchParam, pageable);
+
+        List<ConjuntoDTO> data = result.getContent().stream()
+                .map(c -> ConjuntoDTO.builder()
+                        .id(c.getId())
+                        .nombre(c.getConjNombre())
+                        .documento(c.getConjDocIdent())
+                        .email(c.getConjEMail())
+                        .telefono(c.getConjTelefono())
+                        .estatus(c.getConjSts())
+                        .build())
+                .toList();
+
+        return ConjuntoListResponse.builder()
+                .data(data)
+                .total(result.getTotalElements())
+                .page(page)
+                .limit(limit)
+                .build();
+    }
 
     /**
      * Obtiene un conjunto por ID

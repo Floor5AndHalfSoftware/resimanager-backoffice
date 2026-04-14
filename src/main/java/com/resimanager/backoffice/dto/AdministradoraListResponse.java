@@ -5,15 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdministradoraDTO {
-    private Integer id;
-    private String nombre;
-    private String documento;
-    private String email;
-    private String telefono;
-    private String estatus;
+public class AdministradoraListResponse {
+    private List<AdministradoraDTO> data;
+    private Long total;
+    private Integer page;
+    private Integer limit;
 }

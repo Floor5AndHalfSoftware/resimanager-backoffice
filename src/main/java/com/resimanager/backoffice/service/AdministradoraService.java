@@ -1,5 +1,7 @@
 package com.resimanager.backoffice.service;
 
+import com.resimanager.backoffice.dto.AdministradoraDTO;
+import com.resimanager.backoffice.dto.AdministradoraListResponse;
 import com.resimanager.backoffice.dto.AsignarPerfilesRequest;
 import com.resimanager.backoffice.dto.ContextoUsuariosResponse;
 import com.resimanager.backoffice.exception.ResourceNotFoundException;
@@ -18,6 +20,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +46,36 @@ public class AdministradoraService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    /**
+     * Lista administradoras con filtros opcionales
+     */
+    @Transactional(readOnly = true)
+    public AdministradoraListResponse getAdministradoras(String estatus, String search, Integer page, Integer limit) {
+        String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
+        String estatusParam = (estatus != null && !estatus.isBlank()) ? estatus.trim() : null;
+
+        PageRequest pageable = PageRequest.of(page - 1, limit);
+        Page<Administradora> result = administradoraRepository.findAllWithFilters(estatusParam, searchParam, pageable);
+
+        List<AdministradoraDTO> data = result.getContent().stream()
+                .map(a -> AdministradoraDTO.builder()
+                        .id(a.getId())
+                        .nombre(a.getAdmNombre())
+                        .documento(a.getAdmDocIdent())
+                        .email(a.getAdmEMail())
+                        .telefono(a.getAdmTelefono())
+                        .estatus(a.getAdmSts())
+                        .build())
+                .toList();
+
+        return AdministradoraListResponse.builder()
+                .data(data)
+                .total(result.getTotalElements())
+                .page(page)
+                .limit(limit)
+                .build();
+    }
 
     /**
      * Obtiene una administradora por ID

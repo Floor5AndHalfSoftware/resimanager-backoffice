@@ -1,5 +1,6 @@
 package com.resimanager.backoffice.controller;
 
+import com.resimanager.backoffice.dto.AdministradoraListResponse;
 import com.resimanager.backoffice.dto.AsignarPerfilesRequest;
 import com.resimanager.backoffice.dto.ContextoUsuariosResponse;
 import com.resimanager.backoffice.service.AdministradoraService;
@@ -32,6 +33,18 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 public class AdministradoraController {
 
     private final AdministradoraService administradoraService;
+
+    @Operation(summary = "Listar administradoras", description = "Obtiene la lista de administradoras con filtros opcionales")
+    @GetMapping
+    public ResponseEntity<AdministradoraListResponse> listarAdministradoras(
+            @Parameter(description = "Filtrar por estatus (A/I)") @RequestParam(required = false) String estatus,
+            @Parameter(description = "Búsqueda por nombre o documento") @RequestParam(required = false) String search,
+            @Parameter(description = "Número de página (inicia en 1)") @RequestParam(required = false, defaultValue = "1") Integer page,
+            @Parameter(description = "Registros por página") @RequestParam(required = false, defaultValue = "50") Integer limit
+    ) {
+        log.debug("GET /administradoras - estatus: {}, search: {}, page: {}, limit: {}", estatus, search, page, limit);
+        return ResponseEntity.ok(administradoraService.getAdministradoras(estatus, search, page, limit));
+    }
 
     @Operation(
             summary = "Obtener administradora por ID",

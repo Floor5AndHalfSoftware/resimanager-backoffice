@@ -1,6 +1,7 @@
 package com.resimanager.backoffice.controller;
 
 import com.resimanager.backoffice.dto.AsignarPerfilesRequest;
+import com.resimanager.backoffice.dto.ConjuntoListResponse;
 import com.resimanager.backoffice.dto.ContextoUsuariosResponse;
 import com.resimanager.backoffice.service.ConjuntoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +33,18 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 public class ConjuntoController {
 
     private final ConjuntoService conjuntoService;
+
+    @Operation(summary = "Listar conjuntos", description = "Obtiene la lista de conjuntos con filtros opcionales")
+    @GetMapping
+    public ResponseEntity<ConjuntoListResponse> listarConjuntos(
+            @Parameter(description = "Filtrar por estatus (A/I)") @RequestParam(required = false) String estatus,
+            @Parameter(description = "Búsqueda por nombre o documento") @RequestParam(required = false) String search,
+            @Parameter(description = "Número de página (inicia en 1)") @RequestParam(required = false, defaultValue = "1") Integer page,
+            @Parameter(description = "Registros por página") @RequestParam(required = false, defaultValue = "50") Integer limit
+    ) {
+        log.debug("GET /conjuntos - estatus: {}, search: {}, page: {}, limit: {}", estatus, search, page, limit);
+        return ResponseEntity.ok(conjuntoService.getConjuntos(estatus, search, page, limit));
+    }
 
     @Operation(
             summary = "Obtener conjunto por ID",

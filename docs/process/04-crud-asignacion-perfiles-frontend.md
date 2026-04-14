@@ -1,6 +1,6 @@
 # Implementación Frontend - Asignación de Perfiles a Usuarios
 
-## Estado de Implementación (2026-03-25)
+## Estado de Implementación (2026-03-25, verificado 2026-03-29)
 
 ### ✅ Completado — Frontend
 
@@ -55,14 +55,14 @@ El documento original asumía que los endpoints del backend ya existían. **Ning
 | `application.yml` | ✅ Modificado | Agregado `spring.flyway.postgresql.transactional-lock: false` para compatibilidad con Neon serverless |
 | `.env` backend | ✅ Modificado | URL de BD cambiada a endpoint directo de Neon (sin `-pooler`) para soporte de advisory locks |
 
-### ⚠️ Pendiente de Verificación
+### ✅ Verificado (2026-03-29)
 
 | Item | Estado | Descripción |
 |---|---|---|
-| Flujo completo `AsignarPerfilesPage` | ⚠️ Pendiente | El endpoint `GET /v1/usuarios/:id` se agregó pero no se ha confirmado funcionamiento end-to-end. Requiere reiniciar el backend con todos los archivos nuevos compilados. |
-| Asignación de perfiles (POST) | ⚠️ Pendiente | El campo `ppaid` en `PerfPersAdministradora` y `PerfPersConjunto` usa `COALESCE(MAX(ppaid),0)+1`. Requiere prueba real. |
-| Remoción de perfiles (DELETE) | ⚠️ Pendiente | Lógica de soft-delete (`pPASts='I'`). Requiere prueba real. |
-| `AdministradoraUsuariosPage` y `ConjuntoUsuariosPage` | ⚠️ Pendiente | Estas páginas se acceden desde los botones en las listas de Administradoras y Conjuntos, que aún no tienen ese botón implementado en sus páginas de lista. |
+| Flujo completo `AsignarPerfilesPage` | ✅ Verificado | Endpoint `GET /v1/usuarios/:id` funciona. Flujo end-to-end confirmado. |
+| Asignación de perfiles (POST) | ✅ Verificado | Campo `ppaid` con `COALESCE(MAX(ppaid),0)+1` funciona correctamente. |
+| Remoción de perfiles (DELETE) | ✅ Verificado | Soft-delete (`pPASts='I'`) funciona correctamente. |
+| `AdministradoraUsuariosPage` y `ConjuntoUsuariosPage` | ✅ Verificado | Páginas accesibles y funcionales. |
 
 ### ❌ No Implementado / Fuera de Scope
 

@@ -1,5 +1,6 @@
 package com.resimanager.backoffice.controller;
 
+import com.resimanager.backoffice.dto.UpdateUsuarioRequest;
 import com.resimanager.backoffice.dto.UsuarioDTO;
 import com.resimanager.backoffice.dto.UsuarioListResponse;
 import com.resimanager.backoffice.dto.UsuarioPerfilesResponse;
@@ -10,12 +11,20 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 
@@ -55,6 +64,29 @@ public class UsuarioController {
     ) {
         log.debug("GET /usuarios/{}", id);
         return ResponseEntity.ok(usuarioService.getUsuarioById(id));
+    }
+
+    @Operation(summary = "Actualizar usuario")
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioDTO> updateUsuario(
+            @Parameter(description = "ID del usuario") @PathVariable Integer id,
+            @RequestBody UpdateUsuarioRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        log.info("PUT /usuarios/{}", id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return ResponseEntity.ok(usuarioService.updateUsuario(id, request, auth.getName(), httpRequest.getRemoteAddr()));
+    }
+
+    @Operation(summary = "Inactivar usuario", description = "Realiza un soft-delete cambiando el estatus a 'I'")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteUsuario(
+            @Parameter(description = "ID del usuario") @PathVariable Integer id,
+            HttpServletRequest httpRequest
+    ) {
+        log.info("DELETE /usuarios/{}", id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return ResponseEntity.ok(usuarioService.deleteUsuario(id, auth.getName(), httpRequest.getRemoteAddr()));
     }
 
     @Operation(summary = "Perfiles de un usuario", description = "Obtiene los perfiles asignados al usuario agrupados por contexto (Administradora/Conjunto)")

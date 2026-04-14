@@ -1,5 +1,6 @@
 package com.resimanager.backoffice.service;
 
+import com.resimanager.backoffice.dto.UpdateUsuarioRequest;
 import com.resimanager.backoffice.dto.UsuarioDTO;
 import com.resimanager.backoffice.dto.UsuarioListResponse;
 import com.resimanager.backoffice.dto.UsuarioPerfilesResponse;
@@ -19,8 +20,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -113,6 +116,54 @@ public class UsuarioService {
                 .persona(toDTO(persona))
                 .contextos(contextos)
                 .build();
+    }
+
+    @Transactional
+    public UsuarioDTO updateUsuario(Integer id, UpdateUsuarioRequest request, String executorUsername, String estacion) {
+        Persona persona = personaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        Persona ejecutor = personaRepository.findByPerUsuario(executorUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejecutor no encontrado"));
+
+        if (request.getNombre() != null && !request.getNombre().isBlank()) {
+            persona.setPerNombre(request.getNombre().trim());
+        }
+        if (request.getApellido() != null && !request.getApellido().isBlank()) {
+            persona.setPerApellido(request.getApellido().trim());
+        }
+        if (request.getTelefono() != null && !request.getTelefono().isBlank()) {
+            persona.setPerTlfCel(request.getTelefono().trim());
+        }
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            persona.setPerEMail(request.getEmail().trim());
+        }
+        if (request.getEstatus() != null && (request.getEstatus().equals("A") || request.getEstatus().equals("I"))) {
+            persona.setPerSts(request.getEstatus());
+        }
+
+        persona.setPerUsrmod(ejecutor);
+        persona.setPerFchHorMod(OffsetDateTime.now());
+        persona.setPerEstMod(estacion);
+
+        return toDTO(personaRepository.save(persona));
+    }
+
+    @Transactional
+    public Map<String, String> deleteUsuario(Integer id, String executorUsername, String estacion) {
+        Persona persona = personaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        Persona ejecutor = personaRepository.findByPerUsuario(executorUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejecutor no encontrado"));
+
+        persona.setPerSts("I");
+        persona.setPerUsrmod(ejecutor);
+        persona.setPerFchHorMod(OffsetDateTime.now());
+        persona.setPerEstMod(estacion);
+
+        personaRepository.save(persona);
+        return Map.of("message", "Usuario inactivado correctamente");
     }
 
     private UsuarioDTO toDTO(Persona p) {

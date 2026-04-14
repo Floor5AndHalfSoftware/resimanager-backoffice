@@ -1,6 +1,8 @@
 package com.resimanager.backoffice.persistance.repository;
 
 import com.resimanager.backoffice.persistance.entity.Conjunto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,9 +15,22 @@ public interface ConjuntoRepository extends JpaRepository<Conjunto, Integer> {
 
     /**
      * Obtiene conjuntos activos por IDs
-     * @param ids Lista de IDs de conjuntos
-     * @return Lista de conjuntos activos
      */
     @Query("SELECT c FROM Conjunto c WHERE c.id IN :ids AND c.conjSts = 'A'")
     List<Conjunto> findActiveByIds(@Param("ids") List<Integer> ids);
+
+    /**
+     * Lista conjuntos con filtros opcionales de estatus y búsqueda por nombre/documento
+     */
+    @Query("""
+            SELECT c FROM Conjunto c
+            WHERE (:estatus IS NULL OR c.conjSts = :estatus)
+              AND (:search IS NULL
+                   OR LOWER(c.conjNombre) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(c.conjDocIdent) LIKE LOWER(CONCAT('%', :search, '%')))
+            ORDER BY c.conjNombre
+            """)
+    Page<Conjunto> findAllWithFilters(@Param("estatus") String estatus,
+                                      @Param("search") String search,
+                                      Pageable pageable);
 }
