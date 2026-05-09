@@ -5,164 +5,98 @@ Aplicación backend para la gestión de residencias y condominios.
 ## Tecnologías
 
 - Java 21
-- Spring Boot 3.4.1
+- Spring Boot 3.1.4
 - Maven
-- Spring Security
+- Spring Security (JWT + HttpOnly Cookie)
 - PostgreSQL / H2
 - Flyway (Migraciones)
-- Swagger/OpenAPI
+- Swagger/OpenAPI (SpringDoc)
+
+## Endpoints Disponibles
+
+| Categoría | Endpoints |
+|-----------|-----------|
+| Autenticación | POST /v1/login |
+| Contexto | POST /v1/contexto/cambiar |
+| Menú | GET /v1/menu/perfil |
+| Usuarios | GET /v1/usuarios, GET/{id}, PUT/{id}, DELETE/{id}, GET/{id}/perfiles |
+| Perfiles | GET /v1/perfiles, POST, GET/{id}, PUT/{id}, DELETE/{id}, POST/{id}/modulos, DELETE/{id}/modulos/{moduloId} |
+| Módulos | GET /v1/modulos |
+| Conjuntos | GET /v1/conjuntos, GET/{id}, GET/{id}/usuarios, POST/{conjId}/usuarios/{userId}/perfiles, DELETE/{conjId}/usuarios/{userId}/perfiles/{perfilId} |
+| Administradoras | GET /v1/administradoras, GET/{id}, GET/{id}/usuarios, POST/{admId}/usuarios/{userId}/perfiles, DELETE/{admId}/usuarios/{userId}/perfiles/{perfilId} |
+| Propietarios (legacy) | GET /api/owners, POST, GET/{id}, PUT/{id}, DELETE/{id} |
+
+Documentación Swagger: http://localhost:8080/swagger-ui.html
 
 ## Configuración
 
 ### Variables de Entorno
 
-El proyecto usa un único archivo `application.yml` que lee variables de entorno desde un archivo `.env`.
+Copia `.env.example` a `.env` y configura:
 
-1. **Copia el archivo de ejemplo:**
-   ```bash
-   cp .env.example .env
-   ```
-
-2. **Configura tus variables de entorno en `.env`:**
-   ```properties
-   # Perfil de Spring (dev, local, test, prod)
-   SPRING_PROFILES_ACTIVE=dev
-   
-   # Configuración de base de datos
-   DB_HOST=localhost:5432
-   DB_NAME=condominio
-   DB_USERNAME=postgres
-   DB_PASSWORD=tu_password
-   DB_PARAMS=
-   ```
-
-3. **Variables disponibles:**
-   - `SPRING_PROFILES_ACTIVE`: Perfil de Spring a usar
-   - `SERVER_PORT`: Puerto del servidor (default: 8080)
-   - `DB_HOST`: Host y puerto de la base de datos
-   - `DB_NAME`: Nombre de la base de datos
-   - `DB_USERNAME`: Usuario de la base de datos
-   - `DB_PASSWORD`: Password de la base de datos
-   - `DB_PARAMS`: Parámetros adicionales de conexión
-   - `DB_DRIVER`: Driver JDBC (default: org.postgresql.Driver)
-   - `JPA_DDL_AUTO`: Modo DDL de Hibernate (default: none)
-   - `JPA_SHOW_SQL`: Mostrar SQL en consola (default: true)
-   - `FLYWAY_ENABLED`: Activar migraciones Flyway (default: true)
-
-Ver `.env.example` para más detalles y ejemplos de configuración.
+```properties
+SPRING_PROFILES_ACTIVE=dev
+DB_HOST=localhost:5432
+DB_NAME=condominio
+DB_USERNAME=postgres
+DB_PASSWORD=tu_password
+```
 
 ### Base de Datos
 
-El proyecto incluye migraciones Flyway que crean automáticamente el esquema completo:
-
-**Bootstrap Admin User (creado automáticamente):**
-- **Username:** `admin`
-- **Email:** `admin@resimanager.com`
-- **Password:** `Admin123!` (SHA-256 hash)
-- **ID:** 1
-
-> ⚠️ **IMPORTANTE:** Cambia el password del usuario admin inmediatamente después del primer login.
-
-**Esquema creado:**
-- 30+ tablas incluyendo: Persona, Administradora, Conjunto, Propiedad, Perfil, etc.
+Flyway crea el esquema automáticamente con 14 migraciones (V1.0.0.0 a V2.0.8):
+- 30+ tablas (Persona, Administradora, Conjunto, Propiedad, Perfil, etc.)
 - Sistema de seguridad completo (Módulos, Opciones, Acciones, Perfiles)
 - Sistema de invitaciones con UUID
-- 5 perfiles predefinidos
-- 10 módulos del sistema
-- Menú base configurado
+- Datos de prueba: 6 usuarios, 2 administradoras, 3 conjuntos
+
+**Usuario admin por defecto:**
+- Usuario: `admin`
+- Email: `admin@resimanager.com`
+- Password: `Admin2024!`
 
 ## Construcción y Ejecución
 
-### Requisitos
-
-- Java 21+
-- Maven 3.8+
-- PostgreSQL 12+ (o usar H2 para testing)
-
-### Maven
-
-Compilar el proyecto:
 ```bash
+# Compilar
 mvn clean package
-```
 
-Ejecutar la aplicación:
-```bash
+# Ejecutar
 mvn spring-boot:run
-```
 
-La aplicación cargará automáticamente las variables del archivo `.env`.
-
-### Ejecutar tests:
-```bash
+# Tests
 mvn test
-```
 
-### Docker
-
-Construir la imagen Docker:
-```bash
+# Docker
 docker build -t resimanager-backoffice .
-```
-
-Ejecutar el contenedor:
-```bash
 docker run -p 8080:8080 --env-file .env resimanager-backoffice
 ```
-
-## Documentación API
-
-### Swagger UI
-
-La documentación interactiva de la API está disponible en:
-```
-http://localhost:8080/swagger-ui.html
-```
-
-### OpenAPI JSON
-
-La especificación OpenAPI en formato JSON:
-```
-http://localhost:8080/v3/api-docs
-```
-
-## Migraciones de Base de Datos
-
-El proyecto utiliza Flyway para las migraciones. Los scripts están en:
-```
-src/main/resources/migrations/
-```
-
-**Migraciones disponibles:**
-- `V1.0.0.x` - Migraciones antiguas (se eliminan con V2.0.0)
-- `V2.0.0` - DROP de tablas antiguas
-- `V2.0.1` - Tablas core (Persona, Administradora, Conjunto, etc.)
-- `V2.0.2` - Tablas de seguridad (Menu, Modulo, Opcion, Accion, etc.)
-- `V2.0.3` - Tablas de relaciones (many-to-many)
-- `V2.0.4` - Sistema de invitaciones
-- `V2.0.5` - Datos base (admin user, perfiles, módulos, etc.)
 
 ## Estructura del Proyecto
 
 ```
 src/
-├── main/
-│   ├── java/
-│   │   └── com/resimanager/backoffice/
-│   │       ├── config/          # Configuración de Spring
-│   │       ├── controller/      # REST Controllers
-│   │       ├── dto/             # Data Transfer Objects
-│   │       ├── exception/       # Manejo de excepciones
-│   │       ├── persistance/     # Entidades y Repositorios
-│   │       └── service/         # Lógica de negocio
-│   └── resources/
-│       ├── application.yml      # Configuración unificada
-│       ├── banner.txt          # Banner de inicio
-│       └── migrations/         # Migraciones Flyway
-└── test/
-    └── java/                   # Tests unitarios
+├── main/java/com/resimanager/backoffice/
+│   ├── config/           # Seguridad, CORS, OpenAPI, Cache
+│   ├── controller/       # 9 REST Controllers
+│   ├── dto/              # 28 Data Transfer Objects
+│   ├── exception/        # 4 clases de excepción
+│   ├── persistance/
+│   │   ├── entity/       # 40+ entidades JPA
+│   │   └── repository/   # 14 repositorios
+│   └── service/          # 10 servicios
+└── test/                 # Pendiente de implementar
 ```
 
-## Contacto
+## Despliegue
 
-Para más información sobre el proyecto ResiManager.
+- **Koyeb:** https://chilly-libbey-wtysoftware-aab36281.koyeb.app
+- **Base de datos:** Neon (PostgreSQL)
+
+## Documentación
+
+Ver `/docs/general/` para documentación detallada:
+- `07-api-endpoints.md` - Documentación completa de API
+- `02-arquitectura.md` - Arquitectura del sistema
+- `03-modelo-datos.md` - Modelo de datos
+- `04-seguridad.md` - Seguridad y autenticación

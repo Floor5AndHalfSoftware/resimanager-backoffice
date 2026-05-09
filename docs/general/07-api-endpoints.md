@@ -1,620 +1,264 @@
-# API Endpoints
+# API Endpoints - Documentación
 
-## Base URL
+**Última actualización:** 09 de Mayo de 2026  
+**Versión API:** v1  
+**Base Path:** `/v1`
 
-```
-Local:   http://localhost:8080/api
-Dev:     https://api-dev.resimanager.com/api
-Prod:    https://api.resimanager.com/api
-```
+---
 
-## Autenticación
-
-Todas las peticiones (excepto login) requieren el header:
+## 📌 Base URL
 
 ```
-Authorization: Bearer <jwt_token>
+Local:   http://localhost:8080/v1
+Koyeb:   https://chilly-libbey-wtysoftware-aab36281.koyeb.app/v1
 ```
 
-## Documentación Swagger
+---
+
+## 🔐 Autenticación
+
+El JWT se almacena en una cookie HttpOnly (`jwt`) en lugar de enviarse por header.
+Para compatibilidad, también se acepta el header `Authorization: Bearer <token>`.
+
+El token JWT incluye estos claims:
+- `userId` - ID del usuario
+- `nombre` - Nombre del usuario
+- `apellido` - Apellido del usuario
+- `email` - Email del usuario
+- `documento` - Documento de identidad
+- `roles` - Lista de roles/perfiles
+- `contextoTipo` - Tipo de contexto (ADMINISTRADORA o CONJUNTO)
+- `contextoEntidadId` - ID de la entidad activa
+- `contextoPerfilId` - ID del perfil activo
+
+**Expiración:** 24 horas
+
+---
+
+## 📚 Documentación Swagger
 
 ```
 http://localhost:8080/swagger-ui.html
+https://chilly-libbey-wtysoftware-aab36281.koyeb.app/swagger-ui.html
 ```
 
 ---
 
-## Endpoints
+## 📋 Resumen de Endpoints
 
-### Autenticación
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/v1/login` | Iniciar sesión |
+| POST | `/v1/contexto/cambiar` | Cambiar contexto activo |
+| GET | `/v1/menu/perfil` | Obtener menú por perfil |
+| GET | `/v1/usuarios` | Listar usuarios |
+| GET | `/v1/usuarios/{id}` | Obtener usuario por ID |
+| PUT | `/v1/usuarios/{id}` | Actualizar usuario |
+| DELETE | `/v1/usuarios/{id}` | Inactivar usuario |
+| GET | `/v1/usuarios/{id}/perfiles` | Perfiles de un usuario |
+| GET | `/v1/perfiles` | Listar perfiles |
+| POST | `/v1/perfiles` | Crear perfil |
+| GET | `/v1/perfiles/{id}` | Detalle de perfil |
+| PUT | `/v1/perfiles/{id}` | Actualizar perfil |
+| DELETE | `/v1/perfiles/{id}` | Eliminar perfil |
+| POST | `/v1/perfiles/{id}/modulos` | Asignar módulos a perfil |
+| DELETE | `/v1/perfiles/{id}/modulos/{moduloId}` | Revocar módulo de perfil |
+| GET | `/v1/modulos` | Listar módulos |
+| GET | `/v1/conjuntos` | Listar conjuntos |
+| GET | `/v1/conjuntos/{id}` | Obtener conjunto por ID |
+| GET | `/v1/conjuntos/{id}/usuarios` | Usuarios de un conjunto |
+| POST | `/v1/conjuntos/{conjId}/usuarios/{usuarioId}/perfiles` | Asignar perfiles en conjunto |
+| DELETE | `/v1/conjuntos/{conjId}/usuarios/{usuarioId}/perfiles/{perfilId}` | Remover perfil en conjunto |
+| GET | `/v1/administradoras` | Listar administradoras |
+| GET | `/v1/administradoras/{id}` | Obtener administradora por ID |
+| GET | `/v1/administradoras/{id}/usuarios` | Usuarios de una administradora |
+| POST | `/v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles` | Asignar perfiles en administradora |
+| DELETE | `/v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles/{perfilId}` | Remover perfil en administradora |
+| GET | `/api/owners` | Listar propietarios (legacy) |
+| GET | `/api/owners/{id}` | Obtener propietario (legacy) |
+| POST | `/api/owners` | Crear propietario (legacy) |
+| PUT | `/api/owners/{id}` | Actualizar propietario (legacy) |
+| DELETE | `/api/owners/{id}` | Eliminar propietario (legacy) |
 
-#### POST /auth/login
+---
 
-Inicia sesión y obtiene token JWT.
+## 🔑 Endpoints de Autenticación
+
+### POST /v1/login
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Inicia sesión y retorna datos del usuario + contextos disponibles. El JWT se devuelve en el body y también se establece como cookie HttpOnly.
 
 **Request:**
 ```json
 {
-  "usuario": "jperez",
-  "clave": "password123"
+  "username": "admin",
+  "password": "QWRtaW4yMDI0IQ=="
 }
 ```
 
 **Response 200:**
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9...",
+  "type": "Bearer",
   "usuario": {
-    "id": 123,
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "usuario": "jperez"
-  },
-  "administradoras": [
-    { "id": 1, "nombre": "Inmobiliaria ABC" }
-  ],
-  "conjuntos": [
-    { "id": 5, "nombre": "Residencial Las Flores" }
-  ],
-  "perfiles": [
-    { "id": 3, "nombre": "A- Administrador" }
-  ]
-}
-```
-
-**Response 401:**
-```json
-{
-  "error": "Credenciales inválidas"
-}
-```
-
----
-
-#### POST /auth/logout
-
-Cierra la sesión del usuario.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response 200:**
-```json
-{
-  "message": "Sesión cerrada correctamente"
-}
-```
-
----
-
-#### POST /auth/refresh
-
-Renueva el token JWT.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response 200:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIs..."
-}
-```
-
----
-
-### Menú
-
-#### GET /menu
-
-Obtiene las opciones del menú según el perfil seleccionado.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Query Parameters:**
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| perfil_id | int | Sí | ID del perfil seleccionado |
-| conjunto_id | int | No | ID del conjunto (si aplica) |
-| administradora_id | int | No | ID de administradora (si aplica) |
-
-**Response 200:**
-```json
-{
-  "menu": [
-    {
-      "id": 1,
-      "nombre": "Super Admin",
-      "tipo": "A",
-      "estado": "A",
-      "modulo": null,
-      "submenus": [
-        {
-          "id": 3,
-          "nombre": "Modulo",
-          "tipo": "0",
-          "estado": "A",
-          "modulo": "Super-Admin",
-          "controlador": "ccontrolador",
-          "metodo": "index",
-          "submenus": []
-        },
-        {
-          "id": 4,
-          "nombre": "Acciones",
-          "tipo": "0",
-          "estado": "A",
-          "modulo": "Super-Admin",
-          "controlador": "ccontrolador",
-          "metodo": "index",
-          "submenus": []
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-### Invitaciones
-
-#### GET /invitaciones
-
-Lista todas las invitaciones según el contexto del usuario.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Query Parameters:**
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| estatus | string | Filtrar por estatus: A, V, U |
-| page | int | Número de página |
-| limit | int | Registros por página |
-
-**Response 200:**
-```json
-{
-  "data": [
-    {
-      "id": 1,
-      "uuid": "550e8400-e29b-41d4-a716-446655440000",
-      "email": "nuevo@usuario.com",
-      "fecha_creacion": "2024-09-01T10:00:00Z",
-      "fecha_vencimiento": "2024-09-08T10:00:00Z",
-      "estatus": "A",
-      "creado_por": "Juan Pérez"
-    }
-  ],
-  "total": 15,
-  "page": 1,
-  "limit": 25
-}
-```
-
----
-
-#### POST /invitaciones
-
-Crea una nueva invitación.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Request:**
-```json
-{
-  "email": "nuevo@usuario.com",
-  "tipo": "conjunto",
-  "dias_vigencia": 7,
-  "conjunto_id": 5,
-  "perfiles": [3, 4],
-  "propiedades": [101, 102]
-}
-```
-
-**Response 201:**
-```json
-{
-  "id": 1,
-  "uuid": "550e8400-e29b-41d4-a716-446655440000",
-  "email": "nuevo@usuario.com",
-  "link": "https://resimanager.com/invitacion/550e8400-e29b-41d4-a716-446655440000",
-  "fecha_vencimiento": "2024-09-08T10:00:00Z"
-}
-```
-
----
-
-#### GET /invitacion/{uuid}
-
-Obtiene los datos de una invitación para mostrar el formulario de registro.
-
-**Sin autenticación requerida**
-
-**Response 200:**
-```json
-{
-  "email": "nuevo@usuario.com",
-  "tipo": "conjunto",
-  "contexto": {
-    "conjunto": {
-      "id": 5,
-      "nombre": "Residencial Las Flores"
-    },
-    "perfiles": [
-      { "id": 3, "nombre": "Administrador" }
-    ],
-    "propiedades": [
-      { "id": 101, "codigo": "A-101" }
-    ]
-  }
-}
-```
-
-**Response 404:**
-```json
-{
-  "error": "Invitación no encontrada"
-}
-```
-
-**Response 410:**
-```json
-{
-  "error": "La invitación ha expirado"
-}
-```
-
----
-
-### Usuarios (Persona)
-
-#### GET /usuarios
-
-Lista usuarios según el contexto.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Query Parameters:**
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| search | string | Búsqueda por nombre/email |
-| estatus | string | Filtrar por estatus |
-| page | int | Número de página |
-| limit | int | Registros por página |
-
-**Response 200:**
-```json
-{
-  "data": [
-    {
-      "id": 123,
-      "documento": "V-12345678",
-      "nombre": "Juan",
-      "apellido": "Pérez",
-      "email": "juan@email.com",
-      "usuario": "jperez",
-      "estatus": "A",
-      "fecha_creacion": "2024-01-15T10:00:00Z"
-    }
-  ],
-  "total": 38,
-  "page": 1,
-  "limit": 25
-}
-```
-
----
-
-#### GET /usuarios/{id}
-
-Obtiene detalle de un usuario.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response 200:**
-```json
-{
-  "id": 123,
-  "documento": "V-12345678",
-  "tipo_documento": "V",
-  "nombre": "Juan",
-  "apellido": "Pérez",
-  "email": "juan@email.com",
-  "usuario": "jperez",
-  "telefono": "+58 412 1234567",
-  "direccion": "Av. Principal, Edif. A",
-  "estatus": "A",
-  "administradoras": [
-    { "id": 1, "nombre": "Inmobiliaria ABC" }
-  ],
-  "conjuntos": [
-    { "id": 5, "nombre": "Residencial Las Flores" }
-  ],
-  "perfiles": [
-    { "id": 3, "nombre": "Administrador", "contexto": "conjunto" }
-  ]
-}
-```
-
----
-
-#### POST /usuarios
-
-Crea un nuevo usuario (desde administrador, no desde invitación).
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Request:**
-```json
-{
-  "documento": "V-12345678",
-  "tipo_documento": "V",
-  "nombre": "Juan",
-  "apellido": "Pérez",
-  "email": "juan@email.com",
-  "usuario": "jperez",
-  "clave": "password123",
-  "telefono": "+58 412 1234567",
-  "direccion": "Av. Principal, Edif. A"
-}
-```
-
-**Response 201:**
-```json
-{
-  "id": 124,
-  "nombre": "Juan",
-  "apellido": "Pérez",
-  "usuario": "jperez"
-}
-```
-
----
-
-#### PUT /usuarios/{id}
-
-Actualiza un usuario existente.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Request:**
-```json
-{
-  "nombre": "Juan Carlos",
-  "telefono": "+58 412 7654321"
-}
-```
-
-**Response 200:**
-```json
-{
-  "id": 123,
-  "message": "Usuario actualizado correctamente"
-}
-```
-
----
-
-#### DELETE /usuarios/{id}
-
-Elimina (inactiva) un usuario.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response 200:**
-```json
-{
-  "message": "Usuario inactivado correctamente"
-}
-```
-
----
-
-### Conjuntos
-
-#### GET /conjuntos
-
-Lista conjuntos accesibles para el usuario.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response 200:**
-```json
-{
-  "data": [
-    {
-      "id": 5,
-      "documento": "J-123456789",
-      "nombre": "Residencial Las Flores",
-      "tipo": "R",
-      "direccion": "Urbanización Las Flores",
-      "estatus": "A",
-      "total_propiedades": 120,
-      "propietarios_activos": 95
-    }
-  ],
-  "total": 3
-}
-```
-
----
-
-#### GET /conjuntos/{id}
-
-Obtiene detalle de un conjunto.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response 200:**
-```json
-{
-  "id": 5,
-  "documento": "J-123456789",
-  "nombre": "Residencial Las Flores",
-  "tipo": "R",
-  "direccion": "Urbanización Las Flores",
-  "estatus": "A",
-  "clases_propiedad": [
-    { "id": 1, "nombre": "Apartamento Tipo A" },
-    { "id": 2, "nombre": "Apartamento Tipo B" }
-  ],
-  "administradora": {
     "id": 1,
-    "nombre": "Inmobiliaria ABC"
+    "usuario": "admin",
+    "nombre": "Super",
+    "apellido": "Admin",
+    "email": "admin@resimanager.com",
+    "documento": "ADMIN-001"
+  },
+  "contextosDisponibles": [
+    {
+      "tipo": "ADMINISTRADORA",
+      "administradora": { "id": 1, "nombre": "Inmobiliaria ABC", "documento": "J-12345678-9", "email": "contacto@inmobiliariaabc.com" },
+      "perfilesDisponibles": [{ "id": 1, "nombre": "Super Administrador", "descripcion": "Acceso total al sistema" }]
+    }
+  ]
+}
+```
+
+**Usuarios de Prueba:**
+| Usuario | Contraseña | Rol |
+|---------|-----------|-----|
+| admin | Admin2024! | Super Administrador |
+| cmartinez | Carlos2024! | Administrador General |
+| mrodriguez | Maria2024! | Administrador de Conjunto |
+| jperez | Juan2024! | Propietario |
+| agarcia | Ana2024! | Residente |
+| lgomez | Luis2024! | Multi-role |
+
+---
+
+### POST /v1/contexto/cambiar
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Cambia el contexto activo y genera un nuevo JWT (también actualiza la cookie HttpOnly).
+
+**Request:**
+```json
+{
+  "tipo": "ADMINISTRADORA",
+  "entidadId": 1,
+  "perfilId": 2
+}
+```
+
+**Response 200:**
+```json
+{
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9...",
+  "type": "Bearer",
+  "contexto": {
+    "tipo": "ADMINISTRADORA",
+    "entidadId": 1,
+    "entidadNombre": "Inmobiliaria ABC",
+    "perfilId": 2,
+    "perfilNombre": "Administrador General",
+    "perfilDescripcion": "Administrador de administradora"
   }
 }
 ```
 
 ---
 
-#### POST /conjuntos
+## 🔑 Endpoints de Menú
 
-Crea un nuevo conjunto.
+### GET /v1/menu/perfil
 
-**Headers:** `Authorization: Bearer <token>`
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
-**Request:**
-```json
-{
-  "documento": "J-987654321",
-  "nombre": "Centro Comercial Plaza",
-  "tipo": "C",
-  "direccion": "Av. Principal, Centro"
-}
+Obtiene el árbol de menú filtrado según el perfil activo.
+
+**Headers:**
+```
+X-Perfil-Id: <perfil_id>
 ```
 
-**Response 201:**
+**Response 200:**
 ```json
-{
-  "id": 10,
-  "nombre": "Centro Comercial Plaza"
-}
+[
+  { "itemId": 1, "nombre": "Dashboard", "tipo": "O", "idPadre": 0, "orden": 1, "controlador": "dashboard", "metodo": "index", "submenus": [] },
+  { "itemId": 2, "nombre": "Configuracion", "tipo": "A", "idPadre": 0, "orden": 2, "submenus": [...] }
+]
 ```
 
 ---
 
-#### PUT /conjuntos/{id}
+## 🔑 CRUD Usuarios
 
-Actualiza un conjunto.
+### GET /v1/usuarios
 
-**Headers:** `Authorization: Bearer <token>`
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
----
-
-#### DELETE /conjuntos/{id}
-
-Inactiva un conjunto.
-
-**Headers:** `Authorization: Bearer <token>`
-
----
-
-### Propiedades
-
-#### GET /conjuntos/{conjunto_id}/propiedades
-
-Lista propiedades de un conjunto.
-
-**Headers:** `Authorization: Bearer <token>`
+Lista usuarios con filtros opcionales y paginación.
 
 **Query Parameters:**
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| search | string | Búsqueda por código |
-| clase_id | int | Filtrar por clase de propiedad |
-| estatus | string | Filtrar por estatus |
+- `estatus` (opcional) - Filtrar por A/I
+- `search` (opcional) - Búsqueda por nombre, documento o email
+- `page` (default: 1)
+- `limit` (default: 50)
 
 **Response 200:**
 ```json
 {
   "data": [
-    {
-      "id": 101,
-      "codigo": "A-101",
-      "piso": "1",
-      "mt2": 85.50,
-      "clase": "Apartamento Tipo A",
-      "estatus": "A",
-      "propietarios": [
-        { "id": 123, "nombre": "Juan Pérez", "tipo": "P" }
-      ]
-    }
+    { "id": 1, "documento": "ADMIN-001", "nombre": "Super", "apellido": "Admin", "email": "admin@resimanager.com", "telefono": null, "usuario": "admin", "estatus": "A" }
   ],
-  "total": 120
+  "total": 1,
+  "page": 1,
+  "limit": 50
 }
 ```
 
----
+### GET /v1/usuarios/{id}
 
-#### POST /conjuntos/{conjunto_id}/propiedades
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
-Crea una nueva propiedad.
+Obtiene un usuario por ID.
 
-**Headers:** `Authorization: Bearer <token>`
+### PUT /v1/usuarios/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Actualiza datos de un usuario (nombre, apellido, email, teléfono, estatus).
 
 **Request:**
 ```json
 {
-  "codigo": "A-102",
-  "piso": "1",
-  "mt2": 85.50,
-  "clase_id": 1
+  "nombre": "Super",
+  "apellido": "Admin",
+  "email": "admin@resimanager.com",
+  "telefono": "+584121234567",
+  "estatus": "A"
 }
 ```
 
----
+### DELETE /v1/usuarios/{id}
 
-#### PUT /propiedades/{id}
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
-Actualiza una propiedad.
+Inactiva un usuario (soft-delete, cambia estatus a 'I').
 
-**Headers:** `Authorization: Bearer <token>`
+### GET /v1/usuarios/{id}/perfiles
 
----
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
-#### POST /propiedades/{id}/propietarios
-
-Asigna propietario a una propiedad.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Request:**
-```json
-{
-  "persona_id": 123,
-  "tipo": "P",
-  "pct_participacion": 100,
-  "fecha_desde": "2024-01-01"
-}
-```
-
----
-
-#### DELETE /propiedades/{id}/propietarios/{persona_id}
-
-Desvincula propietario de una propiedad.
-
-**Headers:** `Authorization: Bearer <token>`
-
----
-
-### Perfiles
-
-#### GET /perfiles
-
-Lista perfiles según contexto.
-
-**Headers:** `Authorization: Bearer <token>`
+Obtiene los perfiles del usuario agrupados por contexto (Administradora/Conjunto).
 
 **Response 200:**
 ```json
 {
-  "data": [
+  "persona": { "id": 1, "nombre": "Super", "apellido": "Admin", "email": "admin@resimanager.com", "estatus": "A" },
+  "contextos": [
     {
-      "id": 3,
-      "nombre": "Administrador Conjunto",
-      "descripcion": "Acceso total al conjunto",
-      "estatus": "A",
-      "usuarios_asignados": 5
+      "tipo": "ADMINISTRADORA",
+      "entidad": { "id": 1, "nombre": "Inmobiliaria ABC" },
+      "perfiles": [ { "id": 1, "nombre": "Super Administrador" } ]
     }
   ]
 }
@@ -622,35 +266,207 @@ Lista perfiles según contexto.
 
 ---
 
-#### POST /perfiles
+## 🔑 CRUD Perfiles
+
+### GET /v1/perfiles
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Lista perfiles con filtros (estatus, nivel, search) y paginación.
+
+**Query Parameters:**
+- `estatus` (opcional) - A/I
+- `nivel` (opcional) - 0 (Super Admin), 1 (Admin General), 2 (Admin Conjunto), 3 (Propietario/Residente)
+- `search` (opcional) - Búsqueda por nombre o descripción
+- `page` (default: 1)
+- `limit` (default: 25)
+
+**Response 200:**
+```json
+{
+  "data": [
+    { "id": 1, "nombre": "Super Administrador", "descripcion": "Acceso total al sistema", "estatus": "A", "nivel": 0, "fechaCreacion": "2026-01-01T00:00:00", "usuariosAsignados": 1 }
+  ],
+  "total": 5,
+  "page": 1,
+  "limit": 25
+}
+```
+
+### POST /v1/perfiles
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
 Crea un nuevo perfil.
-
-**Headers:** `Authorization: Bearer <token>`
 
 **Request:**
 ```json
 {
   "nombre": "Contador",
   "descripcion": "Acceso a módulos financieros",
-  "permisos": [
-    { "modulo_id": 1, "opcion_id": 1, "accion_id": 4 },
-    { "modulo_id": 2, "opcion_id": 3, "accion_id": 1 }
-  ]
+  "nivel": 2
 }
+```
+
+### GET /v1/perfiles/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Obtiene detalle completo: info básica + módulos asignados + permisos + usuarios asignados.
+
+### PUT /v1/perfiles/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Actualiza datos del perfil (nombre, descripción, estatus, nivel).
+
+### DELETE /v1/perfiles/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Inactiva un perfil (soft-delete).
+
+### POST /v1/perfiles/{id}/modulos
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Asigna módulos a un perfil.
+
+**Request:**
+```json
+{
+  "modulos": [1, 2, 3]
+}
+```
+
+### DELETE /v1/perfiles/{id}/modulos/{moduloId}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Revoca un módulo específico de un perfil (soft-delete).
+
+---
+
+## 🔑 Módulos
+
+### GET /v1/modulos
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Lista módulos del sistema.
+
+**Query Parameters:**
+- `nivel` (opcional) - Filtrar por nivel (0-4)
+
+**Response 200:**
+```json
+[
+  { "id": 1, "nombre": "Dashboard", "descripcion": "...", "nivel": 0 },
+  { "id": 2, "nombre": "Administradoras", "descripcion": "...", "nivel": 0 }
+]
 ```
 
 ---
 
-#### PUT /perfiles/{id}
+## 🔑 CRUD Conjuntos
 
-Actualiza un perfil y sus permisos.
+### GET /v1/conjuntos
 
-**Headers:** `Authorization: Bearer <token>`
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Lista conjuntos con filtros (estatus, search) y paginación.
+
+### GET /v1/conjuntos/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Obtiene datos básicos de un conjunto.
+
+### GET /v1/conjuntos/{id}/usuarios
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Obtiene los usuarios del conjunto con sus perfiles asignados.
+
+### POST /v1/conjuntos/{conjId}/usuarios/{usuarioId}/perfiles
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Asigna perfiles a un usuario dentro del conjunto.
+
+### DELETE /v1/conjuntos/{conjId}/usuarios/{usuarioId}/perfiles/{perfilId}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Remueve un perfil de un usuario en el conjunto (soft-delete).
 
 ---
 
-## Códigos de Error
+## 🔑 CRUD Administradoras
+
+### GET /v1/administradoras
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Lista administradoras con filtros (estatus, search) y paginación.
+
+### GET /v1/administradoras/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Obtiene datos básicos de una administradora.
+
+### GET /v1/administradoras/{id}/usuarios
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Obtiene los usuarios de la administradora con sus perfiles asignados.
+
+### POST /v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Asigna perfiles a un usuario dentro de la administradora.
+
+### DELETE /v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles/{perfilId}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Remueve un perfil de un usuario en la administradora (soft-delete).
+
+---
+
+## 🔑 PROPIETARIOS (Legacy - /api/owners)
+
+**Estado:** ⚠️ Legacy (ruta antigua, no migrada a /v1)
+
+CRUD completo en `/api/owners` con paginación. Pendiente de migrar a `/v1/propietarios`.
+
+---
+
+## ❌ Endpoints Pendientes de Implementar
+
+### PROPIEDADES (/v1/propiedades)
+- ❌ POST - Crear propiedad
+- ❌ GET - Listar propiedades
+- ❌ GET /{id} - Obtener propiedad
+- ❌ PUT /{id} - Actualizar propiedad
+- ❌ DELETE /{id} - Eliminar propiedad
+
+### INVITACIONES (/v1/invitaciones)
+- ❌ POST - Crear invitación
+- ❌ GET - Listar invitaciones
+- ❌ GET /{uuid} - Obtener invitación por UUID
+- ❌ PUT /{id} - Actualizar invitación
+- ❌ DELETE /{id} - Eliminar invitación
+
+### AUDITORÍA
+- ❌ Tabla `log_operacion` con campos de auditoría
+- ❌ Triggers para registro automático de operaciones
+
+---
+
+## 📊 Códigos de Error
 
 | Código | Descripción |
 |--------|-------------|
@@ -662,67 +478,34 @@ Actualiza un perfil y sus permisos.
 | 403 | Forbidden - Sin permisos |
 | 404 | Not Found - Recurso no encontrado |
 | 409 | Conflict - Conflicto (ej: duplicado) |
-| 410 | Gone - Recurso expirado |
 | 422 | Unprocessable Entity - Validación fallida |
-| 500 | Internal Server Error - Error del servidor |
+| 500 | Internal Server Error |
 
-## Formato de Errores
+---
 
-```json
-{
-  "error": "ValidationError",
-  "message": "Los datos proporcionados no son válidos",
-  "details": [
-    {
-      "field": "email",
-      "message": "El email no tiene un formato válido"
-    },
-    {
-      "field": "documento",
-      "message": "El documento ya está registrado"
-    }
-  ]
-}
+## 📝 Notas Importantes
+
+### Contraseñas en Base64
+```bash
+echo -n "Admin2024!" | base64
+# Resultado: QWRtaW4yMDI0IQ==
 ```
 
-## Paginación
+### Cookie HttpOnly
+El JWT se almacena en una cookie `jwt` con las siguientes características:
+- `HttpOnly` - No accesible desde JavaScript
+- `Secure` - Solo en HTTPS (configurable para desarrollo local)
+- `SameSite` - Lax (dev) / None (producción)
+- `MaxAge` - 24 horas
 
-Parámetros estándar:
+### Contexto Multi-tenant
+Después del login, el usuario debe cambiar de contexto mediante `/v1/contexto/cambiar`. El nuevo token incluye los claims del contexto activo.
 
-| Parámetro | Default | Máximo |
-|-----------|---------|--------|
-| page | 1 | - |
-| limit | 25 | 100 |
+### Paginación
+Todos los endpoints de listado usan el mismo formato:
+- Parámetros: `page` (default 1), `limit` (default 25-50 según endpoint)
+- Respuesta: `{ data: [...], total: N, page: N, limit: N }`
 
-Respuesta:
+---
 
-```json
-{
-  "data": [...],
-  "total": 150,
-  "page": 1,
-  "limit": 25,
-  "total_pages": 6
-}
-```
-
-## Filtros y Búsqueda
-
-### Búsqueda genérica
-
-```
-GET /usuarios?search=juan
-```
-
-### Filtros específicos
-
-```
-GET /propiedades?estatus=A&clase_id=1
-```
-
-### Ordenamiento
-
-```
-GET /usuarios?sort=nombre&order=asc
-GET /propiedades?sort=codigo&order=desc
-```
+**Documento actualizado:** 09 de Mayo de 2026
