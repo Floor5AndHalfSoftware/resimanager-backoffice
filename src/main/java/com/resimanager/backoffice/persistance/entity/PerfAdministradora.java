@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "PerfAdministradora")
+@Table(name = "\"PerfAdministradora\"")
 public class PerfAdministradora {
     @EmbeddedId
     private PerfAdministradoraId id;
@@ -28,46 +28,46 @@ public class PerfAdministradora {
     @MapsId("pfaPrfid")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PFA_PrfID", nullable = false)
+    @JoinColumn(name = "pfa_prf_id", nullable = false)
     private Perfil pfaPrfid;
 
     @NotNull
-    @Column(name = "PFAID", nullable = false)
+    @Column(name = "pfaid", nullable = false)
     private Integer pfaid;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "PFASts", nullable = false, length = 1)
+    @Column(name = "pfa_sts", nullable = false, length = 1)
     private String pFASts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PFA_UsrCrea", nullable = false)
+    @JoinColumn(name = "pfa_usr_crea", nullable = false)
     private Persona pfaUsrcrea;
 
     @NotNull
-    @Column(name = "PFAFchHorCrea", nullable = false)
+    @Column(name = "pfa_fch_hor_crea", nullable = false)
     private OffsetDateTime pFAFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PFAEstCrea", nullable = false, length = 40)
+    @Column(name = "pfa_est_crea", nullable = false, length = 40)
     private String pFAEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PFA_UsrMod", nullable = false)
+    @JoinColumn(name = "pfa_usr_mod", nullable = false)
     private Persona pfaUsrmod;
 
     @NotNull
-    @Column(name = "PFAFchHorMod", nullable = false)
+    @Column(name = "pfa_fch_hor_mod", nullable = false)
     private OffsetDateTime pFAFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PFAEstMod", nullable = false, length = 40)
+    @Column(name = "pfa_est_mod", nullable = false, length = 40)
     private String pFAEstMod;
 
 }

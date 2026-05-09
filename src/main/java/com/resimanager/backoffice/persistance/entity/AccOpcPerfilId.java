@@ -16,19 +16,19 @@ import java.util.Objects;
 public class AccOpcPerfilId implements Serializable {
     private static final long serialVersionUID = -5006547744321359266L;
     @NotNull
-    @Column(name = "AOP_PrfID", nullable = false)
+    @Column(name = "aop_prf_id", nullable = false)
     private Integer aopPrfid;
 
     @NotNull
-    @Column(name = "AOP_ModID", nullable = false)
+    @Column(name = "aop_mod_id", nullable = false)
     private Integer aopModid;
 
     @NotNull
-    @Column(name = "AOP_OpcID", nullable = false)
+    @Column(name = "aop_opc_id", nullable = false)
     private Integer aopOpcid;
 
     @NotNull
-    @Column(name = "AOP_AccID", nullable = false)
+    @Column(name = "aop_acc_id", nullable = false)
     private Integer aopAccid;
 
     @Override

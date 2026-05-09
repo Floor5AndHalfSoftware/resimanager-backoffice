@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "Propietario")
+@Table(name = "\"Propietario\"")
 public class Propietario {
     @EmbeddedId
     private PropietarioId id;

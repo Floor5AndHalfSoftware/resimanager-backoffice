@@ -16,11 +16,11 @@ import java.util.Objects;
 public class PersConjuntoId implements Serializable {
     private static final long serialVersionUID = -8936907586810601808L;
     @NotNull
-    @Column(name = "PC_ConjID", nullable = false)
+    @Column(name = "pc_conj_id", nullable = false)
     private Integer pcConjid;
 
     @NotNull
-    @Column(name = "PC_PerID", nullable = false)
+    @Column(name = "pc_per_id", nullable = false)
     private Integer pcPerid;
 
     @Override

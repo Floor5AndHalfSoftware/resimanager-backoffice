@@ -16,11 +16,11 @@ import java.util.Objects;
 public class PersAdministradoraId implements Serializable {
     private static final long serialVersionUID = -7614469060147355624L;
     @NotNull
-    @Column(name = "PA_AdmID", nullable = false)
+    @Column(name = "pa_adm_id", nullable = false)
     private Integer paAdmid;
 
     @NotNull
-    @Column(name = "PA_PerID", nullable = false)
+    @Column(name = "pa_per_id", nullable = false)
     private Integer paPerid;
 
     @Override

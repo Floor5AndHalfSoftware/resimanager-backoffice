@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 @Builder
@@ -14,5 +16,7 @@ import lombok.NoArgsConstructor;
 public class LoginResponseJson {
     private String type;
     private String token;
-
+    private UserInfoDTO usuario;
+    private List<ContextoDTO> contextosDisponibles;
 }
+

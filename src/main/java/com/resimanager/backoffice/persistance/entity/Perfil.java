@@ -21,55 +21,59 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "Perfil")
+@Table(name = "\"Perfil\"")
 public class Perfil {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "PrfID", nullable = false)
+    @Column(name = "prfid", nullable = false)
     private Integer id;
 
     @Size(max = 80)
     @NotNull
-    @Column(name = "PrfNombre", nullable = false, length = 80)
+    @Column(name = "prf_nombre", nullable = false, length = 80)
     private String prfNombre;
 
     @Size(max = 120)
-    @Column(name = "PrfDescrip", length = 120)
+    @Column(name = "prf_descrip", length = 120)
     private String prfDescrip;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "PrfSts", nullable = false, length = 1)
+    @Column(name = "prf_sts", nullable = false, length = 1)
     private String prfSts;
+
+    @NotNull
+    @Column(name = "prf_nivel", nullable = false)
+    private Integer prfNivel;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Prf_UsrCrea", nullable = false)
+    @JoinColumn(name = "prf_usr_crea", nullable = false)
     private Persona prfUsrcrea;
 
     @NotNull
-    @Column(name = "PrfFchHorCrea", nullable = false)
+    @Column(name = "prf_fch_hor_crea", nullable = false)
     private OffsetDateTime prfFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PrfEstCrea", nullable = false, length = 40)
+    @Column(name = "prf_est_crea", nullable = false, length = 40)
     private String prfEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Prf_UsrMod", nullable = false)
+    @JoinColumn(name = "prf_usr_mod", nullable = false)
     private Persona prfUsrmod;
 
     @NotNull
-    @Column(name = "PrfFchHorMod", nullable = false)
+    @Column(name = "prf_fch_hor_mod", nullable = false)
     private OffsetDateTime prfFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PrfEstMod", nullable = false, length = 40)
+    @Column(name = "prf_est_mod", nullable = false, length = 40)
     private String prfEstMod;
 
 }

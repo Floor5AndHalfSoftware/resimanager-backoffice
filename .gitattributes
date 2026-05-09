@@ -1,0 +1,42 @@
+# Enforce consistent line endings across the repo
+
+# Default: use LF in working directory for all text files
+* text=auto eol=lf
+
+# Windows batch scripts should keep CRLF in working directory
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Common script and source files
+*.sh text eol=lf
+*.java text eol=lf
+*.kt text eol=lf
+*.groovy text eol=lf
+*.pom text eol=lf
+*.properties text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.sql text eol=lf
+
+# Binary files: no EOL normalization
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.jar binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.rar binary
+*.7z binary
+*.exe binary
+*.dll binary
+*.so binary
+*.a binary
+*.class binary

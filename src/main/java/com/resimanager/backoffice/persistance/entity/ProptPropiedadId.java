@@ -16,15 +16,15 @@ import java.util.Objects;
 public class ProptPropiedadId implements Serializable {
     private static final long serialVersionUID = -2780907301203063122L;
     @NotNull
-    @Column(name = "PP_PpdID", nullable = false)
+    @Column(name = "prpt_pp_id", nullable = false)
     private Integer ppPpdid;
 
     @NotNull
-    @Column(name = "PP_ConjID", nullable = false)
+    @Column(name = "prpt_conj_id", nullable = false)
     private Integer ppConjid;
 
     @NotNull
-    @Column(name = "PP_PerID", nullable = false)
+    @Column(name = "prpt_per_id", nullable = false)
     private Integer ppPerid;
 
     @Override

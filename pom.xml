@@ -19,6 +19,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.3.0</version>
@@ -51,27 +55,22 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>2.1.210</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-            <version>1.4.8</version>
+            <version>2.3.232</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -92,13 +91,26 @@
         <dependency>
             <groupId>io.github.classgraph</groupId>
             <artifactId>classgraph</artifactId>
-            <version>4.8.104</version>
+            <version>4.8.177</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>1.5.3.Final</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.7</version>
+        </dependency>
+        <!-- Spring Dotenv for loading .env files -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
     </dependencies>
 
     <dependencyManagement>
@@ -161,18 +173,24 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!-- Flyway Plugin - Only for manual execution -->
+            <!-- Run manually with: mvn flyway:migrate -->
+            <!-- Automatic migrations are handled by Spring Boot on startup -->
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>9.0.0</version>
                 <configuration>
-                    <url>jdbc:h2:mem:demo_db</url>
-                    <user>root</user>
-                    <password>12345</password>
+                    <url>${env.DB_URL}</url>
+                    <driver>${env.DB_DRIVER}</driver>
+                    <user>${env.DB_USERNAME}</user>
+                    <password>${env.DB_PASSWORD}</password>
                     <locations>
                         <location>filesystem:src/main/resources/migrations</location>
                     </locations>
                 </configuration>
+                <!-- Executions commented out - Flyway runs automatically with Spring Boot -->
+                <!--
                 <executions>
                     <execution>
                         <phase>validate</phase>
@@ -181,6 +199,7 @@
                         </goals>
                     </execution>
                 </executions>
+                -->
             </plugin>
         </plugins>
     </build>

@@ -1,11 +1,16 @@
 package com.resimanager.backoffice.service;
 
+import com.resimanager.backoffice.dto.ContextoActualDTO;
+import com.resimanager.backoffice.dto.UserInfoDTO;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.stream.Collectors;
@@ -17,6 +22,17 @@ import static com.resimanager.backoffice.utils.Constants.TOKEN_EXPIRATION_TIME_I
 @Component
 public class JwtService {
 
+    private static SecretKey getSigningKey() {
+        try {
+            // Generar una clave de 64 bytes usando SHA-512
+            MessageDigest digest = MessageDigest.getInstance("SHA-512");
+            byte[] hash = digest.digest(SUPER_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+            return Keys.hmacShaKeyFor(hash);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating signing key", e);
+        }
+    }
+
     public String generateToken(Authentication auth) {
         var cal = Calendar.getInstance();
         cal.setTime(new Date());
@@ -24,15 +40,67 @@ public class JwtService {
 
         return buildToken(auth, cal);
     }
+    
+    public String generateTokenWithUserInfo(Authentication auth, UserInfoDTO userInfo) {
+        var cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + TOKEN_EXPIRATION_TIME_IN_MINUTES);
+
+        return buildTokenWithUserInfo(auth, userInfo, null, cal);
+    }
+    
+    public String generateTokenWithContext(Authentication auth, UserInfoDTO userInfo, ContextoActualDTO contexto) {
+        var cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + TOKEN_EXPIRATION_TIME_IN_MINUTES);
+
+        return buildTokenWithUserInfo(auth, userInfo, contexto, cal);
+    }
 
     private static String buildToken(Authentication auth, Calendar cal) {
+        SecretKey key = getSigningKey();
         var preToken = Jwts.builder()
-                .setIssuedAt(new Date())
-                .setIssuer(ISSUER_INFO)
-                .setSubject(auth.getName())
-                .setExpiration(cal.getTime())
-                .signWith(SignatureAlgorithm.HS512, SUPER_SECRET_KEY.getBytes());
+                .issuedAt(new Date())
+                .issuer(ISSUER_INFO)
+                .subject(auth.getName())
+                .expiration(cal.getTime())
+                .signWith(key);
         preToken.claim("roles", auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
+        return preToken.compact();
+    }
+    
+    private static String buildTokenWithUserInfo(Authentication auth, UserInfoDTO userInfo, ContextoActualDTO contexto, Calendar cal) {
+        SecretKey key = getSigningKey();
+        var preToken = Jwts.builder()
+                .issuedAt(new Date())
+                .issuer(ISSUER_INFO)
+                .subject(auth.getName())
+                .expiration(cal.getTime())
+                .signWith(key);
+        
+        // Add roles
+        preToken.claim("roles", auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()));
+        
+        // Add user info
+        if (userInfo != null) {
+            preToken.claim("userId", userInfo.getId());
+            preToken.claim("nombre", userInfo.getNombre());
+            preToken.claim("apellido", userInfo.getApellido());
+            preToken.claim("email", userInfo.getEmail());
+            preToken.claim("documento", userInfo.getDocumento());
+        }
+        
+        // Add context info
+        if (contexto != null) {
+            preToken.claim("contextoTipo", contexto.getTipo());
+            preToken.claim("contextoEntidadId", contexto.getEntidadId());
+            preToken.claim("contextoEntidadNombre", contexto.getEntidadNombre());
+            preToken.claim("contextoPerfilId", contexto.getPerfilId());
+            preToken.claim("contextoPerfilNombre", contexto.getPerfilNombre());
+        }
+        
         return preToken.compact();
     }
 }

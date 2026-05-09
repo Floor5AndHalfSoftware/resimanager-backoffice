@@ -32,12 +32,25 @@ public class SimpleCORSFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) req;
         final HttpServletResponse response = (HttpServletResponse) res;
 
-        response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+        // Configurar CORS headers
+        String origin = request.getHeader("Origin");
+        if (origin == null) {
+            origin = "*";
+        }
+        response.setHeader("Access-Control-Allow-Origin", origin);
         response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT, PATCH");
+        response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT, PATCH, HEAD");
         response.setHeader("Access-Control-Max-Age", "3600");
-        response.setHeader("Access-Control-Allow-Headers", "Authorization,Content-Type, Accept, X-Requested-With, remember-me");
-        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition, Authorization");
+        response.setHeader("Access-Control-Allow-Headers", 
+            "Authorization, Content-Type, Accept, X-Requested-With, remember-me, X-XSRF-TOKEN, Cache-Control, Pragma, X-Perfil-Id");
+        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition, Authorization, X-Perfil-Id");
+
+        // Handle preflight OPTIONS requests
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+
         chain.doFilter(req, res);
     }
 

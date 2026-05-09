@@ -21,61 +21,61 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "Menu")
+@Table(name = "\"Menu\"")
 public class Menu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "MenuID", nullable = false)
+    @Column(name = "menuid", nullable = false)
     private Integer id;
 
     @Size(max = 80)
     @NotNull
-    @Column(name = "MenuNombre", nullable = false, length = 80)
+    @Column(name = "menu_nombre", nullable = false, length = 80)
     private String menuNombre;
 
     @Size(max = 120)
     @NotNull
-    @Column(name = "MenuDescrip", nullable = false, length = 120)
+    @Column(name = "menu_descrip", nullable = false, length = 120)
     private String menuDescrip;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "MenuSts", nullable = false, length = 1)
+    @Column(name = "menu_sts", nullable = false, length = 1)
     private String menuSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Menu_UsrCrea", nullable = false)
+    @JoinColumn(name = "menu_usr_crea", nullable = false)
     private Persona menuUsrcrea;
 
     @NotNull
-    @Column(name = "MenuFchHorCrea", nullable = false)
+    @Column(name = "menu_fch_hor_crea", nullable = false)
     private OffsetDateTime menuFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "MenuEstCrea", nullable = false, length = 40)
+    @Column(name = "menu_est_crea", nullable = false, length = 40)
     private String menuEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Menu_UsrMod", nullable = false)
+    @JoinColumn(name = "menu_usr_mod", nullable = false)
     private Persona menuUsrmod;
 
     @NotNull
-    @Column(name = "MenuFchHorMod", nullable = false)
+    @Column(name = "menu_fch_hor_mod", nullable = false)
     private OffsetDateTime menuFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "MenuEstMod", nullable = false, length = 40)
+    @Column(name = "menu_est_mod", nullable = false, length = 40)
     private String menuEstMod;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "MenuPosicion", nullable = false, length = 1)
+    @Column(name = "menu_posicion", nullable = false, length = 1)
     private String menuPosicion;
 
 }
