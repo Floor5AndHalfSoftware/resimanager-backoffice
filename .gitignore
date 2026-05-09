@@ -184,6 +184,7 @@ modules.xml
 
 # Log file
 *.log
+logs/
 
 # BlueJ files
 *.ctxt
@@ -211,3 +212,6 @@ hs_err_pid*
 
 ### Extras ###
 *.attach*
+pom.xml
+src/main/resources/application-local.yml
+src/main/java/com/resimanager/backoffice/config/security/SecurityConfig.java

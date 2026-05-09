@@ -1,5 +1,6 @@
 package com.resimanager.backoffice.config.security.provider;
 
+import com.resimanager.backoffice.exception.ServiceException;
 import com.resimanager.backoffice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -72,7 +73,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 throw new BadCredentialsException("Number of possible attempts reached!");
             }
         } else {
-            throw new UsernameNotFoundException("User not found!");
+            throw new ServiceException("User not found!", 404);
         }
     }
 

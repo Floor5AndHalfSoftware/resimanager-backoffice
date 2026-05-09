@@ -16,11 +16,11 @@ import java.util.Objects;
 public class ModPerfilId implements Serializable {
     private static final long serialVersionUID = -531869305143932259L;
     @NotNull
-    @Column(name = "MP_PrfID", nullable = false)
+    @Column(name = "mp_prf_id", nullable = false)
     private Integer mpPrfid;
 
     @NotNull
-    @Column(name = "MP_ModID", nullable = false)
+    @Column(name = "mp_mod_id", nullable = false)
     private Integer mpModid;
 
     @Override

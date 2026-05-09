@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "PerfConjunto")
+@Table(name = "\"PerfConjunto\"")
 public class PerfConjunto {
     @EmbeddedId
     private PerfConjuntoId id;
@@ -28,46 +28,46 @@ public class PerfConjunto {
     @MapsId("pfcPrfid")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PFC_PrfID", nullable = false)
+    @JoinColumn(name = "pfc_prf_id", nullable = false)
     private Perfil pfcPrfid;
 
     @NotNull
-    @Column(name = "PFCID", nullable = false)
+    @Column(name = "pfcid", nullable = false)
     private Integer pfcid;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "PFCSts", nullable = false, length = 1)
+    @Column(name = "pfc_sts", nullable = false, length = 1)
     private String pFCSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PFC_UsrCrea", nullable = false)
+    @JoinColumn(name = "pfc_usr_crea", nullable = false)
     private Persona pfcUsrcrea;
 
     @NotNull
-    @Column(name = "PFCFchHorCrea", nullable = false)
+    @Column(name = "pfc_fch_hor_crea", nullable = false)
     private OffsetDateTime pFCFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PFCEstCrea", nullable = false, length = 40)
+    @Column(name = "pfc_est_crea", nullable = false, length = 40)
     private String pFCEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PFC_UsrMod", nullable = false)
+    @JoinColumn(name = "pfc_usr_mod", nullable = false)
     private Persona pfcUsrmod;
 
     @NotNull
-    @Column(name = "PFCFchHorMod", nullable = false)
+    @Column(name = "pfc_fch_hor_mod", nullable = false)
     private OffsetDateTime pFCFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PFCEstMod", nullable = false, length = 40)
+    @Column(name = "pfc_est_mod", nullable = false, length = 40)
     private String pFCEstMod;
 
 }

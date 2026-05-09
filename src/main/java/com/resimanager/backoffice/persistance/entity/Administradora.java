@@ -16,77 +16,73 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "Administradora")
+@Table(name = "\"Administradora\"")
 public class Administradora {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "AdmID", nullable = false)
+    @Column(name = "admid", nullable = false)
     private Integer id;
 
-    @Size(max = 20)
-    @NotNull
-    @Column(name = "AdmDocIdent", nullable = false, length = 20)
+    @Size(max = 50)
+    @Column(name = "adm_doc_ident", length = 50)
     private String admDocIdent;
 
-    @Size(max = 80)
-    @NotNull
-    @Column(name = "AdmNombre", nullable = false, length = 80)
+    @Size(max = 250)
+    @Column(name = "adm_nombre", length = 250)
     private String admNombre;
 
     @Size(max = 15)
-    @NotNull
-    @Column(name = "AdmTelefono", nullable = false, length = 15)
+    @Column(name = "adm_telefono", length = 15)
     private String admTelefono;
 
-    @Size(max = 80)
-    @NotNull
-    @Column(name = "AdmEMail", nullable = false, length = 80)
+    @Size(max = 250)
+    @Column(name = "adm_email", length = 250)
     private String admEMail;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Adm_PersContacto", nullable = false)
-    private Persona admPerscontacto;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "AdmSts", nullable = false, length = 1)
+    @Column(name = "adm_sts", nullable = false, length = 1)
     private String admSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Adm_UsrCrea", nullable = false)
-    private Persona admUsrcrea;
+    @JoinColumn(name = "adm_pers_contacto", nullable = false)
+    private Persona admPersContacto;
 
     @NotNull
-    @Column(name = "AdmFchHorCrea", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "adm_usr_crea", nullable = false)
+    private Persona admUsrCrea;
+
+    @NotNull
+    @Column(name = "adm_fch_hor_crea", nullable = false)
     private OffsetDateTime admFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "AdmEstCrea", nullable = false, length = 40)
+    @Column(name = "adm_est_crea", nullable = false, length = 40)
     private String admEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Adm_UsrMod", nullable = false)
-    private Persona admUsrmod;
+    @JoinColumn(name = "adm_usr_mod", nullable = false)
+    private Persona admUsrMod;
 
     @NotNull
-    @Column(name = "AdmFchHorMod", nullable = false)
+    @Column(name = "adm_fch_hor_mod", nullable = false)
     private OffsetDateTime admFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "AdmEstMod", nullable = false, length = 40)
+    @Column(name = "adm_est_mod", nullable = false, length = 40)
     private String admEstMod;
 
 }

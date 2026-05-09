@@ -1,5 +1,103 @@
 server:
-  port: 5000
+  port: ${SERVER_PORT}
+
+info:
+  app:
+    name: ResiManager Backoffice
+    description: Sistema de gestión de condominios
+    version: 1.0-SNAPSHOT
+    encoding: UTF-8
+    java-version: 21
+
+app:
+  api:
+    base-url: ${API_BASE_URL:http://localhost:8080}
+  security:
+    cookie-secure: ${SECURITY_COOKIE_SECURE:true}
+
 spring:
   profiles:
-    active: local
+    active: ${SPRING_PROFILES_ACTIVE}
+  
+  jackson:
+    default-property-inclusion: NON_NULL
+  
+  banner:
+    location: classpath:banner.txt
+  
+  datasource:
+    driverClassName: ${DB_DRIVER}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO}
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    generate-ddl: false
+    open-in-view: false
+    database-platform: ${JPA_DIALECT}
+    show-sql: ${JPA_SHOW_SQL}
+  
+  sql:
+    init:
+      mode: ${SQL_INIT_MODE}
+  
+  flyway:
+    enabled: ${FLYWAY_ENABLED}
+    locations: classpath:migrations
+    baseline-on-migrate: true
+    baseline-version: 0
+    clean-on-validation-error: false
+    out-of-order: false
+    postgresql:
+      transactional-lock: false
+  
+  web:
+    resources:
+      add-mappings: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    try-it-out-enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+    docExpansion: none
+    displayRequestDuration: true
+    showExtensions: true
+    showCommonExtensions: true
+  show-actuator: true
+  use-management-port: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers,flyway,beans
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+logging:
+  level:
+    com.resimanager.backoffice: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG

@@ -21,79 +21,79 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "Persona")
+@Table(name = "\"Persona\"")
 public class Persona {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "PerID", nullable = false)
+    @Column(name = "perid", nullable = false)
     private Integer id;
 
     @Size(max = 20)
     @NotNull
-    @Column(name = "PerDocIdent", nullable = false, length = 20)
+    @Column(name = "per_doc_ident", nullable = false, length = 20)
     private String perDocIdent;
 
     @Size(max = 80)
     @NotNull
-    @Column(name = "PerNombre", nullable = false, length = 80)
+    @Column(name = "per_nombre", nullable = false, length = 80)
     private String perNombre;
 
     @Size(max = 80)
     @NotNull
-    @Column(name = "PerApellido", nullable = false, length = 80)
+    @Column(name = "per_apellido", nullable = false, length = 80)
     private String perApellido;
 
     @Size(max = 15)
     @NotNull
-    @Column(name = "PerTlfCel", nullable = false, length = 15)
+    @Column(name = "per_tlf_cel", nullable = false, length = 15)
     private String perTlfCel;
 
     @Size(max = 80)
     @NotNull
-    @Column(name = "PerEMail", nullable = false, length = 80)
+    @Column(name = "per_email", nullable = false, length = 80)
     private String perEMail;
 
     @Size(max = 80)
-    @Column(name = "PerUsuario", length = 80)
+    @Column(name = "per_usuario", length = 80)
     private String perUsuario;
 
     @Size(max = 80)
-    @Column(name = "PerClave", length = 80)
+    @Column(name = "per_clave", length = 80)
     private String perClave;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "PerSts", nullable = false, length = 1)
+    @Column(name = "per_sts", nullable = false, length = 1)
     private String perSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Per_UsrCrea", nullable = false)
+    @JoinColumn(name = "per_usr_crea", nullable = false)
     private Persona perUsrcrea;
 
     @NotNull
-    @Column(name = "PerFchHorCrea", nullable = false)
+    @Column(name = "per_fch_hor_crea", nullable = false)
     private OffsetDateTime perFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PerEstCrea", nullable = false, length = 40)
+    @Column(name = "per_est_crea", nullable = false, length = 40)
     private String perEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "Per_UsrMod", nullable = false)
+    @JoinColumn(name = "per_usr_mod", nullable = false)
     private Persona perUsrmod;
 
     @NotNull
-    @Column(name = "PerFchHorMod", nullable = false)
+    @Column(name = "per_fch_hor_mod", nullable = false)
     private OffsetDateTime perFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PerEstMod", nullable = false, length = 40)
+    @Column(name = "per_est_mod", nullable = false, length = 40)
     private String perEstMod;
 
 }

@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "PersConjunto")
+@Table(name = "\"PersConjunto\"")
 public class PersConjunto {
     @EmbeddedId
     private PersConjuntoId id;
@@ -28,46 +28,46 @@ public class PersConjunto {
     @MapsId("pcPerid")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PC_PerID", nullable = false)
+    @JoinColumn(name = "pc_per_id", nullable = false)
     private Persona pcPerid;
 
     @NotNull
-    @Column(name = "PCID", nullable = false)
+    @Column(name = "pcid", nullable = false)
     private Integer pcid;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "PCSts", nullable = false, length = 1)
+    @Column(name = "pc_sts", nullable = false, length = 1)
     private String pCSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PC_UsrCrea", nullable = false)
+    @JoinColumn(name = "pc_usr_crea", nullable = false)
     private Persona pcUsrcrea;
 
     @NotNull
-    @Column(name = "PCFchHorCrea", nullable = false)
+    @Column(name = "pc_fch_hor_crea", nullable = false)
     private OffsetDateTime pCFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PCEstCrea", nullable = false, length = 40)
+    @Column(name = "pc_est_crea", nullable = false, length = 40)
     private String pCEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "PC_UsrMod", nullable = false)
+    @JoinColumn(name = "pc_usr_mod", nullable = false)
     private Persona pcUsrmod;
 
     @NotNull
-    @Column(name = "PCFchHorMod", nullable = false)
+    @Column(name = "pc_fch_hor_mod", nullable = false)
     private OffsetDateTime pCFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PCEstMod", nullable = false, length = 40)
+    @Column(name = "pc_est_mod", nullable = false, length = 40)
     private String pCEstMod;
 
 }

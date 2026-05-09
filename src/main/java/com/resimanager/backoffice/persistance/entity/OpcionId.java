@@ -16,11 +16,11 @@ import java.util.Objects;
 public class OpcionId implements Serializable {
     private static final long serialVersionUID = -7499113938290006938L;
     @NotNull
-    @Column(name = "OpcID", nullable = false)
+    @Column(name = "opcid", nullable = false)
     private Integer opcID;
 
     @NotNull
-    @Column(name = "Opc_ModID", nullable = false)
+    @Column(name = "opc_modid", nullable = false)
     private Integer opcModid;
 
     @Override

@@ -12,7 +12,9 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class AuthDto {
+    private Integer userId;
     private String username;
     private String password;
     private Set<String> authorities;
 }
+

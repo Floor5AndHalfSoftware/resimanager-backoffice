@@ -21,7 +21,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "AccOpcion")
+@Table(name = "\"AccOpcion\"")
 public class AccOpcion {
     @EmbeddedId
     private AccOpcionId id;
@@ -29,8 +29,8 @@ public class AccOpcion {
     @MapsId("id")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumns({
-            @JoinColumn(name = "AO_ModID", referencedColumnName = "Opc_ModID", nullable = false),
-            @JoinColumn(name = "AO_OpcID", referencedColumnName = "OpcID", nullable = false)
+            @JoinColumn(name = "ao_mod_id", referencedColumnName = "opc_modid", nullable = false),
+            @JoinColumn(name = "ao_opc_id", referencedColumnName = "opcid", nullable = false)
     })
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private Opcion opcion;
@@ -38,50 +38,50 @@ public class AccOpcion {
     @MapsId("aoAccid")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "AO_AccID", nullable = false)
+    @JoinColumn(name = "ao_acc_id", nullable = false)
     private Accion aoAccid;
 
     @NotNull
-    @Column(name = "AOID", nullable = false)
+    @Column(name = "aoid", nullable = false)
     private Integer aoid;
 
     @NotNull
-    @Column(name = "AOCodSeg", nullable = false)
+    @Column(name = "ao_cod_seg", nullable = false)
     private Integer aOCodSeg;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "AOSts", nullable = false, length = 1)
+    @Column(name = "ao_sts", nullable = false, length = 1)
     private String aOSts;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "AO_UsrCrea", nullable = false)
+    @JoinColumn(name = "ao_usr_crea", nullable = false)
     private Persona aoUsrcrea;
 
     @NotNull
-    @Column(name = "AOFchHorCrea", nullable = false)
+    @Column(name = "ao_fch_hor_crea", nullable = false)
     private OffsetDateTime aOFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "AOEstCrea", nullable = false, length = 40)
+    @Column(name = "ao_est_crea", nullable = false, length = 40)
     private String aOEstCrea;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "AO_UsrMod", nullable = false)
+    @JoinColumn(name = "ao_usr_mod", nullable = false)
     private Persona aoUsrmod;
 
     @NotNull
-    @Column(name = "AOFchHorMod", nullable = false)
+    @Column(name = "ao_fch_hor_mod", nullable = false)
     private OffsetDateTime aOFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "AOEstMod", nullable = false, length = 40)
+    @Column(name = "ao_est_mod", nullable = false, length = 40)
     private String aOEstMod;
 
 }
