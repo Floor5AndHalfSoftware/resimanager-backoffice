@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -112,7 +113,7 @@ public class ConjuntoController {
             @Parameter(description = "ID del usuario (persona)")
             @PathVariable Integer usuarioId,
 
-            @RequestBody AsignarPerfilesRequest request,
+            @Valid @RequestBody AsignarPerfilesRequest request,
             HttpServletRequest httpRequest
     ) {
         log.info("POST /conjuntos/{}/usuarios/{}/perfiles - Asignar {} perfiles",

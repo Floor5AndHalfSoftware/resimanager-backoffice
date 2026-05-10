@@ -107,7 +107,9 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                         .getPayload()
                         .getSubject();
                 if (user != null) {
-                    return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+                    auth.setDetails(token);
+                    return auth;
                 }
             } catch (Exception exception) {
                 throw new ServiceException("Authentication was not possible: " + exception.getMessage(), 403);

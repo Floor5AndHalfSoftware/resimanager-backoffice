@@ -1,6 +1,7 @@
 package com.resimanager.backoffice.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginRequestJson {
-    private String username;
-    private String password;
 
+    @NotBlank(message = "El usuario es obligatorio")
+    private String username;
+
+    @NotBlank(message = "La contraseña es obligatoria")
+    private String password;
 }

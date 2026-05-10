@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +26,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 
@@ -77,7 +80,7 @@ public class LoginController {
     @SecurityRequirements
     @PostMapping(value = "/login", produces = "application/json", consumes = "application/json")
     public ResponseEntity<LoginResponseJson> login(
-            @RequestBody @NotNull LoginRequestJson loginRequestJson,
+            @Valid @RequestBody @NotNull LoginRequestJson loginRequestJson,
             HttpServletResponse response) {
         log.info("Login attempt for user: {}", loginRequestJson.getUsername());
         
@@ -133,6 +136,37 @@ public class LoginController {
         } else {
             throw new UsernameNotFoundException("invalid user request");
         }
+    }
+
+    @Operation(
+            summary = "Cerrar sesión",
+            description = """
+                    Invalida la sesión actual eliminando la cookie HttpOnly del JWT.
+                    También limpia cualquier dato de sesión en el frontend.
+
+                    **Nota:** Como JWT es stateless, esta operación solo elimina la cookie del lado del cliente.
+                    El token sigue siendo válido hasta su expiración natural.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sesión cerrada exitosamente"),
+            @ApiResponse(responseCode = "401", description = "No autorizado")
+    })
+    @SecurityRequirements
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+        log.info("Logout - Cerrando sesión");
+
+        Cookie jwtCookie = new Cookie("jwt", null);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(cookieSecure);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0);
+        jwtCookie.setAttribute("SameSite", cookieSecure ? "None" : "Lax");
+        response.addCookie(jwtCookie);
+
+        log.debug("JWT cookie cleared (MaxAge=0) with Secure={}, SameSite={}", cookieSecure, cookieSecure ? "None" : "Lax");
+        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
     }
 }
 

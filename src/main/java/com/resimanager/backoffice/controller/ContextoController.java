@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,6 +32,7 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @RequestMapping(value = API_VERSION_PATH + "/contexto")
 @RequiredArgsConstructor
 @Slf4j
+@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Contexto", description = "Cambio de contexto multi-tenant (Administradora / Conjunto)")
 public class ContextoController {
 

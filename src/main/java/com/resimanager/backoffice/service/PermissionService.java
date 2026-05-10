@@ -108,9 +108,9 @@ public class PermissionService {
      * This is a simplified version - in production, the token would be passed differently
      */
     private String getTokenFromAuthentication(Authentication auth) {
-        // In a real implementation, the token would be stored in the authentication details
-        // or passed through a request context. For now, we'll return null to indicate
-        // the feature needs frontend integration
+        if (auth.getDetails() instanceof String token) {
+            return token;
+        }
         return null;
     }
 
