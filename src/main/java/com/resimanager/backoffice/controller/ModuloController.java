@@ -1,8 +1,7 @@
 package com.resimanager.backoffice.controller;
 
 import com.resimanager.backoffice.dto.ModuloDTO;
-import com.resimanager.backoffice.persistance.entity.Modulo;
-import com.resimanager.backoffice.persistance.repository.ModuloRepository;
+import com.resimanager.backoffice.service.ModuloService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,10 +13,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 
@@ -29,18 +30,18 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @Tag(name = "Módulos", description = "Gestión de módulos del sistema")
 public class ModuloController {
 
-    private final ModuloRepository moduloRepository;
+    private final ModuloService moduloService;
 
     @Operation(
             summary = "Listar módulos",
             description = """
                     Obtiene una lista de módulos del sistema.
-                    
+
                     Por defecto, devuelve solo módulos activos.
-                    
+
                     Puede filtrar por:
                     - **nivel**: 0 (Super Admin), 1 (Admin General), 2 (Admin Conjunto), 3 (Propietario), 4 (Residente)
-                    
+
                     Los módulos se ordenan alfabéticamente por nombre.
                     """
     )
@@ -55,39 +56,6 @@ public class ModuloController {
             @RequestParam(required = false) Integer nivel
     ) {
         log.debug("GET /modulos - nivel: {}", nivel);
-        
-        List<Modulo> modulos;
-        
-        if (nivel != null) {
-            // Filtrar por nivel y solo activos
-            modulos = moduloRepository.findByModNivelAndModSts(nivel, "A");
-            log.debug("Encontrados {} módulos activos de nivel {}", modulos.size(), nivel);
-        } else {
-            // Obtener todos los módulos activos
-            modulos = moduloRepository.findByModSts("A");
-            log.debug("Encontrados {} módulos activos", modulos.size());
-        }
-        
-        // Convertir a DTOs
-        List<ModuloDTO> dtos = modulos.stream()
-                .map(this::toDTO)
-                .sorted((m1, m2) -> m1.getNombre().compareTo(m2.getNombre()))
-                .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(dtos);
-    }
-
-    /**
-     * Convert Modulo entity to ModuloDTO
-     * @param modulo Modulo entity
-     * @return ModuloDTO
-     */
-    private ModuloDTO toDTO(Modulo modulo) {
-        return ModuloDTO.builder()
-                .id(modulo.getModId())
-                .nombre(modulo.getModNombre())
-                .descripcion(modulo.getModDescrip())
-                .nivel(modulo.getModNivel())
-                .build();
+        return ResponseEntity.ok(moduloService.getModulos(nivel));
     }
 }

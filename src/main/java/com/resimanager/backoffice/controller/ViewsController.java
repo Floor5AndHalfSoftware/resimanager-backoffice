@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @RequestMapping(value = API_VERSION_PATH)
 @Validated
 @Slf4j
+@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Menú", description = "Obtención del menú lateral filtrado por perfil y permisos")
 public class ViewsController {
 

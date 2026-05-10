@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.http.HttpServletRequest;
@@ -70,7 +71,7 @@ public class UsuarioController {
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioDTO> updateUsuario(
             @Parameter(description = "ID del usuario") @PathVariable Integer id,
-            @RequestBody UpdateUsuarioRequest request,
+            @Valid @RequestBody UpdateUsuarioRequest request,
             HttpServletRequest httpRequest
     ) {
         log.info("PUT /usuarios/{}", id);
