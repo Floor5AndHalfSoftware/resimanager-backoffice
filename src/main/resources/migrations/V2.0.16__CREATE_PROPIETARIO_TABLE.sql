@@ -1,7 +1,7 @@
 -- Create Propietario table (Owner/Property assignment)
 -- This replaces the old ProptPropiedad approach with a direct conjunt-persona-property relationship
 
-CREATE TABLE "Propietario" (
+CREATE TABLE IF NOT EXISTS "Propietario" (
     Ppt_ConjID INTEGER NOT NULL,
     Ppt_PerID INTEGER NOT NULL,
     PptID INTEGER NOT NULL,
