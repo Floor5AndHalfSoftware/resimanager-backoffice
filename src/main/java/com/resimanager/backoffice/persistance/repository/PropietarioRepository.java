@@ -16,12 +16,9 @@ public interface PropietarioRepository extends JpaRepository<Propietario, Propie
             SELECT p FROM Propietario p
             WHERE (:estatus IS NULL OR p.pptSts = :estatus)
               AND (:conjuntoId IS NULL OR p.id.pptConjid = :conjuntoId)
-              AND (:search IS NULL
-                   OR LOWER(p.id.pptPerid) LIKE LOWER(CONCAT('%', :search, '%')))
             ORDER BY p.id.pptConjid, p.id.pptPerid
             """)
     Page<Propietario> findAllWithFilters(@Param("estatus") String estatus,
                                          @Param("conjuntoId") Integer conjuntoId,
-                                         @Param("search") String search,
                                          Pageable pageable);
 }

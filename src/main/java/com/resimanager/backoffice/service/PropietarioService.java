@@ -32,11 +32,10 @@ public class PropietarioService {
     private final PropiedadRepository propiedadRepository;
 
     public PropietarioListResponse getPropietarios(String estatus, Integer conjuntoId, String search, Integer page, Integer limit) {
-        String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
         String estatusParam = (estatus != null && !estatus.isBlank()) ? estatus.trim() : null;
 
         PageRequest pageable = PageRequest.of(page - 1, limit);
-        Page<Propietario> result = propietarioRepository.findAllWithFilters(estatusParam, conjuntoId, searchParam, pageable);
+        Page<Propietario> result = propietarioRepository.findAllWithFilters(estatusParam, conjuntoId, pageable);
 
         return PropietarioListResponse.builder()
                 .data(result.getContent().stream().map(this::toDTO).toList())
