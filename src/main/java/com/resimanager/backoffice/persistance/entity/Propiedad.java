@@ -1,14 +1,17 @@
 package com.resimanager.backoffice.persistance.entity;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Getter
@@ -16,39 +19,60 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "\"Propiedad\"")
 public class Propiedad {
-    @EmbeddedId
-    private PropiedadId id;
-
-    @Size(max = 80)
-    @NotNull
-    @Column(name = "PpdNombre", nullable = false, length = 80)
-    private String ppdNombre;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ppid", nullable = false)
+    private Integer ppid;
 
     @NotNull
-    @Column(name = "Ppd_UbiID", nullable = false)
-    private Integer ppdUbiid;
+    @Column(name = "pp_conj_id", nullable = false)
+    private Integer ppConjId;
+
+    @NotNull
+    @Column(name = "pp_cdp_id", nullable = false)
+    private Integer ppCdpId;
+
+    @Size(max = 20)
+    @NotNull
+    @Column(name = "pp_numero", nullable = false, length = 20)
+    private String ppNumero;
+
+    @NotNull
+    @Column(name = "pp_cantidad", nullable = false, precision = 10, scale = 4)
+    private BigDecimal ppCantidad;
+
+    @NotNull
+    @Column(name = "pp_coef_participacion", nullable = false, precision = 10, scale = 8)
+    private BigDecimal ppCoefParticipacion;
 
     @Size(max = 1)
     @NotNull
-    @Column(name = "PpdSts", nullable = false, length = 1)
-    private String ppdSts;
+    @Column(name = "pp_sts", nullable = false, length = 1)
+    private String ppSts;
 
     @NotNull
-    @Column(name = "PpdFchHorCrea", nullable = false)
-    private OffsetDateTime ppdFchHorCrea;
+    @Column(name = "pp_usr_crea", nullable = false)
+    private Integer ppUsrCrea;
+
+    @NotNull
+    @Column(name = "pp_fch_hor_crea", nullable = false)
+    private OffsetDateTime ppFchHorCrea;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PpdEstCrea", nullable = false, length = 40)
-    private String ppdEstCrea;
+    @Column(name = "pp_est_crea", nullable = false, length = 40)
+    private String ppEstCrea;
 
     @NotNull
-    @Column(name = "PpdFchHorMod", nullable = false)
-    private OffsetDateTime ppdFchHorMod;
+    @Column(name = "pp_usr_mod", nullable = false)
+    private Integer ppUsrMod;
+
+    @NotNull
+    @Column(name = "pp_fch_hor_mod", nullable = false)
+    private OffsetDateTime ppFchHorMod;
 
     @Size(max = 40)
     @NotNull
-    @Column(name = "PpdEstMod", nullable = false, length = 40)
-    private String ppdEstMod;
-
+    @Column(name = "pp_est_mod", nullable = false, length = 40)
+    private String ppEstMod;
 }

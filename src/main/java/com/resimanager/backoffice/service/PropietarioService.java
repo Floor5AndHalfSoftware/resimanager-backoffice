@@ -139,9 +139,9 @@ public class PropietarioService {
             documentoPersona = persona.get().getPerDocIdent();
         }
 
-        Optional<Propiedad> prop = propiedadRepository.findByPpdIDAndPpdConjid(p.getPptID(), p.getId().getPptConjid());
+        Optional<Propiedad> prop = propiedadRepository.findByPpidAndPpConjId(p.getPptID(), p.getId().getPptConjid());
         if (prop.isPresent()) {
-            nombrePropiedad = prop.get().getPpdNombre();
+            nombrePropiedad = prop.get().getPpNumero();
         }
 
         return PropietarioDTO.builder()
