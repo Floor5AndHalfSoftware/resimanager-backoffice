@@ -1,6 +1,7 @@
 package com.resimanager.backoffice.controller;
 
 import com.resimanager.backoffice.dto.AsignarPerfilesRequest;
+import com.resimanager.backoffice.dto.ConjuntoDTO;
 import com.resimanager.backoffice.dto.ConjuntoListResponse;
 import com.resimanager.backoffice.dto.ContextoUsuariosResponse;
 import com.resimanager.backoffice.service.ConjuntoService;
@@ -14,11 +15,15 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -28,6 +33,7 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @RestController
 @RequestMapping(value = API_VERSION_PATH + "/conjuntos")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Conjuntos", description = "Gestión de conjuntos residenciales y sus usuarios")
@@ -49,7 +55,7 @@ public class ConjuntoController {
 
     @Operation(
             summary = "Obtener conjunto por ID",
-            description = "Obtiene la información básica (id y nombre) de un conjunto."
+            description = "Obtiene la información completa de un conjunto."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Conjunto encontrado exitosamente"),
@@ -57,13 +63,72 @@ public class ConjuntoController {
             @ApiResponse(responseCode = "401", description = "No autorizado")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getConjuntoById(
+    public ResponseEntity<ConjuntoDTO> getConjuntoById(
             @Parameter(description = "ID del conjunto")
             @PathVariable Integer id
     ) {
         log.debug("GET /conjuntos/{}", id);
-        Map<String, Object> result = conjuntoService.getConjuntoById(id);
+        return ResponseEntity.ok(conjuntoService.getConjuntoById(id));
+    }
+
+    @Operation(summary = "Crear conjunto", description = "Crea un nuevo conjunto residencial")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Conjunto creado exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "401", description = "No autorizado")
+    })
+    @PostMapping
+    public ResponseEntity<ConjuntoDTO> createConjunto(
+            @Valid @RequestBody CreateConjuntoRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        log.info("POST /conjuntos - nombre: {}", request.nombre);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        String estacion = httpRequest.getRemoteAddr();
+
+        ConjuntoDTO result = conjuntoService.createConjunto(request, username, estacion);
         return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "Actualizar conjunto", description = "Actualiza los datos de un conjunto existente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Conjunto actualizado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Conjunto no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autorizado")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<ConjuntoDTO> updateConjunto(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateConjuntoRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        log.info("PUT /conjuntos/{}", id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        String estacion = httpRequest.getRemoteAddr();
+
+        ConjuntoDTO result = conjuntoService.updateConjunto(id, request, username, estacion);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "Inactivar conjunto", description = "Inactiva (soft-delete) un conjunto")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Conjunto inactivado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Conjunto no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autorizado")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteConjunto(
+            @PathVariable Integer id,
+            HttpServletRequest httpRequest
+    ) {
+        log.info("DELETE /conjuntos/{}", id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        String estacion = httpRequest.getRemoteAddr();
+
+        return ResponseEntity.ok(conjuntoService.deleteConjunto(id, username, estacion));
     }
 
     @Operation(
@@ -166,4 +231,21 @@ public class ConjuntoController {
         Map<String, String> result = conjuntoService.removerPerfil(conjId, usuarioId, perfilId, username, estacion);
         return ResponseEntity.ok(result);
     }
+
+    public record CreateConjuntoRequest(
+            @NotBlank @Size(max = 20) String documento,
+            @NotBlank @Size(max = 80) String nombre,
+            @NotBlank @Size(max = 15) String telefono,
+            @NotBlank @Size(max = 80) String email,
+            @NotNull Integer persContactoId
+    ) {}
+
+    public record UpdateConjuntoRequest(
+            @Size(max = 20) String documento,
+            @Size(max = 80) String nombre,
+            @Size(max = 15) String telefono,
+            @Size(max = 80) String email,
+            Integer persContactoId,
+            @Size(min = 1, max = 1) String estatus
+    ) {}
 }

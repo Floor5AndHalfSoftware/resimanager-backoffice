@@ -59,14 +59,7 @@ public class ConjuntoService {
         Page<Conjunto> result = conjuntoRepository.findAllWithFilters(estatusParam, searchParam, pageable);
 
         List<ConjuntoDTO> data = result.getContent().stream()
-                .map(c -> ConjuntoDTO.builder()
-                        .id(c.getId())
-                        .nombre(c.getConjNombre())
-                        .documento(c.getConjDocIdent())
-                        .email(c.getConjEMail())
-                        .telefono(c.getConjTelefono())
-                        .estatus(c.getConjSts())
-                        .build())
+                .map(this::toDTO)
                 .toList();
 
         return ConjuntoListResponse.builder()
@@ -80,19 +73,99 @@ public class ConjuntoService {
     /**
      * Obtiene un conjunto por ID
      * @param id ID del conjunto
-     * @return Map con id y nombre
+     * @return ConjuntoDTO con datos completos
      */
     @Transactional(readOnly = true)
-    public Map<String, Object> getConjuntoById(Integer id) {
+    public ConjuntoDTO getConjuntoById(Integer id) {
         log.debug("Obteniendo conjunto con ID: {}", id);
 
         Conjunto conjunto = conjuntoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Conjunto no encontrado con ID: " + id));
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("id", conjunto.getId());
-        result.put("nombre", conjunto.getConjNombre());
-        return result;
+        return toDTO(conjunto);
+    }
+
+    /**
+     * Crea un nuevo conjunto
+     */
+    @Transactional
+    public ConjuntoDTO createConjunto(
+            com.resimanager.backoffice.controller.ConjuntoController.CreateConjuntoRequest request,
+            String username, String estacion) {
+        log.info("Creando conjunto: {} por usuario: {}", request.nombre(), username);
+
+        Persona contacto = personaRepository.findById(request.persContactoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Persona contacto no encontrada con ID: " + request.persContactoId()));
+
+        Persona ejecutor = findEjecutor(username);
+
+        Conjunto conj = new Conjunto();
+        conj.setConjDocIdent(request.documento());
+        conj.setConjNombre(request.nombre());
+        conj.setConjTelefono(request.telefono());
+        conj.setConjEMail(request.email());
+        conj.setConjPersContacto(contacto);
+        conj.setConjOrigen("A");
+        conj.setConjSts("A");
+        conj.setConjUsrCrea(ejecutor);
+        conj.setConjFchHorCrea(OffsetDateTime.now());
+        conj.setConjEstCrea(estacion);
+        conj.setConjUsrMod(ejecutor);
+        conj.setConjFchHorMod(OffsetDateTime.now());
+        conj.setConjEstMod(estacion);
+
+        return toDTO(conjuntoRepository.save(conj));
+    }
+
+    /**
+     * Actualiza un conjunto existente
+     */
+    @Transactional
+    public ConjuntoDTO updateConjunto(Integer id,
+                                       com.resimanager.backoffice.controller.ConjuntoController.UpdateConjuntoRequest request,
+                                       String username, String estacion) {
+        log.info("Actualizando conjunto ID: {} por usuario: {}", id, username);
+
+        Conjunto conj = conjuntoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Conjunto no encontrado con ID: " + id));
+
+        if (request.documento() != null) conj.setConjDocIdent(request.documento());
+        if (request.nombre() != null) conj.setConjNombre(request.nombre());
+        if (request.telefono() != null) conj.setConjTelefono(request.telefono());
+        if (request.email() != null) conj.setConjEMail(request.email());
+        if (request.persContactoId() != null) {
+            Persona contacto = personaRepository.findById(request.persContactoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Persona contacto no encontrada con ID: " + request.persContactoId()));
+            conj.setConjPersContacto(contacto);
+        }
+        if (request.estatus() != null && (request.estatus().equals("A") || request.estatus().equals("I"))) {
+            conj.setConjSts(request.estatus());
+        }
+
+        conj.setConjUsrMod(findEjecutor(username));
+        conj.setConjFchHorMod(OffsetDateTime.now());
+        conj.setConjEstMod(estacion);
+
+        return toDTO(conjuntoRepository.save(conj));
+    }
+
+    /**
+     * Inactiva (soft-delete) un conjunto
+     */
+    @Transactional
+    public Map<String, String> deleteConjunto(Integer id, String username, String estacion) {
+        log.info("Inactivando conjunto ID: {} por usuario: {}", id, username);
+
+        Conjunto conj = conjuntoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Conjunto no encontrado con ID: " + id));
+
+        conj.setConjSts("I");
+        conj.setConjUsrMod(findEjecutor(username));
+        conj.setConjFchHorMod(OffsetDateTime.now());
+        conj.setConjEstMod(estacion);
+
+        conjuntoRepository.save(conj);
+        return Map.of("message", "Conjunto inactivado correctamente");
     }
 
     /**
@@ -265,6 +338,23 @@ public class ConjuntoService {
 
         log.info("Perfil ID: {} removido del usuario ID: {} en conjunto ID: {}", perfilId, usuarioId, conjId);
         return Map.of("message", "Perfil removido correctamente");
+    }
+
+    private ConjuntoDTO toDTO(Conjunto c) {
+        return ConjuntoDTO.builder()
+                .id(c.getId())
+                .nombre(c.getConjNombre())
+                .documento(c.getConjDocIdent())
+                .email(c.getConjEMail())
+                .telefono(c.getConjTelefono())
+                .estatus(c.getConjSts())
+                .persContactoId(c.getConjPersContacto() != null ? c.getConjPersContacto().getId() : null)
+                .build();
+    }
+
+    private Persona findEjecutor(String username) {
+        return personaRepository.findByPerUsuario(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario ejecutor no encontrado: " + username));
     }
 
     /**
