@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PropietarioRepository extends JpaRepository<Propietario, PropietarioId> {
 
+    long countByPptSts(String pptSts);
+
     @Query("""
             SELECT p FROM Propietario p
             WHERE (:estatus IS NULL OR p.pptSts = :estatus)

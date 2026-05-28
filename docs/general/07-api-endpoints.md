@@ -1,6 +1,6 @@
 # API Endpoints - Documentación
 
-**Última actualización:** 09 de Mayo de 2026  
+**Última actualización:** 28 de Mayo de 2026  
 **Versión API:** v1  
 **Base Path:** `/v1`
 
@@ -74,6 +74,7 @@ https://chilly-libbey-wtysoftware-aab36281.koyeb.app/swagger-ui.html
 | GET | `/v1/administradoras/{id}/usuarios` | Usuarios de una administradora |
 | POST | `/v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles` | Asignar perfiles en administradora |
 | DELETE | `/v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles/{perfilId}` | Remover perfil en administradora |
+| GET | `/v1/dashboard/stats` | Obtener estadísticas del dashboard |
 | GET | `/api/owners` | Listar propietarios (legacy) |
 | GET | `/api/owners/{id}` | Obtener propietario (legacy) |
 | POST | `/api/owners` | Crear propietario (legacy) |
@@ -441,6 +442,33 @@ Remueve un perfil de un usuario en la administradora (soft-delete).
 **Estado:** ⚠️ Legacy (ruta antigua, no migrada a /v1)
 
 CRUD completo en `/api/owners` con paginación. Pendiente de migrar a `/v1/propietarios`.
+
+---
+
+## 🔑 Dashboard
+
+### GET /v1/dashboard/stats
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Obtiene estadísticas generales del sistema: conteos reales de entidades (administradoras, conjuntos, usuarios, propiedades, propietarios) y datos mock de facturas e incidencias.
+
+**Response 200:**
+```json
+{
+  "totalAdministradoras": 2,
+  "totalConjuntos": 3,
+  "totalUsuarios": 6,
+  "totalPropiedades": 10,
+  "totalPropietarios": 5,
+  "totalFacturas": 156,
+  "totalFacturasPagadas": 98,
+  "totalFacturasPendientes": 58,
+  "totalIncidencias": 23,
+  "totalIncidenciasAbiertas": 8,
+  "totalIncidenciasCerradas": 15
+}
+```
 
 ---
 

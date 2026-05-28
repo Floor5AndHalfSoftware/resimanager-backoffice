@@ -13,6 +13,8 @@ import java.util.List;
 @Repository
 public interface ConjuntoRepository extends JpaRepository<Conjunto, Integer> {
 
+    long countByConjSts(String conjSts);
+
     /**
      * Obtiene conjuntos activos por IDs
      */

@@ -12,6 +12,8 @@ import java.util.Optional;
 
 @Repository
 public interface PersonaRepository extends JpaRepository<Persona, Integer> {
+
+    long countByPerSts(String perSts);
     
     /**
      * Find user by username (per_usuario field)

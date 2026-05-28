@@ -1,7 +1,7 @@
 # Análisis de Desarrollo vs Especificación
 
-**Fecha:** 09 de Mayo de 2026  
-**Versión:** 3.0 (Actualizada con código fuente local + deploy Koyeb)  
+**Fecha:** 28 de Mayo de 2026  
+**Versión:** 3.1 (Actualizada con código fuente local + deploy Koyeb)  
 
 ---
 
@@ -13,22 +13,24 @@
 | Backend - Contexto Multi-tenant | ✅ 90% | ✅ 100% | Cookie se actualiza en cambio de contexto |
 | Backend - Menú Dinámico | ✅ 85% | ✅ 95% | Funcional |
 | Backend - APIs CRUD | ⚠️ 20% | ✅ 85% | + Usuarios, Perfiles, Módulos, Conjuntos, Administradoras |
+| Backend - Dashboard | ❌ 0% | ✅ 95% | + DashboardController + DashboardService |
 | Backend - Entidades | ✅ 100% | ✅ 100% | Sin cambios |
 | Backend - BD + Migraciones | ✅ 100% | ✅ 100% | Sin cambios |
 | Frontend - Páginas de negocio | ❌ 20% | ✅ 80% | 12 páginas nuevas |
-| **TOTAL PROYECTO** | **~55%** | **~85%** | **+30%** |
+| **TOTAL PROYECTO** | **~55%** | **~86%** | **+31%** |
 
 ---
 
 ## 1. Backend - Estado Actual
 
-### 1.1 Endpoints Implementados (26)
+### 1.1 Endpoints Implementados (27)
 
 | Categoría | Endpoints | Archivo |
 |-----------|-----------|---------|
 | Autenticación | POST /v1/login | LoginController.java |
 | Contexto | POST /v1/contexto/cambiar | ContextoController.java |
 | Menú | GET /v1/menu/perfil | ViewsController.java |
+| Dashboard | GET /v1/dashboard/stats | DashboardController.java |
 | Usuarios | GET, GET/{id}, PUT/{id}, DELETE/{id}, GET/{id}/perfiles | UsuarioController.java |
 | Perfiles | GET, POST, GET/{id}, PUT/{id}, DELETE/{id}, POST/{id}/modulos, DELETE/{id}/modulos/{moduloId} | PerfilController.java |
 | Módulos | GET | ModuloController.java |
@@ -36,7 +38,7 @@
 | Administradoras | GET, GET/{id}, GET/{id}/usuarios, POST/{admId}/usuarios/{userId}/perfiles, DELETE/{admId}/usuarios/{userId}/perfiles/{perfilId} | AdministradoraController.java |
 | Owners (legacy) | GET, POST, GET/{id}, PUT/{id}, DELETE/{id} | OwnerController.java |
 
-### 1.2 Servicios (10)
+### 1.2 Servicios (11)
 
 | Servicio | Estado | Métodos principales |
 |----------|--------|-------------------|
@@ -45,6 +47,7 @@
 | PerfilService | ✅ **Nuevo** | getPerfiles(), getPerfilById(), createPerfil(), updatePerfil(), deletePerfil(), asignarModulos(), revocarModulo() |
 | AdministradoraService | ✅ **Nuevo** | getAdministradoras(), getAdministradoraById(), getUsuarios(), asignarPerfiles(), removerPerfil() |
 | ConjuntoService | ✅ **Nuevo** | getConjuntos(), getConjuntoById(), getUsuarios(), asignarPerfiles(), removerPerfil() |
+| DashboardService | ✅ **Nuevo** | getStats() |
 | MenuService | ✅ | menus(), menusByPerfil(), buildMenuHierarchy() |
 | ContextoService | ✅ | getContextosDisponibles(), validarYConstruirContexto() |
 | JwtService | ✅ | generateToken(), generateTokenWithUserInfo(), generateTokenWithContext() |
@@ -140,10 +143,10 @@ DTOs para todos los endpoints: Login, Contexto, Menú, Usuario, Perfil, Módulo,
 
 ## 📊 Resumen Final
 
-**Backend:** ~85% completitud  
-**Frontend:** ~80% completitud  
-**TOTAL PROYECTO:** ~83% completitud
+**Backend:** ~87% completitud  
+**Frontend:** ~82% completitud  
+**TOTAL PROYECTO:** ~86% completitud
 
 ---
 
-**Documento actualizado:** 09 de Mayo de 2026
+**Documento actualizado:** 28 de Mayo de 2026

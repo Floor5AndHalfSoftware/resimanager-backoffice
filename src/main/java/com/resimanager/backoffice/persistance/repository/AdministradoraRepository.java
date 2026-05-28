@@ -13,6 +13,8 @@ import java.util.List;
 @Repository
 public interface AdministradoraRepository extends JpaRepository<Administradora, Integer> {
 
+    long countByAdmSts(String admSts);
+
     /**
      * Obtiene administradoras activas por IDs
      */

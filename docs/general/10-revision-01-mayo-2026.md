@@ -1,7 +1,7 @@
 # 📋 REVISIÓN DEL BACKEND - 09 de Mayo 2026
 
-**Fecha:** 09 de Mayo de 2026  
-**Versión del Proyecto:** 2.0.8+  
+**Fecha:** 28 de Mayo de 2026  
+**Versión del Proyecto:** 2.0.9+  
 
 ---
 
@@ -62,6 +62,24 @@ ya están implementados y funcionales.
 
 ---
 
+## ✅ NUEVO DASHBOARD (Agregado post 09-Mayo)
+
+### DashboardController (1 endpoint)
+| Método | Endpoint | Estado |
+|--------|----------|--------|
+| GET | /v1/dashboard/stats | ✅ Implementado con conteos reales + datos mock |
+
+### DashboardService
+- `getStats()` - Agrega conteos de administradoras, conjuntos, usuarios, propiedades y propietarios desde la BD
+- Datos mock para facturas (156 total, 98 pagadas, 58 pendientes) e incidencias (23 total, 8 abiertas, 15 cerradas)
+
+### Frontend - HomePage
+- Ahora consume `GET /v1/dashboard/stats` en lugar de usar valores hardcodeados
+- Maneja estados de loading y error
+- Muestra datos dinámicos en las info-box de AdminLTE
+
+---
+
 ## ✅ MEJORAS EN SEGURIDAD
 
 ### Cookie HttpOnly para JWT
@@ -100,12 +118,13 @@ ya están implementados y funcionales.
 | Perfiles CRUD | 95% | ✅ Implementado |
 | Administradoras | 90% | ✅ Implementado (solo consulta + asignación) |
 | Conjuntos | 90% | ✅ Implementado (solo consulta + asignación) |
+| Dashboard | 95% | ✅ Implementado (conteos reales + mock) |
 | Propiedades CRUD | 0% | ❌ No implementado |
 | Invitaciones | 20% | ⚠️ Solo tablas |
 | Auditoría | 0% | ❌ No existe |
 | Tests | 0% | ❌ No existe |
-| **TOTAL** | **~85%** | |
+| **TOTAL** | **~86%** | |
 
 ---
 
-**Documento actualizado:** 09 de Mayo de 2026
+**Documento actualizado:** 28 de Mayo de 2026

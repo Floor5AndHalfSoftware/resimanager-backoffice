@@ -19,6 +19,7 @@ Aplicación backend para la gestión de residencias y condominios.
 | Autenticación | POST /v1/login |
 | Contexto | POST /v1/contexto/cambiar |
 | Menú | GET /v1/menu/perfil |
+| Dashboard | GET /v1/dashboard/stats |
 | Usuarios | GET /v1/usuarios, GET/{id}, PUT/{id}, DELETE/{id}, GET/{id}/perfiles |
 | Perfiles | GET /v1/perfiles, POST, GET/{id}, PUT/{id}, DELETE/{id}, POST/{id}/modulos, DELETE/{id}/modulos/{moduloId} |
 | Módulos | GET /v1/modulos |

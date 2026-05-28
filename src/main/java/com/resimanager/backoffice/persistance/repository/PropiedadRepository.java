@@ -13,6 +13,10 @@ import java.util.Optional;
 @Repository
 public interface PropiedadRepository extends JpaRepository<Propiedad, Integer> {
 
+    long countByPpSts(String ppSts);
+
+    long countByPpStsAndPpConjId(String ppSts, Integer ppConjId);
+
     @Query("""
             SELECT p FROM Propiedad p
             WHERE (:estatus IS NULL OR p.ppSts = :estatus)
