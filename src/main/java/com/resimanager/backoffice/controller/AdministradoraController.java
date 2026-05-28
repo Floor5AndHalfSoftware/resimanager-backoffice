@@ -1,5 +1,6 @@
 package com.resimanager.backoffice.controller;
 
+import com.resimanager.backoffice.dto.AdministradoraDTO;
 import com.resimanager.backoffice.dto.AdministradoraListResponse;
 import com.resimanager.backoffice.dto.AsignarPerfilesRequest;
 import com.resimanager.backoffice.dto.ContextoUsuariosResponse;
@@ -14,11 +15,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -28,6 +32,7 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @RestController
 @RequestMapping(value = API_VERSION_PATH + "/administradoras")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Administradoras", description = "Gestión de administradoras y sus usuarios")
@@ -49,7 +54,7 @@ public class AdministradoraController {
 
     @Operation(
             summary = "Obtener administradora por ID",
-            description = "Obtiene la información básica (id y nombre) de una administradora."
+            description = "Obtiene la información completa de una administradora."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Administradora encontrada exitosamente"),
@@ -57,13 +62,72 @@ public class AdministradoraController {
             @ApiResponse(responseCode = "401", description = "No autorizado")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getAdministradoraById(
+    public ResponseEntity<AdministradoraDTO> getAdministradoraById(
             @Parameter(description = "ID de la administradora")
             @PathVariable Integer id
     ) {
         log.debug("GET /administradoras/{}", id);
-        Map<String, Object> result = administradoraService.getAdministradoraById(id);
+        return ResponseEntity.ok(administradoraService.getAdministradoraById(id));
+    }
+
+    @Operation(summary = "Crear administradora", description = "Crea una nueva administradora")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Administradora creada exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "401", description = "No autorizado")
+    })
+    @PostMapping
+    public ResponseEntity<AdministradoraDTO> createAdministradora(
+            @Valid @RequestBody CreateAdministradoraRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        log.info("POST /administradoras - nombre: {}", request.nombre());
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        String estacion = httpRequest.getRemoteAddr();
+
+        AdministradoraDTO result = administradoraService.createAdministradora(request, username, estacion);
         return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "Actualizar administradora", description = "Actualiza los datos de una administradora existente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Administradora actualizada exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Administradora no encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autorizado")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<AdministradoraDTO> updateAdministradora(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateAdministradoraRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        log.info("PUT /administradoras/{}", id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        String estacion = httpRequest.getRemoteAddr();
+
+        AdministradoraDTO result = administradoraService.updateAdministradora(id, request, username, estacion);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "Inactivar administradora", description = "Inactiva (soft-delete) una administradora")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Administradora inactivada exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Administradora no encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autorizado")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteAdministradora(
+            @PathVariable Integer id,
+            HttpServletRequest httpRequest
+    ) {
+        log.info("DELETE /administradoras/{}", id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        String estacion = httpRequest.getRemoteAddr();
+
+        return ResponseEntity.ok(administradoraService.deleteAdministradora(id, username, estacion));
     }
 
     @Operation(
@@ -166,4 +230,19 @@ public class AdministradoraController {
         Map<String, String> result = administradoraService.removerPerfil(admId, usuarioId, perfilId, username, estacion);
         return ResponseEntity.ok(result);
     }
+
+    public record CreateAdministradoraRequest(
+            @NotBlank @Size(max = 50) String documento,
+            @NotBlank @Size(max = 250) String nombre,
+            @NotBlank @Size(max = 15) String telefono,
+            @NotBlank @Size(max = 250) String email
+    ) {}
+
+    public record UpdateAdministradoraRequest(
+            @Size(max = 50) String documento,
+            @Size(max = 250) String nombre,
+            @Size(max = 15) String telefono,
+            @Size(max = 250) String email,
+            @Size(min = 1, max = 1) String estatus
+    ) {}
 }

@@ -47,9 +47,6 @@ public class AdministradoraService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    /**
-     * Lista administradoras con filtros opcionales
-     */
     @Transactional(readOnly = true)
     public AdministradoraListResponse getAdministradoras(String estatus, String search, Integer page, Integer limit) {
         String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
@@ -59,14 +56,7 @@ public class AdministradoraService {
         Page<Administradora> result = administradoraRepository.findAllWithFilters(estatusParam, searchParam, pageable);
 
         List<AdministradoraDTO> data = result.getContent().stream()
-                .map(a -> AdministradoraDTO.builder()
-                        .id(a.getId())
-                        .nombre(a.getAdmNombre())
-                        .documento(a.getAdmDocIdent())
-                        .email(a.getAdmEMail())
-                        .telefono(a.getAdmTelefono())
-                        .estatus(a.getAdmSts())
-                        .build())
+                .map(this::toDTO)
                 .toList();
 
         return AdministradoraListResponse.builder()
@@ -77,29 +67,82 @@ public class AdministradoraService {
                 .build();
     }
 
-    /**
-     * Obtiene una administradora por ID
-     * @param id ID de la administradora
-     * @return Map con id y nombre
-     */
     @Transactional(readOnly = true)
-    public Map<String, Object> getAdministradoraById(Integer id) {
+    public AdministradoraDTO getAdministradoraById(Integer id) {
         log.debug("Obteniendo administradora con ID: {}", id);
 
         Administradora administradora = administradoraRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + id));
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("id", administradora.getId());
-        result.put("nombre", administradora.getAdmNombre());
-        return result;
+        return toDTO(administradora);
     }
 
-    /**
-     * Obtiene la lista de usuarios activos de una administradora con sus perfiles
-     * @param admId ID de la administradora
-     * @return ContextoUsuariosResponse con los usuarios y sus perfiles
-     */
+    @Transactional
+    public AdministradoraDTO createAdministradora(
+            com.resimanager.backoffice.controller.AdministradoraController.CreateAdministradoraRequest request,
+            String username, String estacion) {
+        log.info("Creando administradora: {} por usuario: {}", request.nombre(), username);
+
+        Persona ejecutor = findEjecutor(username);
+
+        Administradora adm = new Administradora();
+        adm.setId(queryNextAdmid());
+        adm.setAdmDocIdent(request.documento());
+        adm.setAdmNombre(request.nombre());
+        adm.setAdmTelefono(request.telefono());
+        adm.setAdmEMail(request.email());
+        adm.setAdmSts("A");
+        adm.setAdmPersContacto(ejecutor);
+        adm.setAdmUsrCrea(ejecutor);
+        adm.setAdmFchHorCrea(OffsetDateTime.now());
+        adm.setAdmEstCrea(estacion);
+        adm.setAdmUsrMod(ejecutor);
+        adm.setAdmFchHorMod(OffsetDateTime.now());
+        adm.setAdmEstMod(estacion);
+
+        return toDTO(administradoraRepository.save(adm));
+    }
+
+    @Transactional
+    public AdministradoraDTO updateAdministradora(Integer id,
+                                                   com.resimanager.backoffice.controller.AdministradoraController.UpdateAdministradoraRequest request,
+                                                   String username, String estacion) {
+        log.info("Actualizando administradora ID: {} por usuario: {}", id, username);
+
+        Administradora adm = administradoraRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + id));
+
+        if (request.documento() != null) adm.setAdmDocIdent(request.documento());
+        if (request.nombre() != null) adm.setAdmNombre(request.nombre());
+        if (request.telefono() != null) adm.setAdmTelefono(request.telefono());
+        if (request.email() != null) adm.setAdmEMail(request.email());
+        if (request.estatus() != null && (request.estatus().equals("A") || request.estatus().equals("I"))) {
+            adm.setAdmSts(request.estatus());
+        }
+
+        adm.setAdmUsrMod(findEjecutor(username));
+        adm.setAdmFchHorMod(OffsetDateTime.now());
+        adm.setAdmEstMod(estacion);
+
+        return toDTO(administradoraRepository.save(adm));
+    }
+
+    @Transactional
+    public Map<String, String> deleteAdministradora(Integer id, String username, String estacion) {
+        log.info("Inactivando administradora ID: {} por usuario: {}", id, username);
+
+        Administradora adm = administradoraRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + id));
+
+        adm.setAdmSts("I");
+        adm.setAdmUsrMod(findEjecutor(username));
+        adm.setAdmFchHorMod(OffsetDateTime.now());
+        adm.setAdmEstMod(estacion);
+
+        administradoraRepository.save(adm);
+        return Map.of("message", "Administradora inactivada correctamente");
+    }
+
     @Transactional(readOnly = true)
     public ContextoUsuariosResponse getUsuarios(Integer admId) {
         log.debug("Obteniendo usuarios de la administradora ID: {}", admId);
@@ -148,20 +191,10 @@ public class AdministradoraService {
                 .build();
     }
 
-    /**
-     * Asigna perfiles a un usuario en una administradora.
-     * Si el registro ya existe pero está inactivo, lo reactiva.
-     * @param admId ID de la administradora
-     * @param usuarioId ID del usuario (persona)
-     * @param request Lista de IDs de perfiles a asignar
-     * @param username Usuario que realiza la operación
-     * @param estacion Estación desde donde se realiza la operación
-     * @return Mensaje de resultado
-     */
     @Transactional
     public Map<String, Object> asignarPerfiles(Integer admId, Integer usuarioId,
-                                               AsignarPerfilesRequest request,
-                                               String username, String estacion) {
+                                                AsignarPerfilesRequest request,
+                                                String username, String estacion) {
         log.info("Asignando perfiles al usuario ID: {} en administradora ID: {} por usuario: {}",
                 usuarioId, admId, username);
 
@@ -228,18 +261,9 @@ public class AdministradoraService {
         return result;
     }
 
-    /**
-     * Remueve (inactiva) un perfil de un usuario en una administradora
-     * @param admId ID de la administradora
-     * @param usuarioId ID del usuario (persona)
-     * @param perfilId ID del perfil a remover
-     * @param username Usuario que realiza la operación
-     * @param estacion Estación desde donde se realiza la operación
-     * @return Mensaje de resultado
-     */
     @Transactional
     public Map<String, String> removerPerfil(Integer admId, Integer usuarioId, Integer perfilId,
-                                             String username, String estacion) {
+                                              String username, String estacion) {
         log.info("Removiendo perfil ID: {} del usuario ID: {} en administradora ID: {} por usuario: {}",
                 perfilId, usuarioId, admId, username);
 
@@ -267,9 +291,29 @@ public class AdministradoraService {
         return Map.of("message", "Perfil removido correctamente");
     }
 
-    /**
-     * Obtiene el siguiente valor para el campo ppaid usando MAX+1 sobre la tabla
-     */
+    private AdministradoraDTO toDTO(Administradora a) {
+        return AdministradoraDTO.builder()
+                .id(a.getId())
+                .nombre(a.getAdmNombre())
+                .documento(a.getAdmDocIdent())
+                .email(a.getAdmEMail())
+                .telefono(a.getAdmTelefono())
+                .estatus(a.getAdmSts())
+                .build();
+    }
+
+    private Persona findEjecutor(String username) {
+        return personaRepository.findByPerUsuario(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario ejecutor no encontrado: " + username));
+    }
+
+    private Integer queryNextAdmid() {
+        Number maxId = (Number) entityManager
+                .createNativeQuery("SELECT COALESCE(MAX(admid), 0) + 1 FROM \"Administradora\"")
+                .getSingleResult();
+        return maxId.intValue();
+    }
+
     private Integer queryNextPpaid() {
         Number maxId = (Number) entityManager
                 .createNativeQuery("SELECT COALESCE(MAX(ppaid), 0) + 1 FROM \"PerfPersAdministradora\"")
