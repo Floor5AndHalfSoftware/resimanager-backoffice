@@ -1,6 +1,6 @@
 # 📋 REVISIÓN DEL BACKEND - 09 de Mayo 2026
 
-**Fecha:** 28 de Mayo de 2026  
+**Fecha:** 16 de Agosto de 2026  
 **Versión del Proyecto:** 2.0.9+  
 
 ---
@@ -11,7 +11,7 @@ El backend ha avanzado significativamente desde la última revisión (01-May-202
 Los controllers CRUD para Usuarios, Perfiles, Módulos, Conjuntos y Administradoras 
 ya están implementados y funcionales.
 
-**Estado Actual:** ~85% de completitud (vs. ~55% reportado anteriormente)
+**Estado Actual:** ~90% de completitud (vs. ~55% reportado anteriormente)
 
 ---
 
@@ -42,20 +42,26 @@ ya están implementados y funcionales.
 |--------|----------|--------|
 | GET | /v1/modulos | ✅ Listar módulos (filtro por nivel) |
 
-### ConjuntoController (5 endpoints)
+### ConjuntoController (8 endpoints)
 | Método | Endpoint | Estado |
 |--------|----------|--------|
 | GET | /v1/conjuntos | ✅ Listar con filtros y paginación |
+| POST | /v1/conjuntos | ✅ Crear (con generación de ID) |
 | GET | /v1/conjuntos/{id} | ✅ Obtener por ID |
+| PUT | /v1/conjuntos/{id} | ✅ Actualizar campos |
+| DELETE | /v1/conjuntos/{id} | ✅ Inactivar (soft-delete) |
 | GET | /v1/conjuntos/{id}/usuarios | ✅ Usuarios con perfiles |
 | POST | /v1/conjuntos/{conjId}/usuarios/{userId}/perfiles | ✅ Asignar perfiles |
 | DELETE | /v1/conjuntos/{conjId}/usuarios/{userId}/perfiles/{perfilId} | ✅ Remover perfil |
 
-### AdministradoraController (5 endpoints)
+### AdministradoraController (8 endpoints)
 | Método | Endpoint | Estado |
 |--------|----------|--------|
 | GET | /v1/administradoras | ✅ Listar con filtros y paginación |
-| GET | /v1/administradoras/{id} | ✅ Obtener por ID |
+| POST | /v1/administradoras | ✅ Crear (con generación de ID) |
+| GET | /v1/administradoras/{id} | ✅ Obtener por ID (retorna AdministradoraDTO) |
+| PUT | /v1/administradoras/{id} | ✅ Actualizar campos |
+| DELETE | /v1/administradoras/{id} | ✅ Inactivar (soft-delete) |
 | GET | /v1/administradoras/{id}/usuarios | ✅ Usuarios con perfiles |
 | POST | /v1/administradoras/{admId}/usuarios/{userId}/perfiles | ✅ Asignar perfiles |
 | DELETE | /v1/administradoras/{admId}/usuarios/{userId}/perfiles/{perfilId} | ✅ Remover perfil |
@@ -94,14 +100,15 @@ ya están implementados y funcionales.
 
 ---
 
-## ❌ SIGUE PENDIENTE (sin cambios)
+## ❌ SIGUE PENDIENTE (actualizado 16-Ago-2026)
 
-1. **CRUD Propiedades** - Sin endpoints ni servicio
-2. **Sistema de Invitaciones** - Tablas creadas, sin endpoints
-3. **Auditoría** - Tabla `log_operacion` no implementada
+1. **Sistema de Invitaciones** - Solo migración `V2.0.4`; sin entidad JPA, controller, service ni frontend
+2. **CRUD Módulos/Opciones/Acciones** - Jerarquía de permisos sin implementar. Ver `12-estructura-modulos-seguridad.md`. Solo `GET /v1/modulos`.
+3. **Auditoría** - Tabla `log_operacion` y triggers no implementados
 4. **Tests** - 0% en todo el proyecto
-5. **Validaciones Bean Validation** - Parcial en algunos DTOs
-6. **Refresh token / Logout endpoint** - No implementado
+5. **Refresh token** - No implementado (el logout ya está implementado)
+
+> ✅ Resueltos desde la revisión anterior: CRUD de Propiedades, CRUD de Propietarios (reemplaza `/api/owners`), Bean Validation en controllers/entidades, y endpoint de logout.
 
 ---
 
@@ -116,15 +123,17 @@ ya están implementados y funcionales.
 | BD + Migraciones | 100% | ✅ Completa |
 | Usuarios CRUD | 95% | ✅ Implementado |
 | Perfiles CRUD | 95% | ✅ Implementado |
-| Administradoras | 90% | ✅ Implementado (solo consulta + asignación) |
-| Conjuntos | 90% | ✅ Implementado (solo consulta + asignación) |
+| Administradoras CRUD | 95% | ✅ CRUD completo (crear/editar/inactivar) + frontend |
+| Conjuntos CRUD | 95% | ✅ CRUD completo (crear/editar/inactivar) + frontend |
 | Dashboard | 95% | ✅ Implementado (conteos reales + mock) |
-| Propiedades CRUD | 0% | ❌ No implementado |
-| Invitaciones | 20% | ⚠️ Solo tablas |
+| Propiedades CRUD | 100% | ✅ CRUD completo (crear/editar/inactivar) + frontend |
+| Propietarios CRUD | 100% | ✅ CRUD completo + frontend (reemplaza /api/owners) |
+| Módulos/Opciones/Acciones | 0% | ❌ No implementado (solo GET /v1/modulos) |
+| Invitaciones | 20% | ⚠️ Solo migración V2.0.4 |
 | Auditoría | 0% | ❌ No existe |
 | Tests | 0% | ❌ No existe |
-| **TOTAL** | **~86%** | |
+| **TOTAL** | **~90%** | |
 
 ---
 
-**Documento actualizado:** 28 de Mayo de 2026
+**Documento actualizado:** 16 de Agosto de 2026

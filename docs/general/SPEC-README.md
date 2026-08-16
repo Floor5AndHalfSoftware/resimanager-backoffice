@@ -31,16 +31,18 @@ Basado en análisis de código (ver [09-analisis-desarrollo.md](./09-analisis-de
 
 | Módulo | Completitud | Estado |
 |--------|-------------|--------|
-| Backend - Entidades JPA | 60% | ⚠️ Parcial |
-| Backend - Autenticación | 40% | ⚠️ Hardcodeado |
-| Backend - APIs CRUD | 5% | ❌ Pendiente |
-| Frontend - Login | 30% | ⚠️ Sin API |
-| Frontend - Dashboard | 20% | ⚠️ Estático |
-| Frontend - Menú | 50% | ⚠️ JSON local |
-| Base de Datos | 10% | ❌ Sin migraciones |
+| Backend - Entidades JPA | 100% | ✅ Completa |
+| Backend - Autenticación | 100% | ✅ JWT + cookie HttpOnly |
+| Backend - APIs CRUD | 95% | ✅ Usuarios, Perfiles, Conjuntos, Administradoras, Propiedades, Propietarios |
+| Frontend - Login | 100% | ✅ Con API |
+| Frontend - Dashboard | 95% | ✅ Dinámico (facturas/incidencias mock) |
+| Frontend - Menú | 95% | ✅ Dinámico por perfil |
+| Base de Datos | 100% | ✅ Flyway migraciones |
 
-### Bloqueantes Críticos
+### Pendientes principales
 
-1. **Migraciones de BD** - Las tablas no coinciden con entidades JPA
-2. **UserService** - Conectar con tabla Persona real (no hardcodeado)
-3. **AuthContext** - Manejo de sesión en frontend
+1. **Sistema de Invitaciones** - Solo migración `V2.0.4`; sin entidad, controller, service ni frontend
+2. **Auditoría** - Tabla `log_operacion` y triggers sin implementar
+3. **Jerarquía Módulos/Opciones/Acciones** - Solo `GET /v1/modulos`; sin middleware de autorización granular
+4. **Tests** - 0% en backend y frontend
+5. **Refresh token** - No implementado (logout sí está)

@@ -1,6 +1,6 @@
 # API Endpoints - Documentación
 
-**Última actualización:** 28 de Mayo de 2026  
+**Última actualización:** 16 de Agosto de 2026  
 **Versión API:** v1  
 **Base Path:** `/v1`
 
@@ -51,6 +51,23 @@ https://chilly-libbey-wtysoftware-aab36281.koyeb.app/swagger-ui.html
 | POST | `/v1/login` | Iniciar sesión |
 | POST | `/v1/contexto/cambiar` | Cambiar contexto activo |
 | GET | `/v1/menu/perfil` | Obtener menú por perfil |
+| GET | `/v1/dashboard/stats` | Estadísticas del dashboard |
+| POST | `/v1/conjuntos` | Crear conjunto |
+| GET | `/v1/conjuntos` | Listar conjuntos |
+| GET | `/v1/conjuntos/{id}` | Obtener conjunto |
+| PUT | `/v1/conjuntos/{id}` | Actualizar conjunto |
+| DELETE | `/v1/conjuntos/{id}` | Inactivar conjunto |
+| GET | `/v1/conjuntos/{id}/usuarios` | Usuarios de un conjunto |
+| POST | `/v1/conjuntos/{conjId}/usuarios/{usuarioId}/perfiles` | Asignar perfiles en conjunto |
+| DELETE | `/v1/conjuntos/{conjId}/usuarios/{usuarioId}/perfiles/{perfilId}` | Remover perfil en conjunto |
+| POST | `/v1/administradoras` | Crear administradora |
+| GET | `/v1/administradoras` | Listar administradoras |
+| GET | `/v1/administradoras/{id}` | Obtener administradora |
+| PUT | `/v1/administradoras/{id}` | Actualizar administradora |
+| DELETE | `/v1/administradoras/{id}` | Inactivar administradora |
+| GET | `/v1/administradoras/{id}/usuarios` | Usuarios de una administradora |
+| POST | `/v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles` | Asignar perfiles en administradora |
+| DELETE | `/v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles/{perfilId}` | Remover perfil en administradora |
 | GET | `/v1/usuarios` | Listar usuarios |
 | GET | `/v1/usuarios/{id}` | Obtener usuario por ID |
 | PUT | `/v1/usuarios/{id}` | Actualizar usuario |
@@ -64,22 +81,34 @@ https://chilly-libbey-wtysoftware-aab36281.koyeb.app/swagger-ui.html
 | POST | `/v1/perfiles/{id}/modulos` | Asignar módulos a perfil |
 | DELETE | `/v1/perfiles/{id}/modulos/{moduloId}` | Revocar módulo de perfil |
 | GET | `/v1/modulos` | Listar módulos |
+| POST | `/v1/conjuntos` | Crear conjunto |
 | GET | `/v1/conjuntos` | Listar conjuntos |
 | GET | `/v1/conjuntos/{id}` | Obtener conjunto por ID |
+| PUT | `/v1/conjuntos/{id}` | Actualizar conjunto |
+| DELETE | `/v1/conjuntos/{id}` | Inactivar conjunto |
 | GET | `/v1/conjuntos/{id}/usuarios` | Usuarios de un conjunto |
 | POST | `/v1/conjuntos/{conjId}/usuarios/{usuarioId}/perfiles` | Asignar perfiles en conjunto |
 | DELETE | `/v1/conjuntos/{conjId}/usuarios/{usuarioId}/perfiles/{perfilId}` | Remover perfil en conjunto |
+| POST | `/v1/administradoras` | Crear administradora |
 | GET | `/v1/administradoras` | Listar administradoras |
 | GET | `/v1/administradoras/{id}` | Obtener administradora por ID |
+| PUT | `/v1/administradoras/{id}` | Actualizar administradora |
+| DELETE | `/v1/administradoras/{id}` | Inactivar administradora |
 | GET | `/v1/administradoras/{id}/usuarios` | Usuarios de una administradora |
 | POST | `/v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles` | Asignar perfiles en administradora |
 | DELETE | `/v1/administradoras/{admId}/usuarios/{usuarioId}/perfiles/{perfilId}` | Remover perfil en administradora |
 | GET | `/v1/dashboard/stats` | Obtener estadísticas del dashboard |
-| GET | `/api/owners` | Listar propietarios (legacy) |
-| GET | `/api/owners/{id}` | Obtener propietario (legacy) |
-| POST | `/api/owners` | Crear propietario (legacy) |
-| PUT | `/api/owners/{id}` | Actualizar propietario (legacy) |
-| DELETE | `/api/owners/{id}` | Eliminar propietario (legacy) |
+| GET | `/v1/propietarios` | Listar propietarios |
+| GET | `/v1/propietarios/{conjId}/{perId}` | Obtener propietario |
+| POST | `/v1/propietarios` | Crear propietario |
+| PUT | `/v1/propietarios/{conjId}/{perId}` | Actualizar propietario |
+| DELETE | `/v1/propietarios/{conjId}/{perId}` | Inactivar propietario |
+| GET | `/v1/propiedades` | Listar propiedades |
+| GET | `/v1/propiedades/{id}` | Obtener propiedad |
+| POST | `/v1/propiedades` | Crear propiedad |
+| PUT | `/v1/propiedades/{id}` | Actualizar propiedad |
+| DELETE | `/v1/propiedades/{id}` | Inactivar propiedad |
+| GET | `/v1/propiedades/clases` | Listar clases de propiedad |
 
 ---
 
@@ -377,11 +406,52 @@ Lista módulos del sistema.
 
 Lista conjuntos con filtros (estatus, search) y paginación.
 
+### POST /v1/conjuntos
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Crea un nuevo conjunto. El ID se genera automáticamente.
+
+**Request:**
+```json
+{
+  "documento": "J-98765432-1",
+  "nombre": "Conjunto Residencial Las Flores",
+  "telefono": "+582121234567",
+  "email": "lasflores@resimanager.com",
+  "persContactoId": 1
+}
+```
+
 ### GET /v1/conjuntos/{id}
 
 **Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
 Obtiene datos básicos de un conjunto.
+
+### PUT /v1/conjuntos/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Actualiza datos de un conjunto.
+
+**Request:**
+```json
+{
+  "documento": "J-98765432-1",
+  "nombre": "Conjunto Residencial Las Flores (Actualizado)",
+  "telefono": "+582121234567",
+  "email": "contacto@lasflores.com",
+  "persContactoId": 1,
+  "estatus": "A"
+}
+```
+
+### DELETE /v1/conjuntos/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Inactiva un conjunto (soft-delete, cambia estatus a 'I').
 
 ### GET /v1/conjuntos/{id}/usuarios
 
@@ -411,11 +481,62 @@ Remueve un perfil de un usuario en el conjunto (soft-delete).
 
 Lista administradoras con filtros (estatus, search) y paginación.
 
+### POST /v1/administradoras
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Crea una nueva administradora. El ID se genera automáticamente.
+
+**Request:**
+```json
+{
+  "documento": "J-12345678-9",
+  "nombre": "Nueva Administradora C.A.",
+  "telefono": "+582121234567",
+  "email": "contacto@nueva-adm.com"
+}
+```
+
 ### GET /v1/administradoras/{id}
 
 **Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
-Obtiene datos básicos de una administradora.
+Obtiene datos de una administradora. Retorna `AdministradoraDTO` con todos los campos.
+
+**Response 200:**
+```json
+{
+  "id": 1,
+  "documento": "J-12345678-9",
+  "nombre": "Inmobiliaria ABC",
+  "telefono": "+582121234567",
+  "email": "contacto@inmobiliariaabc.com",
+  "estatus": "A"
+}
+```
+
+### PUT /v1/administradoras/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Actualiza datos de una administradora.
+
+**Request:**
+```json
+{
+  "documento": "J-12345678-9",
+  "nombre": "Inmobiliaria ABC (Actualizada)",
+  "telefono": "+582121234567",
+  "email": "contacto@abc-updated.com",
+  "estatus": "A"
+}
+```
+
+### DELETE /v1/administradoras/{id}
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+Inactiva una administradora (soft-delete, cambia estatus a 'I').
 
 ### GET /v1/administradoras/{id}/usuarios
 
@@ -437,11 +558,17 @@ Remueve un perfil de un usuario en la administradora (soft-delete).
 
 ---
 
-## 🔑 PROPIETARIOS (Legacy - /api/owners)
+## 🔑 PROPIETARIOS (/v1/propietarios)
 
-**Estado:** ⚠️ Legacy (ruta antigua, no migrada a /v1)
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
 
-CRUD completo en `/api/owners` con paginación. Pendiente de migrar a `/v1/propietarios`.
+CRUD completo en `/v1/propietarios` (GET, POST, GET/{conjId}/{perId}, PUT/{conjId}/{perId}, DELETE/{conjId}/{perId}) con paginación, en `PropietarioController`. La antigua ruta `/api/owners` y `OwnerController` fueron reemplazados.
+
+## 🔑 PROPIEDADES (/v1/propiedades)
+
+**Estado:** ✅ IMPLEMENTADO Y FUNCIONAL
+
+CRUD completo en `/v1/propiedades` (GET, POST, GET/{id}, PUT/{id}, DELETE/{id}) y `GET /v1/propiedades/clases`, en `PropiedadController`.
 
 ---
 
@@ -474,23 +601,27 @@ Obtiene estadísticas generales del sistema: conteos reales de entidades (admini
 
 ## ❌ Endpoints Pendientes de Implementar
 
-### PROPIEDADES (/v1/propiedades)
-- ❌ POST - Crear propiedad
-- ❌ GET - Listar propiedades
-- ❌ GET /{id} - Obtener propiedad
-- ❌ PUT /{id} - Actualizar propiedad
-- ❌ DELETE /{id} - Eliminar propiedad
-
 ### INVITACIONES (/v1/invitaciones)
 - ❌ POST - Crear invitación
 - ❌ GET - Listar invitaciones
 - ❌ GET /{uuid} - Obtener invitación por UUID
 - ❌ PUT /{id} - Actualizar invitación
 - ❌ DELETE /{id} - Eliminar invitación
+- Nota: solo existe la migración `V2.0.4__CREATE_INVITATION_TABLES.sql`; no hay entidad JPA ni controller.
+
+### MÓDULOS / OPCIONES / ACCIONES (Jerarquía de Permisos)
+- ❌ CRUD Opciones por módulo
+- ❌ CRUD AccOpcion (acciones disponibles por opción)
+- ❌ CRUD Permisos granulares (OpcPerfil + AccOpcPerfil)
+- ❌ Middleware de autorización por opción+acción
+- Ver `12-estructura-modulos-seguridad.md` para detalle completo de tablas, entidades y estado actual
 
 ### AUDITORÍA
 - ❌ Tabla `log_operacion` con campos de auditoría
 - ❌ Triggers para registro automático de operaciones
+
+### SEGURIDAD ADICIONAL
+- ❌ Refresh token (el endpoint de logout sí está implementado)
 
 ---
 

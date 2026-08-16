@@ -23,8 +23,8 @@ Aplicación backend para la gestión de residencias y condominios.
 | Usuarios | GET /v1/usuarios, GET/{id}, PUT/{id}, DELETE/{id}, GET/{id}/perfiles |
 | Perfiles | GET /v1/perfiles, POST, GET/{id}, PUT/{id}, DELETE/{id}, POST/{id}/modulos, DELETE/{id}/modulos/{moduloId} |
 | Módulos | GET /v1/modulos |
-| Conjuntos | GET /v1/conjuntos, GET/{id}, GET/{id}/usuarios, POST/{conjId}/usuarios/{userId}/perfiles, DELETE/{conjId}/usuarios/{userId}/perfiles/{perfilId} |
-| Administradoras | GET /v1/administradoras, GET/{id}, GET/{id}/usuarios, POST/{admId}/usuarios/{userId}/perfiles, DELETE/{admId}/usuarios/{userId}/perfiles/{perfilId} |
+| Conjuntos | POST, GET, GET/{id}, PUT/{id}, DELETE/{id}, GET/{id}/usuarios, POST/{conjId}/usuarios/{userId}/perfiles, DELETE/{conjId}/usuarios/{userId}/perfiles/{perfilId} |
+| Administradoras | POST, GET, GET/{id}, PUT/{id}, DELETE/{id}, GET/{id}/usuarios, POST/{admId}/usuarios/{userId}/perfiles, DELETE/{admId}/usuarios/{userId}/perfiles/{perfilId} |
 | Propietarios (legacy) | GET /api/owners, POST, GET/{id}, PUT/{id}, DELETE/{id} |
 
 Documentación Swagger: http://localhost:8080/swagger-ui.html
@@ -85,7 +85,7 @@ src/
 │   ├── persistance/
 │   │   ├── entity/       # 40+ entidades JPA
 │   │   └── repository/   # 14 repositorios
-│   └── service/          # 10 servicios
+│   └── service/          # 11 servicios
 └── test/                 # Pendiente de implementar
 ```
 
