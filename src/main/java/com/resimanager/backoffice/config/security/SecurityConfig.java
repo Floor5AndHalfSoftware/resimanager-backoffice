@@ -1,6 +1,7 @@
 package com.resimanager.backoffice.config.security;
 
 import com.resimanager.backoffice.config.security.jwt.JWTAuthorizationFilter;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import com.resimanager.backoffice.config.security.provider.CustomAuthenticationProvider;
 import com.resimanager.backoffice.exception.MvcRequestMatcherConfigurationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,6 @@ public class SecurityConfig {
 
     private final String[] WHITE_LIST = {
             "/",
-            "/actuator/**",
             "/scalar/**",
             "/v3/api-docs/**",
             "/v3/api-docs",
@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> {
                     try {
+                        auth.requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll();
                         for (String pattern : WHITE_LIST) {
                             auth.requestMatchers(new MvcRequestMatcher(introspector, pattern)).permitAll();
                         }
