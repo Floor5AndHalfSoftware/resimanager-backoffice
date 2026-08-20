@@ -41,6 +41,7 @@ public class SecurityConfig {
 
     private final String[] WHITE_LIST = {
             "/",
+            "/actuator/**",
             "/scalar/**",
             "/v3/api-docs/**",
             "/v3/api-docs",
