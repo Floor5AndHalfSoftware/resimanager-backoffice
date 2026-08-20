@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -36,11 +35,11 @@ public class MenuService {
             MenuDto menuDto = new MnuToMnuDtoMapper().apply(menuItem);
             List<MenuItem> menusHijos= subMenus(menuItem.getId());
             for (MenuItem menuHijo : menusHijos) {
-                MenuDto menuHijoDto =new MnuToMnuDtoMapper().apply(menuHijo);
-                menuHijoDto.setSubmenus(new ArrayList<>());
+                MenuDto menuHijoDto = new MnuToMnuDtoMapper().apply(menuHijo);
+                menuHijoDto = menuHijoDto.toBuilder().submenus(new ArrayList<>()).build();
                 menusHijosDto.add(menuHijoDto);
             }
-            menuDto.setSubmenus(menusHijosDto);
+            menuDto = menuDto.toBuilder().submenus(menusHijosDto).build();
             menusDto.add(menuDto);
         }
         return menusDto;
@@ -80,20 +79,23 @@ public class MenuService {
         MnuToMnuDtoMapper mapper = new MnuToMnuDtoMapper();
         for (MenuItem item : menuItems) {
             MenuDto dto = mapper.apply(item);
-            dto.setSubmenus(new ArrayList<>());
-            menuMap.put(dto.getItemId(), dto);
+            dto = dto.toBuilder().submenus(new ArrayList<>()).build();
+            menuMap.put(dto.itemId(), dto);
         }
         
         // Build hierarchy
         for (MenuDto dto : menuMap.values()) {
-            if (dto.getIdPadre() == 0) {
+            if (dto.idPadre() == 0) {
                 // Root level item
                 rootMenus.add(dto);
             } else {
                 // Child item - add to parent's submenu
-                MenuDto parent = menuMap.get(dto.getIdPadre());
+                MenuDto parent = menuMap.get(dto.idPadre());
                 if (parent != null) {
-                    parent.getSubmenus().add(dto);
+                    List<MenuDto> parentSubmenus = new ArrayList<>(parent.submenus());
+                    parentSubmenus.add(dto);
+                    MenuDto updatedParent = parent.toBuilder().submenus(parentSubmenus).build();
+                    menuMap.put(parent.itemId(), updatedParent);
                 } else {
                     // Parent not accessible by this profile, add as root
                     rootMenus.add(dto);
@@ -102,24 +104,34 @@ public class MenuService {
         }
         
         // Sort by order
-        rootMenus.sort((a, b) -> Integer.compare(a.getOrden(), b.getOrden()));
-        for (MenuDto menu : rootMenus) {
+        List<MenuDto> sortedRoots = new ArrayList<>(menuMap.values()).stream()
+            .filter(dto -> dto.idPadre() == 0)
+            .sorted((a, b) -> Integer.compare(a.orden(), b.orden()))
+            .toList();
+        
+        for (MenuDto menu : sortedRoots) {
             sortSubmenus(menu);
         }
+        
+        // Rebuild rootMenus with sorted versions
+        rootMenus.clear();
+        rootMenus.addAll(sortedRoots);
         
         return rootMenus;
     }
     
     /**
-     * Recursively sort submenus
+     * Recursively sort submenus (returns new sorted version)
      */
-    private void sortSubmenus(MenuDto menu) {
-        if (menu.getSubmenus() != null && !menu.getSubmenus().isEmpty()) {
-            menu.getSubmenus().sort((a, b) -> Integer.compare(a.getOrden(), b.getOrden()));
-            for (MenuDto submenu : menu.getSubmenus()) {
-                sortSubmenus(submenu);
-            }
+    private MenuDto sortSubmenus(MenuDto menu) {
+        if (menu.submenus() != null && !menu.submenus().isEmpty()) {
+            List<MenuDto> sorted = menu.submenus().stream()
+                .map(this::sortSubmenus)
+                .sorted((a, b) -> Integer.compare(a.orden(), b.orden()))
+                .toList();
+            return menu.toBuilder().submenus(sorted).build();
         }
+        return menu;
     }
 
     public List<MenuItem> subMenus(MenuItemId menuid){

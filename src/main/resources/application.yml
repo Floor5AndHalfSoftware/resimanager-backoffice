@@ -64,17 +64,20 @@ springdoc:
     path: /v3/api-docs
     enabled: true
   swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-    try-it-out-enabled: true
-    operationsSorter: method
-    tagsSorter: alpha
-    docExpansion: none
-    displayRequestDuration: true
-    showExtensions: true
-    showCommonExtensions: true
+    enabled: false
   show-actuator: true
   use-management-port: false
+
+scalar:
+  enabled: true
+  path: /scalar
+  url: /v3/api-docs
+  theme: deepSpace
+  layout: modern
+  showSidebar: true
+  showModels: true
+  operationSorter: method
+  tagSorter: alpha
 
 management:
   endpoints:

@@ -6,6 +6,7 @@ import com.resimanager.backoffice.dto.UserInfoDTO;
 import com.resimanager.backoffice.service.ContextoService;
 import com.resimanager.backoffice.service.JwtService;
 import com.resimanager.backoffice.service.UserService;
+import com.resimanager.backoffice.service.mapper.PersonaMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -39,6 +40,7 @@ public class ContextoController {
     private final ContextoService contextoService;
     private final UserService userService;
     private final JwtService jwtService;
+    private final PersonaMapper personaMapper;
     
     @Value("${app.security.cookie-secure}")
     private boolean cookieSecure;
@@ -80,7 +82,7 @@ public class ContextoController {
             String username = auth.getName();
             
             log.info("Usuario {} solicitando cambio de contexto a: tipo={}, entidadId={}, perfilId={}", 
-                    username, request.getTipo(), request.getEntidadId(), request.getPerfilId());
+                    username, request.tipo(), request.entidadId(), request.perfilId());
             
             // Obtener el ID del usuario
             var personaOpt = userService.getUserByUsername(username);
@@ -93,21 +95,14 @@ public class ContextoController {
             // Validar y construir el contexto
             ContextoActualDTO contextoActual = contextoService.validarYConstruirContexto(
                     personaId, 
-                    request.getTipo(), 
-                    request.getEntidadId(), 
-                    request.getPerfilId()
+                    request.tipo(), 
+                    request.entidadId(), 
+                    request.perfilId()
             );
             
             // Construir UserInfo
             var persona = personaOpt.get();
-            UserInfoDTO userInfo = UserInfoDTO.builder()
-                    .id(persona.getId())
-                    .usuario(persona.getPerUsuario())
-                    .nombre(persona.getPerNombre())
-                    .apellido(persona.getPerApellido())
-                    .email(persona.getPerEMail())
-                    .documento(persona.getPerDocIdent())
-                    .build();
+            UserInfoDTO userInfo = personaMapper.toUserInfoDTO(persona);
             
             // Generar nuevo token con el contexto
             String newToken = jwtService.generateTokenWithContext(auth, userInfo, contextoActual);

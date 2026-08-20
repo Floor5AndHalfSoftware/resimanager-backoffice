@@ -16,6 +16,7 @@ import com.resimanager.backoffice.persistance.repository.PerfPersAdministradoraR
 import com.resimanager.backoffice.persistance.repository.PerfilRepository;
 import com.resimanager.backoffice.persistance.repository.PersAdministradoraRepository;
 import com.resimanager.backoffice.persistance.repository.PersonaRepository;
+import com.resimanager.backoffice.service.mapper.AdministradoraMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class AdministradoraService {
     private final PerfPersAdministradoraRepository perfPersAdministradoraRepository;
     private final PerfilRepository perfilRepository;
     private final PersonaRepository personaRepository;
+    private final AdministradoraMapper administradoraMapper;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -56,7 +58,7 @@ public class AdministradoraService {
         Page<Administradora> result = administradoraRepository.findAllWithFilters(estatusParam, searchParam, pageable);
 
         List<AdministradoraDTO> data = result.getContent().stream()
-                .map(this::toDTO)
+                .map(administradoraMapper::toDTO)
                 .toList();
 
         return AdministradoraListResponse.builder()
@@ -74,7 +76,7 @@ public class AdministradoraService {
         Administradora administradora = administradoraRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + id));
 
-        return toDTO(administradora);
+        return administradoraMapper.toDTO(administradora);
     }
 
     @Transactional
@@ -100,7 +102,7 @@ public class AdministradoraService {
         adm.setAdmFchHorMod(OffsetDateTime.now());
         adm.setAdmEstMod(estacion);
 
-        return toDTO(administradoraRepository.save(adm));
+        return administradoraMapper.toDTO(administradoraRepository.save(adm));
     }
 
     @Transactional
@@ -124,7 +126,7 @@ public class AdministradoraService {
         adm.setAdmFchHorMod(OffsetDateTime.now());
         adm.setAdmEstMod(estacion);
 
-        return toDTO(administradoraRepository.save(adm));
+        return administradoraMapper.toDTO(administradoraRepository.save(adm));
     }
 
     @Transactional
@@ -210,7 +212,7 @@ public class AdministradoraService {
         int asignados = 0;
         int reactivados = 0;
 
-        for (Integer perfilId : request.getPerfiles()) {
+        for (Integer perfilId : request.perfiles()) {
             Perfil perfil = perfilRepository.findById(perfilId)
                     .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado con ID: " + perfilId));
 
@@ -289,17 +291,6 @@ public class AdministradoraService {
 
         log.info("Perfil ID: {} removido del usuario ID: {} en administradora ID: {}", perfilId, usuarioId, admId);
         return Map.of("message", "Perfil removido correctamente");
-    }
-
-    private AdministradoraDTO toDTO(Administradora a) {
-        return AdministradoraDTO.builder()
-                .id(a.getId())
-                .nombre(a.getAdmNombre())
-                .documento(a.getAdmDocIdent())
-                .email(a.getAdmEMail())
-                .telefono(a.getAdmTelefono())
-                .estatus(a.getAdmSts())
-                .build();
     }
 
     private Persona findEjecutor(String username) {

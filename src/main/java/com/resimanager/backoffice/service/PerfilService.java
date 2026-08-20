@@ -3,7 +3,6 @@ package com.resimanager.backoffice.service;
 import com.resimanager.backoffice.dto.*;
 import com.resimanager.backoffice.exception.BadRequestException;
 import com.resimanager.backoffice.exception.ResourceNotFoundException;
-import com.resimanager.backoffice.persistance.entity.AccOpcPerfil;
 import com.resimanager.backoffice.persistance.entity.ModPerfil;
 import com.resimanager.backoffice.persistance.entity.ModPerfilId;
 import com.resimanager.backoffice.persistance.entity.Modulo;
@@ -14,6 +13,8 @@ import com.resimanager.backoffice.persistance.repository.ModPerfilRepository;
 import com.resimanager.backoffice.persistance.repository.ModuloRepository;
 import com.resimanager.backoffice.persistance.repository.PerfilRepository;
 import com.resimanager.backoffice.persistance.repository.PersonaRepository;
+import com.resimanager.backoffice.service.mapper.ModuloMapper;
+import com.resimanager.backoffice.service.mapper.PerfilMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,8 @@ public class PerfilService {
     private final ModPerfilRepository modPerfilRepository;
     private final PersonaRepository personaRepository;
     private final AccOpcPerfilRepository accOpcPerfilRepository;
+    private final PerfilMapper perfilMapper;
+    private final ModuloMapper moduloMapper;
 
     /**
      * Lista perfiles con filtros y paginación
@@ -65,7 +68,11 @@ public class PerfilService {
         
         // Convertir a DTOs
         List<PerfilDTO> perfilesDTO = perfilesPage.getContent().stream()
-                .map(this::toPerfilDTO)
+                .map(perfil -> {
+                    Long usuariosAsignados = perfilRepository.countUsuariosAsignados(perfil.getId());
+                    PerfilDTO base = perfilMapper.toDTO(perfil);
+                    return base.toBuilder().usuariosAsignados(usuariosAsignados).build();
+                })
                 .collect(Collectors.toList());
         
         return PerfilListResponse.builder()
@@ -91,7 +98,7 @@ public class PerfilService {
         // Obtener módulos asignados
         List<Modulo> modulos = moduloRepository.findByPerfilId(id);
         List<ModuloDTO> modulosDTO = modulos.stream()
-                .map(this::toModuloDTO)
+                .map(moduloMapper::toDTO)
                 .collect(Collectors.toList());
         
         // Obtener permisos agrupados por módulo
@@ -123,11 +130,11 @@ public class PerfilService {
      */
     @Transactional
     public PerfilDTO createPerfil(CreatePerfilRequest request, String username, String estacion) {
-        log.info("Creando perfil: {} por usuario: {}", request.getNombre(), username);
+        log.info("Creando perfil: {} por usuario: {}", request.nombre(), username);
         
         // Validar que no exista un perfil con el mismo nombre
-        if (perfilRepository.existsByPrfNombre(request.getNombre())) {
-            throw new BadRequestException("Ya existe un perfil con el nombre: " + request.getNombre());
+        if (perfilRepository.existsByPrfNombre(request.nombre())) {
+            throw new BadRequestException("Ya existe un perfil con el nombre: " + request.nombre());
         }
         
         // Obtener usuario creador
@@ -136,9 +143,9 @@ public class PerfilService {
         
         // Crear perfil
         Perfil perfil = new Perfil();
-        perfil.setPrfNombre(request.getNombre());
-        perfil.setPrfDescrip(request.getDescripcion());
-        perfil.setPrfNivel(request.getNivel());
+        perfil.setPrfNombre(request.nombre());
+        perfil.setPrfDescrip(request.descripcion());
+        perfil.setPrfNivel(request.nivel());
         perfil.setPrfSts("A");
         perfil.setPrfUsrcrea(usuario);
         perfil.setPrfFchHorCrea(OffsetDateTime.now());
@@ -150,7 +157,7 @@ public class PerfilService {
         perfil = perfilRepository.save(perfil);
         
         log.info("Perfil creado exitosamente con ID: {}", perfil.getId());
-        return toPerfilDTO(perfil);
+        return perfilMapper.toDTO(perfil);
     }
 
     /**
@@ -175,27 +182,27 @@ public class PerfilService {
         // Actualizar campos si están presentes
         boolean updated = false;
         
-        if (request.getNombre() != null && !request.getNombre().equals(perfil.getPrfNombre())) {
+        if (request.nombre() != null && !request.nombre().equals(perfil.getPrfNombre())) {
             // Validar que no exista otro perfil con ese nombre
-            if (perfilRepository.existsByPrfNombreAndIdNot(request.getNombre(), id)) {
-                throw new BadRequestException("Ya existe otro perfil con el nombre: " + request.getNombre());
+            if (perfilRepository.existsByPrfNombreAndIdNot(request.nombre(), id)) {
+                throw new BadRequestException("Ya existe otro perfil con el nombre: " + request.nombre());
             }
-            perfil.setPrfNombre(request.getNombre());
+            perfil.setPrfNombre(request.nombre());
             updated = true;
         }
         
-        if (request.getDescripcion() != null) {
-            perfil.setPrfDescrip(request.getDescripcion());
+        if (request.descripcion() != null) {
+            perfil.setPrfDescrip(request.descripcion());
             updated = true;
         }
         
-        if (request.getEstatus() != null && !request.getEstatus().equals(perfil.getPrfSts())) {
-            perfil.setPrfSts(request.getEstatus());
+        if (request.estatus() != null && !request.estatus().equals(perfil.getPrfSts())) {
+            perfil.setPrfSts(request.estatus());
             updated = true;
         }
         
-        if (request.getNivel() != null && !request.getNivel().equals(perfil.getPrfNivel())) {
-            perfil.setPrfNivel(request.getNivel());
+        if (request.nivel() != null && !request.nivel().equals(perfil.getPrfNivel())) {
+            perfil.setPrfNivel(request.nivel());
             updated = true;
         }
         
@@ -209,7 +216,7 @@ public class PerfilService {
             log.debug("No hubo cambios en el perfil ID: {}", id);
         }
         
-        return toPerfilDTO(perfil);
+        return perfilMapper.toDTO(perfil);
     }
 
     /**
@@ -252,7 +259,7 @@ public class PerfilService {
     @Transactional
     public Map<String, Object> asignarModulos(Integer id, AsignarModulosRequest request, String username, String estacion) {
         log.info("Asignando {} módulos al perfil ID: {} por usuario: {}", 
-                 request.getModulos().size(), id, username);
+                 request.modulos().size(), id, username);
         
         // Validar que el perfil existe
         Perfil perfil = perfilRepository.findById(id)
@@ -263,8 +270,8 @@ public class PerfilService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + username));
         
         // Validar que todos los módulos existen y están activos
-        List<Modulo> modulos = moduloRepository.findActiveByIds(request.getModulos());
-        if (modulos.size() != request.getModulos().size()) {
+        List<Modulo> modulos = moduloRepository.findActiveByIds(request.modulos());
+        if (modulos.size() != request.modulos().size()) {
             throw new BadRequestException("Uno o más módulos no existen o están inactivos");
         }
         
@@ -347,36 +354,12 @@ public class PerfilService {
 
     // Métodos auxiliares de conversión
     
-    private PerfilDTO toPerfilDTO(Perfil perfil) {
-        Long usuariosAsignados = perfilRepository.countUsuariosAsignados(perfil.getId());
-        
-        return PerfilDTO.builder()
-                .id(perfil.getId())
-                .nombre(perfil.getPrfNombre())
-                .descripcion(perfil.getPrfDescrip())
-                .estatus(perfil.getPrfSts())
-                .nivel(perfil.getPrfNivel())
-                .fechaCreacion(perfil.getPrfFchHorCrea())
-                .usuariosAsignados(usuariosAsignados)
-                .build();
-    }
-    
-    private ModuloDTO toModuloDTO(Modulo modulo) {
-        return ModuloDTO.builder()
-                .id(modulo.getModId())
-                .nombre(modulo.getModNombre())
-                .descripcion(modulo.getModDescrip())
-                .nivel(modulo.getModNivel())
-                .build();
-    }
-    
     /**
      * Agrupa los permisos por módulo
      * @param permisos Lista de permisos del perfil (Object[] con moduloId, moduloNombre, accionNombre)
      * @return Lista de permisos agrupados por módulo
      */
     private List<PermisoDTO> groupPermissionsByModule(List<Object[]> permisos) {
-        // Agrupar por módulo
         Map<Integer, PermisoDTO> permisosMap = new HashMap<>();
         
         for (Object[] permiso : permisos) {
@@ -384,16 +367,12 @@ public class PerfilService {
             String moduloNombre = (String) permiso[1];
             String accionNombre = (String) permiso[2];
             
-            PermisoDTO permisoDTO = permisosMap.get(moduloId);
-            if (permisoDTO == null) {
-                permisoDTO = new PermisoDTO();
-                permisoDTO.setModuloId(moduloId);
-                permisoDTO.setModulo(moduloNombre);
-                permisoDTO.setAcciones(new ArrayList<>());
-                permisosMap.put(moduloId, permisoDTO);
-            }
-            
-            permisoDTO.getAcciones().add(accionNombre);
+            permisosMap.merge(moduloId,
+                new PermisoDTO(moduloId, moduloNombre, new ArrayList<>(List.of(accionNombre))),
+                (existing, ignored) -> {
+                    existing.acciones().add(accionNombre);
+                    return existing;
+                });
         }
         
         return new ArrayList<>(permisosMap.values());

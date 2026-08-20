@@ -63,7 +63,7 @@ El sistema de autenticación implementa un modelo RBAC (Role-Based Access Contro
 ```json
 {
   "username": "admin",
-  "password": "QWRtaW4xMjMh"  // Base64 encoded
+  "password": "QWRtaW4yMDI0IQ=="  // Base64 encoded
 }
 ```
 

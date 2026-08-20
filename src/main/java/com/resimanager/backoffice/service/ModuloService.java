@@ -3,6 +3,7 @@ package com.resimanager.backoffice.service;
 import com.resimanager.backoffice.dto.ModuloDTO;
 import com.resimanager.backoffice.persistance.entity.Modulo;
 import com.resimanager.backoffice.persistance.repository.ModuloRepository;
+import com.resimanager.backoffice.service.mapper.ModuloMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 public class ModuloService {
 
     private final ModuloRepository moduloRepository;
+    private final ModuloMapper moduloMapper;
 
     public List<ModuloDTO> getModulos(Integer nivel) {
         List<Modulo> modulos;
@@ -29,17 +31,8 @@ public class ModuloService {
         }
 
         return modulos.stream()
-                .map(this::toDTO)
-                .sorted(Comparator.comparing(ModuloDTO::getNombre))
+                .map(moduloMapper::toDTO)
+                .sorted(Comparator.comparing(ModuloDTO::nombre))
                 .toList();
-    }
-
-    private ModuloDTO toDTO(Modulo modulo) {
-        return ModuloDTO.builder()
-                .id(modulo.getModId())
-                .nombre(modulo.getModNombre())
-                .descripcion(modulo.getModDescrip())
-                .nivel(modulo.getModNivel())
-                .build();
     }
 }

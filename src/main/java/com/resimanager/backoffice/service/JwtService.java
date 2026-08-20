@@ -85,20 +85,20 @@ public class JwtService {
         
         // Add user info
         if (userInfo != null) {
-            preToken.claim("userId", userInfo.getId());
-            preToken.claim("nombre", userInfo.getNombre());
-            preToken.claim("apellido", userInfo.getApellido());
-            preToken.claim("email", userInfo.getEmail());
-            preToken.claim("documento", userInfo.getDocumento());
+            preToken.claim("userId", userInfo.id());
+            preToken.claim("nombre", userInfo.nombre());
+            preToken.claim("apellido", userInfo.apellido());
+            preToken.claim("email", userInfo.email());
+            preToken.claim("documento", userInfo.documento());
         }
         
         // Add context info
         if (contexto != null) {
-            preToken.claim("contextoTipo", contexto.getTipo());
-            preToken.claim("contextoEntidadId", contexto.getEntidadId());
-            preToken.claim("contextoEntidadNombre", contexto.getEntidadNombre());
-            preToken.claim("contextoPerfilId", contexto.getPerfilId());
-            preToken.claim("contextoPerfilNombre", contexto.getPerfilNombre());
+            preToken.claim("contextoTipo", contexto.tipo());
+            preToken.claim("contextoEntidadId", contexto.entidadId());
+            preToken.claim("contextoEntidadNombre", contexto.entidadNombre());
+            preToken.claim("contextoPerfilId", contexto.perfilId());
+            preToken.claim("contextoPerfilNombre", contexto.perfilNombre());
         }
         
         return preToken.compact();

@@ -126,20 +126,20 @@ public class UsuarioService {
         Persona ejecutor = personaRepository.findByPerUsuario(executorUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejecutor no encontrado"));
 
-        if (request.getNombre() != null && !request.getNombre().isBlank()) {
-            persona.setPerNombre(request.getNombre().trim());
+        if (request.nombre() != null && !request.nombre().isBlank()) {
+            persona.setPerNombre(request.nombre().trim());
         }
-        if (request.getApellido() != null && !request.getApellido().isBlank()) {
-            persona.setPerApellido(request.getApellido().trim());
+        if (request.apellido() != null && !request.apellido().isBlank()) {
+            persona.setPerApellido(request.apellido().trim());
         }
-        if (request.getTelefono() != null && !request.getTelefono().isBlank()) {
-            persona.setPerTlfCel(request.getTelefono().trim());
+        if (request.telefono() != null && !request.telefono().isBlank()) {
+            persona.setPerTlfCel(request.telefono().trim());
         }
-        if (request.getEmail() != null && !request.getEmail().isBlank()) {
-            persona.setPerEMail(request.getEmail().trim());
+        if (request.email() != null && !request.email().isBlank()) {
+            persona.setPerEMail(request.email().trim());
         }
-        if (request.getEstatus() != null && (request.getEstatus().equals("A") || request.getEstatus().equals("I"))) {
-            persona.setPerSts(request.getEstatus());
+        if (request.estatus() != null && (request.estatus().equals("A") || request.estatus().equals("I"))) {
+            persona.setPerSts(request.estatus());
         }
 
         persona.setPerUsrmod(ejecutor);

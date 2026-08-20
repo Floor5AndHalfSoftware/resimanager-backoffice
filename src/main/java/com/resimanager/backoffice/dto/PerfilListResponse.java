@@ -1,19 +1,13 @@
 package com.resimanager.backoffice.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class PerfilListResponse {
-    private List<PerfilDTO> data;
-    private Long total;
-    private Integer page;
-    private Integer limit;
-}
+public record PerfilListResponse(
+    List<PerfilDTO> data,
+    Long total,
+    Integer page,
+    Integer limit
+) {}

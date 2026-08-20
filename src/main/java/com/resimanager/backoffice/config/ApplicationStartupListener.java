@@ -57,7 +57,7 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
                     "  External:           http://" + hostAddress + ":" + serverPort + "\n" +
                     "  Host:               " + hostName + "\n" +
                     "  ------------------------------------------------------------------------------\n" +
-                    "  Swagger UI:         http://localhost:" + serverPort + "/swagger-ui.html\n" +
+                    "  Scalar UI:          http://localhost:" + serverPort + "/scalar\n" +
                     "  API Docs:           http://localhost:" + serverPort + "/v3/api-docs\n" +
                     "  ------------------------------------------------------------------------------\n" +
                     "  Actuator:           http://localhost:" + serverPort + "/actuator\n" +

@@ -16,6 +16,7 @@ import com.resimanager.backoffice.persistance.repository.PerfPersConjuntoReposit
 import com.resimanager.backoffice.persistance.repository.PerfilRepository;
 import com.resimanager.backoffice.persistance.repository.PersConjuntoRepository;
 import com.resimanager.backoffice.persistance.repository.PersonaRepository;
+import com.resimanager.backoffice.service.mapper.ConjuntoMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class ConjuntoService {
     private final PerfPersConjuntoRepository perfPersConjuntoRepository;
     private final PerfilRepository perfilRepository;
     private final PersonaRepository personaRepository;
+    private final ConjuntoMapper conjuntoMapper;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -59,7 +61,7 @@ public class ConjuntoService {
         Page<Conjunto> result = conjuntoRepository.findAllWithFilters(estatusParam, searchParam, pageable);
 
         List<ConjuntoDTO> data = result.getContent().stream()
-                .map(this::toDTO)
+                .map(conjuntoMapper::toDTO)
                 .toList();
 
         return ConjuntoListResponse.builder()
@@ -82,7 +84,7 @@ public class ConjuntoService {
         Conjunto conjunto = conjuntoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Conjunto no encontrado con ID: " + id));
 
-        return toDTO(conjunto);
+        return conjuntoMapper.toDTO(conjunto);
     }
 
     /**
@@ -114,7 +116,7 @@ public class ConjuntoService {
         conj.setConjFchHorMod(OffsetDateTime.now());
         conj.setConjEstMod(estacion);
 
-        return toDTO(conjuntoRepository.save(conj));
+        return conjuntoMapper.toDTO(conjuntoRepository.save(conj));
     }
 
     /**
@@ -146,7 +148,7 @@ public class ConjuntoService {
         conj.setConjFchHorMod(OffsetDateTime.now());
         conj.setConjEstMod(estacion);
 
-        return toDTO(conjuntoRepository.save(conj));
+        return conjuntoMapper.toDTO(conjuntoRepository.save(conj));
     }
 
     /**
@@ -250,7 +252,7 @@ public class ConjuntoService {
         int asignados = 0;
         int reactivados = 0;
 
-        for (Integer perfilId : request.getPerfiles()) {
+        for (Integer perfilId : request.perfiles()) {
             Perfil perfil = perfilRepository.findById(perfilId)
                     .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado con ID: " + perfilId));
 
@@ -338,18 +340,6 @@ public class ConjuntoService {
 
         log.info("Perfil ID: {} removido del usuario ID: {} en conjunto ID: {}", perfilId, usuarioId, conjId);
         return Map.of("message", "Perfil removido correctamente");
-    }
-
-    private ConjuntoDTO toDTO(Conjunto c) {
-        return ConjuntoDTO.builder()
-                .id(c.getId())
-                .nombre(c.getConjNombre())
-                .documento(c.getConjDocIdent())
-                .email(c.getConjEMail())
-                .telefono(c.getConjTelefono())
-                .estatus(c.getConjSts())
-                .persContactoId(c.getConjPersContacto() != null ? c.getConjPersContacto().getId() : null)
-                .build();
     }
 
     private Persona findEjecutor(String username) {

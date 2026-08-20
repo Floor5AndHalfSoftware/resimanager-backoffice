@@ -1,46 +1,30 @@
 package com.resimanager.backoffice.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class UsuarioPerfilesResponse {
-
-    private UsuarioDTO persona;
-    private List<ContextoPerfilDTO> contextos;
-
-    @Data
+public record UsuarioPerfilesResponse(
+    UsuarioDTO persona,
+    List<ContextoPerfilDTO> contextos
+) {
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ContextoPerfilDTO {
-        private String tipo; // "ADMINISTRADORA" | "CONJUNTO"
-        private EntidadDTO entidad;
-        private List<PerfilSimpleDTO> perfiles;
-    }
+    public record ContextoPerfilDTO(
+        String tipo,
+        EntidadDTO entidad,
+        List<PerfilSimpleDTO> perfiles
+    ) {}
 
-    @Data
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class EntidadDTO {
-        private Integer id;
-        private String nombre;
-    }
+    public record EntidadDTO(
+        Integer id,
+        String nombre
+    ) {}
 
-    @Data
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PerfilSimpleDTO {
-        private Integer id;
-        private String nombre;
-    }
+    public record PerfilSimpleDTO(
+        Integer id,
+        String nombre
+    ) {}
 }

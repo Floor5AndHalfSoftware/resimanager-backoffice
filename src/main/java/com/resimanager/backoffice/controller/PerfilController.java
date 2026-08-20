@@ -132,7 +132,7 @@ public class PerfilController {
             @Valid @RequestBody CreatePerfilRequest request,
             HttpServletRequest httpRequest
     ) {
-        log.info("POST /perfiles - Crear perfil: {}", request.getNombre());
+        log.info("POST /perfiles - Crear perfil: {}", request.nombre());
         
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
@@ -235,7 +235,7 @@ public class PerfilController {
             @Valid @RequestBody AsignarModulosRequest request,
             HttpServletRequest httpRequest
     ) {
-        log.info("POST /perfiles/{}/modulos - Asignar {} módulos", id, request.getModulos().size());
+        log.info("POST /perfiles/{}/modulos - Asignar {} módulos", id, request.modulos().size());
         
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();

@@ -182,7 +182,7 @@ public class ConjuntoController {
             HttpServletRequest httpRequest
     ) {
         log.info("POST /conjuntos/{}/usuarios/{}/perfiles - Asignar {} perfiles",
-                conjId, usuarioId, request.getPerfiles() != null ? request.getPerfiles().size() : 0);
+                conjId, usuarioId, request.perfiles() != null ? request.perfiles().size() : 0);
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();

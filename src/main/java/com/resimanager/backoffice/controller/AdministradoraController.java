@@ -181,7 +181,7 @@ public class AdministradoraController {
             HttpServletRequest httpRequest
     ) {
         log.info("POST /administradoras/{}/usuarios/{}/perfiles - Asignar {} perfiles",
-                admId, usuarioId, request.getPerfiles() != null ? request.getPerfiles().size() : 0);
+                admId, usuarioId, request.perfiles() != null ? request.perfiles().size() : 0);
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();

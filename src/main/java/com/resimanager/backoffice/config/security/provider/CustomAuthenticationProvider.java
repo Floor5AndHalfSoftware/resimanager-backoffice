@@ -48,15 +48,15 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         if (user != null) {
             var apiPass = new String(Base64.getDecoder().decode((String) authentication.getCredentials()));
-            var dbPass = user.getPassword();
+            var dbPass = user.password();
 
-            if (username.equals(user.getUsername()) && passwordEncoder.matches(apiPass, dbPass)) {
+            if (username.equals(user.username()) && passwordEncoder.matches(apiPass, dbPass)) {
                 Objects.requireNonNull(cacheManagerLogin.getCache(LOGIN_ATTEMPTS_CACHE)).evict(username);
 
                 final List<GrantedAuthority> authorities = new ArrayList<>();
-                user.getAuthorities().forEach(authority -> authorities.add(new SimpleGrantedAuthority(authority)));
+                user.authorities().forEach(authority -> authorities.add(new SimpleGrantedAuthority(authority)));
 
-                return new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword(), authorities);
+                return new UsernamePasswordAuthenticationToken(user.username(), user.password(), authorities);
             } else {
 
                 if (Objects.isNull(attemps)) {

@@ -5,6 +5,7 @@ import com.resimanager.backoffice.dto.*;
 import com.resimanager.backoffice.persistance.repository.PersonaRepository;
 import com.resimanager.backoffice.service.ContextoService;
 import com.resimanager.backoffice.service.JwtService;
+import com.resimanager.backoffice.service.mapper.PersonaMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -50,6 +51,7 @@ public class LoginController {
     private final ObjectMapper objectMapper;
     private final ContextoService contextoService;
     private final PersonaRepository personaRepository;
+    private final PersonaMapper personaMapper;
     
     @Value("${app.security.cookie-secure}")
     private boolean cookieSecure;
@@ -82,26 +84,19 @@ public class LoginController {
     public ResponseEntity<LoginResponseJson> login(
             @Valid @RequestBody @NotNull LoginRequestJson loginRequestJson,
             HttpServletResponse response) {
-        log.info("Login attempt for user: {}", loginRequestJson.getUsername());
+        log.info("Login attempt for user: {}", loginRequestJson.username());
         
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequestJson.getUsername(), loginRequestJson.getPassword())
+                new UsernamePasswordAuthenticationToken(loginRequestJson.username(), loginRequestJson.password())
         );
         
         if (authentication.isAuthenticated()) {
             // Get user data from database
-            var persona = personaRepository.findByPerUsuarioOrPerEMail(loginRequestJson.getUsername(), loginRequestJson.getUsername())
+            var persona = personaRepository.findByPerUsuarioOrPerEMail(loginRequestJson.username(), loginRequestJson.username())
                     .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication"));
             
             // Build UserInfoDTO for JWT claims
-            UserInfoDTO userInfo = UserInfoDTO.builder()
-                    .id(persona.getId())
-                    .usuario(persona.getPerUsuario())
-                    .nombre(persona.getPerNombre())
-                    .apellido(persona.getPerApellido())
-                    .email(persona.getPerEMail())
-                    .documento(persona.getPerDocIdent())
-                    .build();
+            UserInfoDTO userInfo = personaMapper.toUserInfoDTO(persona);
             
             // Generate JWT token with user info in claims
             var token = jwtService.generateTokenWithUserInfo(authentication, userInfo);
