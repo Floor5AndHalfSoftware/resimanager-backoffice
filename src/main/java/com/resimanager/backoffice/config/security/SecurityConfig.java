@@ -40,6 +40,7 @@ public class SecurityConfig {
     private CustomAuthenticationProvider customAuthenticationProvider;
 
     private final String[] WHITE_LIST = {
+            "/",
             "/scalar/**",
             "/v3/api-docs/**",
             "/v3/api-docs",
