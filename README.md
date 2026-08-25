@@ -56,14 +56,31 @@ Flyway crea el esquema automáticamente con 14 migraciones (V1.0.0.0 a V2.0.8):
 - Email: `admin@resimanager.com`
 - Password: `Admin2024!`
 
+### Desarrollo local (PostgreSQL vía Docker)
+
+El profile `local` usa **PostgreSQL** (no H2). Levanta la base con:
+
+```bash
+docker compose up -d
+```
+
+y ejecuta la app desde el módulo `resimanager-bootstrap` con las variables de `.env.local` (usuario/BD `resimanager`, `localhost:5432`). Flyway aplica las 19 migraciones automáticamente.
+
+> **Nota (bug preexistente de seeds):** en una base **vacía desde cero**, `V2.0.5` inserta `ModPerfil.mpid` explícitos sin avanzar la secuencia IDENTITY, por lo que `V2.0.8` choca con claves duplicadas. No afecta a Neon (ya migrada y validada). Si borras el volumen y recreas la base, corrige la secuencia una vez antes de arrancar:
+>
+> ```sql
+> SELECT setval(pg_get_serial_sequence('"ModPerfil"','mpid'),
+>               (SELECT COALESCE(MAX(mpid),0)+1 FROM "ModPerfil"), false);
+> ```
+
 ## Construcción y Ejecución
 
 ```bash
 # Compilar
 mvn clean package
 
-# Ejecutar
-mvn spring-boot:run
+# Ejecutar (módulo bootstrap)
+mvn -pl resimanager-bootstrap spring-boot:run
 
 # Tests
 mvn test
