@@ -1,28 +1,26 @@
 package com.resimanager.backoffice.service;
 
-import com.resimanager.backoffice.dto.AdministradoraDTO;
-import com.resimanager.backoffice.dto.AdministradoraListResponse;
-import com.resimanager.backoffice.dto.AsignarPerfilesRequest;
-import com.resimanager.backoffice.dto.ContextoUsuariosResponse;
-import com.resimanager.backoffice.exception.ResourceNotFoundException;
 import com.resimanager.backoffice.domain.model.Administradora;
 import com.resimanager.backoffice.domain.model.PerfPersAdministradora;
 import com.resimanager.backoffice.domain.model.PerfPersAdministradoraId;
 import com.resimanager.backoffice.domain.model.Perfil;
 import com.resimanager.backoffice.domain.model.PersAdministradora;
 import com.resimanager.backoffice.domain.model.Persona;
-import com.resimanager.backoffice.persistance.repository.AdministradoraRepository;
-import com.resimanager.backoffice.persistance.repository.PerfPersAdministradoraRepository;
-import com.resimanager.backoffice.persistance.repository.PerfilRepository;
-import com.resimanager.backoffice.persistance.repository.PersAdministradoraRepository;
-import com.resimanager.backoffice.persistance.repository.PersonaRepository;
+import com.resimanager.backoffice.domain.model.ResultadoPaginado;
+import com.resimanager.backoffice.domain.model.enums.Estatus;
+import com.resimanager.backoffice.domain.port.out.AdministradoraRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PerfPersAdministradoraRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PerfilRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PersAdministradoraRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PersonaRepositoryPort;
+import com.resimanager.backoffice.dto.AdministradoraDTO;
+import com.resimanager.backoffice.dto.AdministradoraListResponse;
+import com.resimanager.backoffice.dto.AsignarPerfilesRequest;
+import com.resimanager.backoffice.dto.ContextoUsuariosResponse;
+import com.resimanager.backoffice.exception.ResourceNotFoundException;
 import com.resimanager.backoffice.service.mapper.AdministradoraMapper;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,31 +37,27 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AdministradoraService {
 
-    private final AdministradoraRepository administradoraRepository;
-    private final PersAdministradoraRepository persAdministradoraRepository;
-    private final PerfPersAdministradoraRepository perfPersAdministradoraRepository;
-    private final PerfilRepository perfilRepository;
-    private final PersonaRepository personaRepository;
+    private final AdministradoraRepositoryPort administradoraRepositoryPort;
+    private final PersAdministradoraRepositoryPort persAdministradoraRepositoryPort;
+    private final PerfPersAdministradoraRepositoryPort perfPersAdministradoraRepositoryPort;
+    private final PerfilRepositoryPort perfilRepositoryPort;
+    private final PersonaRepositoryPort personaRepositoryPort;
     private final AdministradoraMapper administradoraMapper;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     @Transactional(readOnly = true)
     public AdministradoraListResponse getAdministradoras(String estatus, String search, Integer page, Integer limit) {
-        String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
-        String estatusParam = (estatus != null && !estatus.isBlank()) ? estatus.trim() : null;
+        Estatus estatusParam = (estatus != null && !estatus.isBlank()) ? Estatus.desdeCodigo(estatus.trim()) : null;
 
-        PageRequest pageable = PageRequest.of(page - 1, limit);
-        Page<Administradora> result = administradoraRepository.findAllWithFilters(estatusParam, searchParam, pageable);
+        ResultadoPaginado<Administradora> result =
+                administradoraRepositoryPort.buscarConFiltros(estatusParam, search, page, limit);
 
-        List<AdministradoraDTO> data = result.getContent().stream()
+        List<AdministradoraDTO> data = result.datos().stream()
                 .map(administradoraMapper::toDTO)
                 .toList();
 
         return AdministradoraListResponse.builder()
                 .data(data)
-                .total(result.getTotalElements())
+                .total(result.total())
                 .page(page)
                 .limit(limit)
                 .build();
@@ -71,11 +65,8 @@ public class AdministradoraService {
 
     @Transactional(readOnly = true)
     public AdministradoraDTO getAdministradoraById(Integer id) {
-        log.debug("Obteniendo administradora con ID: {}", id);
-
-        Administradora administradora = administradoraRepository.findById(id)
+        Administradora administradora = administradoraRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + id));
-
         return administradoraMapper.toDTO(administradora);
     }
 
@@ -83,12 +74,10 @@ public class AdministradoraService {
     public AdministradoraDTO createAdministradora(
             com.resimanager.backoffice.dto.CreateAdministradoraRequest request,
             String username, String estacion) {
-        log.info("Creando administradora: {} por usuario: {}", request.nombre(), username);
-
         Persona ejecutor = findEjecutor(username);
 
         Administradora adm = new Administradora();
-        adm.setId(queryNextAdmid());
+        adm.setId(administradoraRepositoryPort.siguienteId());
         adm.setAdmDocIdent(request.documento());
         adm.setAdmNombre(request.nombre());
         adm.setAdmTelefono(request.telefono());
@@ -102,16 +91,14 @@ public class AdministradoraService {
         adm.setAdmFchHorMod(OffsetDateTime.now());
         adm.setAdmEstMod(estacion);
 
-        return administradoraMapper.toDTO(administradoraRepository.save(adm));
+        return administradoraMapper.toDTO(administradoraRepositoryPort.guardar(adm));
     }
 
     @Transactional
     public AdministradoraDTO updateAdministradora(Integer id,
                                                    com.resimanager.backoffice.dto.UpdateAdministradoraRequest request,
                                                    String username, String estacion) {
-        log.info("Actualizando administradora ID: {} por usuario: {}", id, username);
-
-        Administradora adm = administradoraRepository.findById(id)
+        Administradora adm = administradoraRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + id));
 
         if (request.documento() != null) adm.setAdmDocIdent(request.documento());
@@ -126,14 +113,12 @@ public class AdministradoraService {
         adm.setAdmFchHorMod(OffsetDateTime.now());
         adm.setAdmEstMod(estacion);
 
-        return administradoraMapper.toDTO(administradoraRepository.save(adm));
+        return administradoraMapper.toDTO(administradoraRepositoryPort.guardar(adm));
     }
 
     @Transactional
     public Map<String, String> deleteAdministradora(Integer id, String username, String estacion) {
-        log.info("Inactivando administradora ID: {} por usuario: {}", id, username);
-
-        Administradora adm = administradoraRepository.findById(id)
+        Administradora adm = administradoraRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + id));
 
         adm.setAdmSts("I");
@@ -141,26 +126,24 @@ public class AdministradoraService {
         adm.setAdmFchHorMod(OffsetDateTime.now());
         adm.setAdmEstMod(estacion);
 
-        administradoraRepository.save(adm);
+        administradoraRepositoryPort.guardar(adm);
         return Map.of("message", "Administradora inactivada correctamente");
     }
 
     @Transactional(readOnly = true)
     public ContextoUsuariosResponse getUsuarios(Integer admId) {
-        log.debug("Obteniendo usuarios de la administradora ID: {}", admId);
-
-        Administradora administradora = administradoraRepository.findById(admId)
+        Administradora administradora = administradoraRepositoryPort.buscarPorId(admId)
                 .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + admId));
 
-        List<PersAdministradora> persAdministradoras = persAdministradoraRepository.findActiveByAdmId(admId);
+        List<PersAdministradora> persAdministradoras = persAdministradoraRepositoryPort.listarActivasPorAdministradoraId(admId);
 
         List<ContextoUsuariosResponse.UsuarioContextoDTO> usuarios = new ArrayList<>();
 
         for (PersAdministradora pa : persAdministradoras) {
             Persona persona = pa.getPaPerid();
 
-            List<PerfPersAdministradora> perfiles = perfPersAdministradoraRepository
-                    .findActiveByAdmIdAndPerId(admId, persona.getId());
+            List<PerfPersAdministradora> perfiles = perfPersAdministradoraRepositoryPort
+                    .listarActivasPorAdministradoraIdYPersonaId(admId, persona.getId());
 
             List<ContextoUsuariosResponse.PerfilSimpleDTO> perfilesDTO = perfiles.stream()
                     .map(ppa -> ContextoUsuariosResponse.PerfilSimpleDTO.builder()
@@ -197,31 +180,24 @@ public class AdministradoraService {
     public Map<String, Object> asignarPerfiles(Integer admId, Integer usuarioId,
                                                 AsignarPerfilesRequest request,
                                                 String username, String estacion) {
-        log.info("Asignando perfiles al usuario ID: {} en administradora ID: {} por usuario: {}",
-                usuarioId, admId, username);
-
-        administradoraRepository.findById(admId)
+        administradoraRepositoryPort.buscarPorId(admId)
                 .orElseThrow(() -> new ResourceNotFoundException("Administradora no encontrada con ID: " + admId));
 
-        Persona usuarioTarget = personaRepository.findById(usuarioId)
+        personaRepositoryPort.buscarPorId(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + usuarioId));
 
-        Persona ejecutor = personaRepository.findByPerUsuario(username)
+        Persona ejecutor = personaRepositoryPort.buscarPorUsuario(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario ejecutor no encontrado: " + username));
 
         int asignados = 0;
         int reactivados = 0;
 
         for (Integer perfilId : request.perfiles()) {
-            Perfil perfil = perfilRepository.findById(perfilId)
+            Perfil perfil = perfilRepositoryPort.buscarPorId(perfilId)
                     .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado con ID: " + perfilId));
 
-            PerfPersAdministradoraId compositeId = new PerfPersAdministradoraId();
-            compositeId.setPpaAdmid(admId);
-            compositeId.setPpaPerid(usuarioId);
-            compositeId.setPpaPrfid(perfilId);
-
-            Optional<PerfPersAdministradora> existing = perfPersAdministradoraRepository.findById(compositeId);
+            Optional<PerfPersAdministradora> existing =
+                    perfPersAdministradoraRepositoryPort.buscarPorId(admId, usuarioId, perfilId);
 
             if (existing.isPresent()) {
                 PerfPersAdministradora ppa = existing.get();
@@ -230,11 +206,16 @@ public class AdministradoraService {
                     ppa.setPpaUsrmod(ejecutor);
                     ppa.setPPAFchHorMod(OffsetDateTime.now());
                     ppa.setPPAEstMod(estacion);
-                    perfPersAdministradoraRepository.save(ppa);
+                    perfPersAdministradoraRepositoryPort.guardar(ppa);
                     reactivados++;
                 }
             } else {
-                Integer nextPpaid = queryNextPpaid();
+                Integer nextPpaid = perfPersAdministradoraRepositoryPort.siguienteId();
+
+                PerfPersAdministradoraId compositeId = new PerfPersAdministradoraId();
+                compositeId.setPpaAdmid(admId);
+                compositeId.setPpaPerid(usuarioId);
+                compositeId.setPpaPrfid(perfilId);
 
                 PerfPersAdministradora ppa = new PerfPersAdministradora();
                 ppa.setId(compositeId);
@@ -248,13 +229,10 @@ public class AdministradoraService {
                 ppa.setPPAFchHorMod(OffsetDateTime.now());
                 ppa.setPPAEstMod(estacion);
 
-                perfPersAdministradoraRepository.save(ppa);
+                perfPersAdministradoraRepositoryPort.guardar(ppa);
                 asignados++;
             }
         }
-
-        log.info("Perfiles procesados para usuario ID: {} en administradora ID: {} - nuevos: {}, reactivados: {}",
-                usuarioId, admId, asignados, reactivados);
 
         Map<String, Object> result = new HashMap<>();
         result.put("message", "Perfiles asignados correctamente");
@@ -266,49 +244,26 @@ public class AdministradoraService {
     @Transactional
     public Map<String, String> removerPerfil(Integer admId, Integer usuarioId, Integer perfilId,
                                               String username, String estacion) {
-        log.info("Removiendo perfil ID: {} del usuario ID: {} en administradora ID: {} por usuario: {}",
-                perfilId, usuarioId, admId, username);
-
-        Persona ejecutor = personaRepository.findByPerUsuario(username)
+        personaRepositoryPort.buscarPorUsuario(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario ejecutor no encontrado: " + username));
 
-        PerfPersAdministradoraId compositeId = new PerfPersAdministradoraId();
-        compositeId.setPpaAdmid(admId);
-        compositeId.setPpaPerid(usuarioId);
-        compositeId.setPpaPrfid(perfilId);
-
-        PerfPersAdministradora ppa = perfPersAdministradoraRepository.findById(compositeId)
+        PerfPersAdministradora ppa = perfPersAdministradoraRepositoryPort.buscarPorId(admId, usuarioId, perfilId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Asignación de perfil no encontrada para administradora ID: " + admId
                         + ", usuario ID: " + usuarioId + ", perfil ID: " + perfilId));
 
+        Persona ejecutor = personaRepositoryPort.buscarPorUsuario(username).orElseThrow();
         ppa.setPPASts("I");
         ppa.setPpaUsrmod(ejecutor);
         ppa.setPPAFchHorMod(OffsetDateTime.now());
         ppa.setPPAEstMod(estacion);
 
-        perfPersAdministradoraRepository.save(ppa);
-
-        log.info("Perfil ID: {} removido del usuario ID: {} en administradora ID: {}", perfilId, usuarioId, admId);
+        perfPersAdministradoraRepositoryPort.guardar(ppa);
         return Map.of("message", "Perfil removido correctamente");
     }
 
     private Persona findEjecutor(String username) {
-        return personaRepository.findByPerUsuario(username)
+        return personaRepositoryPort.buscarPorUsuario(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario ejecutor no encontrado: " + username));
-    }
-
-    private Integer queryNextAdmid() {
-        Number maxId = (Number) entityManager
-                .createNativeQuery("SELECT COALESCE(MAX(admid), 0) + 1 FROM \"Administradora\"")
-                .getSingleResult();
-        return maxId.intValue();
-    }
-
-    private Integer queryNextPpaid() {
-        Number maxId = (Number) entityManager
-                .createNativeQuery("SELECT COALESCE(MAX(ppaid), 0) + 1 FROM \"PerfPersAdministradora\"")
-                .getSingleResult();
-        return maxId.intValue();
     }
 }

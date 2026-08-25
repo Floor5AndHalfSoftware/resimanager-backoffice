@@ -13,5 +13,5 @@ public interface MenuUseCase {
 
     List<MenuItem> obtenerMenuPorPerfil(Integer perfilId);
 
-    List<MenuItem> obtenerSubMenus(Integer menuId, Integer opcionId, Integer moduloId, Integer accionId);
+    List<MenuItem> obtenerSubMenus(Integer menuId);
 }

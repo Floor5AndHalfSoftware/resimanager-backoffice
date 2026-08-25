@@ -1,12 +1,22 @@
 package com.resimanager.backoffice.service;
 
+import com.resimanager.backoffice.domain.model.Administradora;
+import com.resimanager.backoffice.domain.model.Conjunto;
+import com.resimanager.backoffice.domain.model.PerfPersAdministradora;
+import com.resimanager.backoffice.domain.model.PerfPersConjunto;
+import com.resimanager.backoffice.domain.model.PersAdministradora;
+import com.resimanager.backoffice.domain.model.PersConjunto;
+import com.resimanager.backoffice.domain.port.out.AdministradoraRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.ConjuntoRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PerfPersAdministradoraRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PerfPersConjuntoRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PersAdministradoraRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PersConjuntoRepositoryPort;
 import com.resimanager.backoffice.dto.AdministradoraDTO;
 import com.resimanager.backoffice.dto.ConjuntoDTO;
 import com.resimanager.backoffice.dto.ContextoActualDTO;
 import com.resimanager.backoffice.dto.ContextoDTO;
 import com.resimanager.backoffice.dto.PerfilDTO;
-import com.resimanager.backoffice.domain.model.*;
-import com.resimanager.backoffice.persistance.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,64 +32,40 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ContextoService {
 
-    private final PersAdministradoraRepository persAdministradoraRepository;
-    private final PersConjuntoRepository persConjuntoRepository;
-    private final PerfPersAdministradoraRepository perfPersAdministradoraRepository;
-    private final PerfPersConjuntoRepository perfPersConjuntoRepository;
-    private final AdministradoraRepository administradoraRepository;
-    private final ConjuntoRepository conjuntoRepository;
+    private final PersAdministradoraRepositoryPort persAdministradoraRepositoryPort;
+    private final PersConjuntoRepositoryPort persConjuntoRepositoryPort;
+    private final PerfPersAdministradoraRepositoryPort perfPersAdministradoraRepositoryPort;
+    private final PerfPersConjuntoRepositoryPort perfPersConjuntoRepositoryPort;
+    private final AdministradoraRepositoryPort administradoraRepositoryPort;
+    private final ConjuntoRepositoryPort conjuntoRepositoryPort;
 
-    /**
-     * Obtiene todos los contextos disponibles para un usuario
-     * @param personaId ID de la persona
-     * @return Lista de contextos (Administradoras y Conjuntos) con sus perfiles
-     */
     @Transactional(readOnly = true)
     public List<ContextoDTO> getContextosDisponibles(Integer personaId) {
-        log.debug("Obteniendo contextos para persona ID: {}", personaId);
-        
         List<ContextoDTO> contextos = new ArrayList<>();
-
-        // 1. Obtener contextos de Administradora
         contextos.addAll(getContextosAdministradora(personaId));
-
-        // 2. Obtener contextos de Conjunto
         contextos.addAll(getContextosConjunto(personaId));
-
-        log.info("Usuario {} tiene {} contextos disponibles", personaId, contextos.size());
         return contextos;
     }
 
-    /**
-     * Obtiene los contextos de Administradora para un usuario
-     */
     private List<ContextoDTO> getContextosAdministradora(Integer personaId) {
-        // Obtener las administradoras del usuario
-        List<PersAdministradora> relaciones = persAdministradoraRepository.findActiveByPersonaId(personaId);
-        
+        List<PersAdministradora> relaciones = persAdministradoraRepositoryPort.listarActivasPorPersonaId(personaId);
         if (relaciones.isEmpty()) {
             return List.of();
         }
 
-        // Obtener IDs de administradoras
         List<Integer> adminIds = relaciones.stream()
                 .map(pa -> pa.getId().getPaAdmid())
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Obtener datos de administradoras
-        List<Administradora> administradoras = administradoraRepository.findActiveByIds(adminIds);
+        List<Administradora> administradoras = administradoraRepositoryPort.buscarActivasPorIds(adminIds);
         Map<Integer, Administradora> adminMap = administradoras.stream()
                 .collect(Collectors.toMap(Administradora::getId, a -> a));
 
-        // Obtener perfiles del usuario en cada administradora
-        List<PerfPersAdministradora> perfiles = perfPersAdministradoraRepository.findActiveByPersonaId(personaId);
-        
-        // Agrupar perfiles por administradora
+        List<PerfPersAdministradora> perfiles = perfPersAdministradoraRepositoryPort.listarActivasPorPersonaId(personaId);
         Map<Integer, List<PerfPersAdministradora>> perfilesPorAdmin = perfiles.stream()
                 .collect(Collectors.groupingBy(p -> p.getId().getPpaAdmid()));
 
-        // Construir DTOs
         List<ContextoDTO> contextos = new ArrayList<>();
         for (Integer adminId : adminIds) {
             Administradora admin = adminMap.get(adminId);
@@ -108,36 +94,25 @@ public class ContextoService {
         return contextos;
     }
 
-    /**
-     * Obtiene los contextos de Conjunto para un usuario
-     */
     private List<ContextoDTO> getContextosConjunto(Integer personaId) {
-        // Obtener los conjuntos del usuario
-        List<PersConjunto> relaciones = persConjuntoRepository.findActiveByPersonaId(personaId);
-        
+        List<PersConjunto> relaciones = persConjuntoRepositoryPort.listarActivasPorPersonaId(personaId);
         if (relaciones.isEmpty()) {
             return List.of();
         }
 
-        // Obtener IDs de conjuntos
         List<Integer> conjIds = relaciones.stream()
                 .map(pc -> pc.getId().getPcConjid())
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Obtener datos de conjuntos
-        List<Conjunto> conjuntos = conjuntoRepository.findActiveByIds(conjIds);
+        List<Conjunto> conjuntos = conjuntoRepositoryPort.buscarActivosPorIds(conjIds);
         Map<Integer, Conjunto> conjMap = conjuntos.stream()
                 .collect(Collectors.toMap(Conjunto::getId, c -> c));
 
-        // Obtener perfiles del usuario en cada conjunto
-        List<PerfPersConjunto> perfiles = perfPersConjuntoRepository.findActiveByPersonaId(personaId);
-        
-        // Agrupar perfiles por conjunto
+        List<PerfPersConjunto> perfiles = perfPersConjuntoRepositoryPort.listarActivasPorPersonaId(personaId);
         Map<Integer, List<PerfPersConjunto>> perfilesPorConj = perfiles.stream()
                 .collect(Collectors.groupingBy(p -> p.getId().getPpcConjid()));
 
-        // Construir DTOs
         List<ContextoDTO> contextos = new ArrayList<>();
         for (Integer conjId : conjIds) {
             Conjunto conj = conjMap.get(conjId);
@@ -165,17 +140,11 @@ public class ContextoService {
         return contextos;
     }
 
-    /**
-     * Obtiene los roles/authorities del usuario basado en sus perfiles
-     * @param personaId ID de la persona
-     * @return Set de authorities para Spring Security
-     */
     public List<String> getRolesFromProfiles(Integer personaId) {
         List<String> roles = new ArrayList<>();
-        roles.add("ROLE_USER"); // Rol base para todos los usuarios
+        roles.add("ROLE_USER");
 
-        // Obtener perfiles de administradora
-        List<PerfPersAdministradora> perfilesAdmin = perfPersAdministradoraRepository.findActiveByPersonaId(personaId);
+        List<PerfPersAdministradora> perfilesAdmin = perfPersAdministradoraRepositoryPort.listarActivasPorPersonaId(personaId);
         for (PerfPersAdministradora ppa : perfilesAdmin) {
             String roleName = "ROLE_" + ppa.getPpaPrfid().getPrfNombre().toUpperCase().replace(" ", "_");
             if (!roles.contains(roleName)) {
@@ -183,8 +152,7 @@ public class ContextoService {
             }
         }
 
-        // Obtener perfiles de conjunto
-        List<PerfPersConjunto> perfilesConj = perfPersConjuntoRepository.findActiveByPersonaId(personaId);
+        List<PerfPersConjunto> perfilesConj = perfPersConjuntoRepositoryPort.listarActivasPorPersonaId(personaId);
         for (PerfPersConjunto ppc : perfilesConj) {
             String roleName = "ROLE_" + ppc.getPpcPrfid().getPrfNombre().toUpperCase().replace(" ", "_");
             if (!roles.contains(roleName)) {
@@ -192,24 +160,11 @@ public class ContextoService {
             }
         }
 
-        log.debug("Usuario {} tiene roles: {}", personaId, roles);
         return roles;
     }
-    
-    /**
-     * Valida y construye el contexto actual del usuario
-     * @param personaId ID de la persona
-     * @param tipo Tipo de contexto (ADMINISTRADORA o CONJUNTO)
-     * @param entidadId ID de la entidad (administradora o conjunto)
-     * @param perfilId ID del perfil a usar
-     * @return ContextoActualDTO con la información del contexto activo
-     * @throws IllegalArgumentException si el contexto no es válido
-     */
+
     @Transactional(readOnly = true)
     public ContextoActualDTO validarYConstruirContexto(Integer personaId, String tipo, Integer entidadId, Integer perfilId) {
-        log.debug("Validando contexto para persona {}: tipo={}, entidadId={}, perfilId={}", 
-                personaId, tipo, entidadId, perfilId);
-        
         if ("ADMINISTRADORA".equals(tipo)) {
             return validarContextoAdministradora(personaId, entidadId, perfilId);
         } else if ("CONJUNTO".equals(tipo)) {
@@ -218,33 +173,26 @@ public class ContextoService {
             throw new IllegalArgumentException("Tipo de contexto inválido: " + tipo);
         }
     }
-    
+
     private ContextoActualDTO validarContextoAdministradora(Integer personaId, Integer adminId, Integer perfilId) {
-        // Verificar que la persona tiene acceso a esta administradora
-        List<PersAdministradora> relaciones = persAdministradoraRepository.findActiveByPersonaId(personaId);
-        log.debug("Relaciones de persona {} con administradoras: {}", personaId, 
-            relaciones.stream().map(r -> r.getId().getPaAdmid()).collect(java.util.stream.Collectors.toList()));
-        
+        List<PersAdministradora> relaciones = persAdministradoraRepositoryPort.listarActivasPorPersonaId(personaId);
+
         boolean tieneAcceso = relaciones.stream()
                 .anyMatch(pa -> pa.getId().getPaAdmid().equals(adminId));
-        
+
         if (!tieneAcceso) {
-            log.error("Usuario {} NO tiene acceso a administradora {}. Administradoras disponibles: {}", 
-                personaId, adminId, relaciones.stream().map(r -> r.getId().getPaAdmid()).collect(java.util.stream.Collectors.toList()));
             throw new IllegalArgumentException("El usuario no tiene acceso a la administradora especificada");
         }
-        
-        // Verificar que el perfil existe y está activo en esta administradora
-        List<PerfPersAdministradora> perfiles = perfPersAdministradoraRepository.findActiveByPersonaId(personaId);
+
+        List<PerfPersAdministradora> perfiles = perfPersAdministradoraRepositoryPort.listarActivasPorPersonaId(personaId);
         PerfPersAdministradora perfilActivo = perfiles.stream()
                 .filter(p -> p.getId().getPpaAdmid().equals(adminId) && p.getPpaPrfid().getId().equals(perfilId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("El perfil especificado no está asignado al usuario en esta administradora"));
-        
-        // Obtener información de la administradora
-        Administradora admin = administradoraRepository.findById(adminId)
+
+        Administradora admin = administradoraRepositoryPort.buscarPorId(adminId)
                 .orElseThrow(() -> new IllegalArgumentException("Administradora no encontrada"));
-        
+
         return ContextoActualDTO.builder()
                 .tipo("ADMINISTRADORA")
                 .entidadId(adminId)
@@ -254,28 +202,25 @@ public class ContextoService {
                 .perfilDescripcion(perfilActivo.getPpaPrfid().getPrfDescrip())
                 .build();
     }
-    
+
     private ContextoActualDTO validarContextoConjunto(Integer personaId, Integer conjId, Integer perfilId) {
-        // Verificar que la persona tiene acceso a este conjunto
-        List<PersConjunto> relaciones = persConjuntoRepository.findActiveByPersonaId(personaId);
+        List<PersConjunto> relaciones = persConjuntoRepositoryPort.listarActivasPorPersonaId(personaId);
         boolean tieneAcceso = relaciones.stream()
                 .anyMatch(pc -> pc.getId().getPcConjid().equals(conjId));
-        
+
         if (!tieneAcceso) {
             throw new IllegalArgumentException("El usuario no tiene acceso al conjunto especificado");
         }
-        
-        // Verificar que el perfil existe y está activo en este conjunto
-        List<PerfPersConjunto> perfiles = perfPersConjuntoRepository.findActiveByPersonaId(personaId);
+
+        List<PerfPersConjunto> perfiles = perfPersConjuntoRepositoryPort.listarActivasPorPersonaId(personaId);
         PerfPersConjunto perfilActivo = perfiles.stream()
                 .filter(p -> p.getId().getPpcConjid().equals(conjId) && p.getPpcPrfid().getId().equals(perfilId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("El perfil especificado no está asignado al usuario en este conjunto"));
-        
-        // Obtener información del conjunto
-        Conjunto conj = conjuntoRepository.findById(conjId)
+
+        Conjunto conj = conjuntoRepositoryPort.buscarPorId(conjId)
                 .orElseThrow(() -> new IllegalArgumentException("Conjunto no encontrado"));
-        
+
         return ContextoActualDTO.builder()
                 .tipo("CONJUNTO")
                 .entidadId(conjId)

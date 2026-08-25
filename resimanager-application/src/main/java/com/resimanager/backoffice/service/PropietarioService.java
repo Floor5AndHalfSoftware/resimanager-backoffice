@@ -1,18 +1,18 @@
 package com.resimanager.backoffice.service;
 
-import com.resimanager.backoffice.dto.PropietarioDTO;
-import com.resimanager.backoffice.dto.PropietarioListResponse;
 import com.resimanager.backoffice.domain.model.Persona;
 import com.resimanager.backoffice.domain.model.Propiedad;
 import com.resimanager.backoffice.domain.model.Propietario;
 import com.resimanager.backoffice.domain.model.PropietarioId;
-import com.resimanager.backoffice.persistance.repository.PersonaRepository;
-import com.resimanager.backoffice.persistance.repository.PropiedadRepository;
-import com.resimanager.backoffice.persistance.repository.PropietarioRepository;
+import com.resimanager.backoffice.domain.model.ResultadoPaginado;
+import com.resimanager.backoffice.domain.model.enums.Estatus;
+import com.resimanager.backoffice.domain.port.out.PersonaRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PropiedadRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PropietarioRepositoryPort;
+import com.resimanager.backoffice.dto.PropietarioDTO;
+import com.resimanager.backoffice.dto.PropietarioListResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,30 +27,26 @@ import java.util.Optional;
 @Slf4j
 public class PropietarioService {
 
-    private final PropietarioRepository propietarioRepository;
-    private final PersonaRepository personaRepository;
-    private final PropiedadRepository propiedadRepository;
+    private final PropietarioRepositoryPort propietarioRepositoryPort;
+    private final PersonaRepositoryPort personaRepositoryPort;
+    private final PropiedadRepositoryPort propiedadRepositoryPort;
 
     public PropietarioListResponse getPropietarios(String estatus, Integer conjuntoId, String search, Integer page, Integer limit) {
-        String estatusParam = (estatus != null && !estatus.isBlank()) ? estatus.trim() : null;
+        Estatus estatusParam = (estatus != null && !estatus.isBlank()) ? Estatus.desdeCodigo(estatus.trim()) : null;
 
-        PageRequest pageable = PageRequest.of(page - 1, limit);
-        Page<Propietario> result = propietarioRepository.findAllWithFilters(estatusParam, conjuntoId, pageable);
+        ResultadoPaginado<Propietario> result =
+                propietarioRepositoryPort.buscarConFiltros(estatusParam, conjuntoId, search, page, limit);
 
         return PropietarioListResponse.builder()
-                .data(result.getContent().stream().map(this::toDTO).toList())
-                .total(result.getTotalElements())
+                .data(result.datos().stream().map(this::toDTO).toList())
+                .total(result.total())
                 .page(page)
                 .limit(limit)
                 .build();
     }
 
     public PropietarioDTO getPropietarioById(Integer conjId, Integer perId) {
-        PropietarioId id = new PropietarioId();
-        id.setPptConjid(conjId);
-        id.setPptPerid(perId);
-
-        Propietario propietario = propietarioRepository.findById(id)
+        Propietario propietario = propietarioRepositoryPort.buscarPorId(conjId, perId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Propietario no encontrado"));
         return toDTO(propietario);
     }
@@ -58,14 +54,11 @@ public class PropietarioService {
     @Transactional
     public PropietarioDTO createPropietario(Integer conjId, Integer perId, Integer propiedadId,
                                             String fechaDesde, String executorUsername, String estacion) {
-        if (propietarioRepository.existsById(new PropietarioId() {{
-            setPptConjid(conjId);
-            setPptPerid(perId);
-        }})) {
+        if (propietarioRepositoryPort.existePorId(conjId, perId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El propietario ya existe en este conjunto");
         }
 
-        Persona ejecutor = personaRepository.findByPerUsuario(executorUsername)
+        personaRepositoryPort.buscarPorUsuario(executorUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejecutor no encontrado"));
 
         Propietario propietario = new Propietario();
@@ -81,21 +74,17 @@ public class PropietarioService {
         propietario.setPptFchHorMod(OffsetDateTime.now());
         propietario.setPptEstMod(estacion);
 
-        return toDTO(propietarioRepository.save(propietario));
+        return toDTO(propietarioRepositoryPort.guardar(propietario));
     }
 
     @Transactional
     public PropietarioDTO updatePropietario(Integer conjId, Integer perId, Integer propiedadId,
                                             String fechaDesde, String fechaHasta, String estatus,
                                             String executorUsername, String estacion) {
-        PropietarioId id = new PropietarioId();
-        id.setPptConjid(conjId);
-        id.setPptPerid(perId);
-
-        Propietario propietario = propietarioRepository.findById(id)
+        Propietario propietario = propietarioRepositoryPort.buscarPorId(conjId, perId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Propietario no encontrado"));
 
-        Persona ejecutor = personaRepository.findByPerUsuario(executorUsername)
+        personaRepositoryPort.buscarPorUsuario(executorUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejecutor no encontrado"));
 
         if (propiedadId != null) propietario.setPptID(propiedadId);
@@ -106,23 +95,19 @@ public class PropietarioService {
         propietario.setPptFchHorMod(OffsetDateTime.now());
         propietario.setPptEstMod(estacion);
 
-        return toDTO(propietarioRepository.save(propietario));
+        return toDTO(propietarioRepositoryPort.guardar(propietario));
     }
 
     @Transactional
     public Map<String, String> deletePropietario(Integer conjId, Integer perId, String executorUsername, String estacion) {
-        PropietarioId id = new PropietarioId();
-        id.setPptConjid(conjId);
-        id.setPptPerid(perId);
-
-        Propietario propietario = propietarioRepository.findById(id)
+        Propietario propietario = propietarioRepositoryPort.buscarPorId(conjId, perId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Propietario no encontrado"));
 
         propietario.setPptSts("I");
         propietario.setPptFchHorMod(OffsetDateTime.now());
         propietario.setPptEstMod(estacion);
 
-        propietarioRepository.save(propietario);
+        propietarioRepositoryPort.guardar(propietario);
         return Map.of("message", "Propietario inactivado correctamente");
     }
 
@@ -132,14 +117,14 @@ public class PropietarioService {
         String documentoPersona = null;
         String nombrePropiedad = null;
 
-        Optional<Persona> persona = personaRepository.findById(p.getId().getPptPerid());
+        Optional<Persona> persona = personaRepositoryPort.buscarPorId(p.getId().getPptPerid());
         if (persona.isPresent()) {
             nombrePersona = persona.get().getPerNombre();
             apellidoPersona = persona.get().getPerApellido();
             documentoPersona = persona.get().getPerDocIdent();
         }
 
-        Optional<Propiedad> prop = propiedadRepository.findByPpidAndPpConjId(p.getPptID(), p.getId().getPptConjid());
+        Optional<Propiedad> prop = propiedadRepositoryPort.buscarPorPpidYConjuntoId(p.getPptID(), p.getId().getPptConjid());
         if (prop.isPresent()) {
             nombrePropiedad = prop.get().getPpNumero();
         }

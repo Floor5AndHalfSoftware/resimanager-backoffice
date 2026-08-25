@@ -52,15 +52,11 @@ resimanager-backoffice (parent POM, packaging pom, <modules>)
 
 ## Application Layer (`resimanager-application`)
 
-- **Dependencias**: solo `domain`.
-- **Servicios**: implementan los puertos `in`.
-  - Un servicio por agregado/caso de uso (`UsuarioService implements UsuarioUseCase`, etc.).
-  - Orquestan entidades de dominio + llamadas a puertos `out`.
-  - Sin anotaciones de framework, sin HTTP, sin JPA.
-- **Regla crítica**: portar los cuerpos de la lógica de negocio actual **sin reescribirlos**, para preservar el contrato REST existente. Quitar `ResponseStatusException` (→ excepciones de dominio) y `@Transactional`/`Page<Entity>` (→ responsabilidad del adaptador).
-- **Mappers**: traducción dominio ↔ DTO en esta capa o en `rest` (MapStruct permitido aquí apuntando a tipos de dominio).
-
----
+- **Dependencias**: solo `domain` (modelo + puertos) y sus propios DTOs/mappers.
+- **Servicios**: orquestan entidades de dominio (JPA) usando los **puertos `out`** inyectados; ya no dependen de repositorios Spring Data ni de `EntityManager`.
+  - Un servicio por agregado/caso de uso (`UsuarioService`, `PerfilService`, `AdministradoraService`, `ConjuntoService`, `ContextoService`, `PropietarioService`, `PropiedadService`, `ModuloService`, `MenuService`, `DashboardService`, `UserService`).
+  - Conservan la traducción dominio ↔ DTO para el contrato REST (mappers MapStruct existentes).
+- **Notas transitorias** (se limpian en fases posteriores): se mantienen `@Transactional` en los servicios y `ResponseStatusException`/excepciones de aplicación; el desacople de repositorios ya está resuelto por los puertos.
 
 ## REST API Layer (adaptador HTTP de entrada, `resimanager-rest`)
 
@@ -78,12 +74,11 @@ resimanager-backoffice (parent POM, packaging pom, <modules>)
 ## Infrastructure Layer (`resimanager-infrastructure`)
 
 - **Dependencias**: `domain` + `application`.
-- **Adaptadores**: implementan los puertos `out`.
-  - `infrastructure/adapter`: `JpaPersonaAdapter implements PersonaRepositoryPort`, etc. Envuelven los repos de Spring Data existentes.
-  - `infrastructure/security`: `BCryptPasswordEncoder` (impl de `PasswordEncoderPort`), `JwtAdapter` (impl de `JwtPort`), `CustomAuthenticationProvider` (adaptador de auth).
-  - Modelo de persistencia JPA (`@Entity`/repos) separado del modelo de dominio, con mapeo entre ambos.
-- **Sin lógica de negocio**: solo traducción técnica. `@Transactional` y paginación viven aquí.
-- **Config de datos**: Flyway (migraciones), conexión, cache.
+- **Adaptadores**: implementan los puertos `out` como beans Spring, envolviendo los repositorios Spring Data:
+  - `infrastructure/adapter`: `JpaPersonaAdapter`, `JpaPerfilAdapter`, `JpaModuloAdapter`, `JpaAdministradoraAdapter`, `JpaConjuntoAdapter`, `JpaPropietarioAdapter`, `JpaPropiedadAdapter`, `JpaPersAdministradoraAdapter`, `JpaPersConjuntoAdapter`, `JpaPerfPersAdministradoraAdapter`, `JpaPerfPersConjuntoAdapter`, `JpaModPerfilAdapter`, `JpaAccOpcPerfilAdapter`, `JpaMenuAdapter`, `JpaDashboardStatsAdapter`.
+  - Traducción de paginación (`Page` → `ResultadoPaginado`), `Estatus` → código y las consultas `MAX+1` (IDs manuales) viven aquí.
+- **Sin lógica de negocio**: solo delegación técnica.
+- Los repositorios Spring Data permanecen temporalmente en `application/persistance/repository`; se moverán a esta capa en la fase de limpieza.
 
 ---
 
@@ -133,9 +128,9 @@ resimanager-backoffice (parent POM, packaging pom, <modules>)
 
 | Actual | Destino |
 |---|---|
-| `persistance/entity/*` | `domain/model` (entidades ricas) |
-| `persistance/repository/*` | `domain/port/out` (interfaces) + `infrastructure/adapter` (JPA) |
-| `service/*`, `service/mapper/*` | `application/service` |
+| `persistance/entity/*` | `domain/model` (entidades JPA como modelo de dominio) |
+| `persistance/repository/*` | `domain/port/out` (interfaces) + `infrastructure/adapter` (impl) |
+| `service/*`, `service/mapper/*` | `application/service` (usan puertos `out`) |
 | `controller/*`, `dto/*` | `rest/api`, `rest/dto` |
 | `config/*`, `util*`, `exception/*` | `infrastructure` y `bootstrap` |
 

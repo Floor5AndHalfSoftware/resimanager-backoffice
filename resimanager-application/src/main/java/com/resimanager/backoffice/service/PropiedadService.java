@@ -1,16 +1,15 @@
 package com.resimanager.backoffice.service;
 
-import com.resimanager.backoffice.dto.PropiedadDTO;
 import com.resimanager.backoffice.domain.model.Conjunto;
-import com.resimanager.backoffice.domain.model.Persona;
 import com.resimanager.backoffice.domain.model.Propiedad;
-import com.resimanager.backoffice.persistance.repository.ConjuntoRepository;
-import com.resimanager.backoffice.persistance.repository.PersonaRepository;
-import com.resimanager.backoffice.persistance.repository.PropiedadRepository;
+import com.resimanager.backoffice.domain.model.ResultadoPaginado;
+import com.resimanager.backoffice.domain.model.enums.Estatus;
+import com.resimanager.backoffice.domain.port.out.ConjuntoRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PersonaRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PropiedadRepositoryPort;
+import com.resimanager.backoffice.dto.PropiedadDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,26 +25,26 @@ import java.util.Optional;
 @Slf4j
 public class PropiedadService {
 
-    private final PropiedadRepository propiedadRepository;
-    private final ConjuntoRepository conjuntoRepository;
-    private final PersonaRepository personaRepository;
+    private final PropiedadRepositoryPort propiedadRepositoryPort;
+    private final ConjuntoRepositoryPort conjuntoRepositoryPort;
+    private final PersonaRepositoryPort personaRepositoryPort;
 
     public PropiedadDTO.ListResponse getPropiedades(String estatus, Integer conjuntoId, String search, Integer page, Integer limit) {
-        String estatusParam = (estatus != null && !estatus.isBlank()) ? estatus.trim() : null;
+        Estatus estatusParam = (estatus != null && !estatus.isBlank()) ? Estatus.desdeCodigo(estatus.trim()) : null;
 
-        PageRequest pageable = PageRequest.of(page - 1, limit);
-        Page<Propiedad> result = propiedadRepository.findAllWithFilters(estatusParam, conjuntoId, search, pageable);
+        ResultadoPaginado<Propiedad> result =
+                propiedadRepositoryPort.buscarConFiltros(estatusParam, conjuntoId, search, page, limit);
 
         return new PropiedadDTO.ListResponse(
-                result.getContent().stream().map(this::toDTO).toList(),
-                result.getTotalElements(),
+                result.datos().stream().map(this::toDTO).toList(),
+                result.total(),
                 page,
                 limit
         );
     }
 
     public PropiedadDTO getPropiedadById(Integer id) {
-        Propiedad prop = propiedadRepository.findById(id)
+        Propiedad prop = propiedadRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada"));
         return toDTO(prop);
     }
@@ -68,14 +67,14 @@ public class PropiedadService {
         prop.setPpFchHorMod(OffsetDateTime.now());
         prop.setPpEstMod(estacion);
 
-        return toDTO(propiedadRepository.save(prop));
+        return toDTO(propiedadRepositoryPort.guardar(prop));
     }
 
     @Transactional
     public PropiedadDTO updatePropiedad(Integer id, Integer cdpId, String numero,
                                          BigDecimal cantidad, BigDecimal coefParticipacion,
                                          String estatus, String username, String estacion) {
-        Propiedad prop = propiedadRepository.findById(id)
+        Propiedad prop = propiedadRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada"));
 
         if (cdpId != null) prop.setPpCdpId(cdpId);
@@ -88,12 +87,12 @@ public class PropiedadService {
         prop.setPpFchHorMod(OffsetDateTime.now());
         prop.setPpEstMod(estacion);
 
-        return toDTO(propiedadRepository.save(prop));
+        return toDTO(propiedadRepositoryPort.guardar(prop));
     }
 
     @Transactional
     public Map<String, String> deletePropiedad(Integer id, String username, String estacion) {
-        Propiedad prop = propiedadRepository.findById(id)
+        Propiedad prop = propiedadRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada"));
 
         prop.setPpSts("I");
@@ -101,13 +100,13 @@ public class PropiedadService {
         prop.setPpFchHorMod(OffsetDateTime.now());
         prop.setPpEstMod(estacion);
 
-        propiedadRepository.save(prop);
+        propiedadRepositoryPort.guardar(prop);
         return Map.of("message", "Propiedad inactivada correctamente");
     }
 
     private PropiedadDTO toDTO(Propiedad p) {
         String conjNombre = null;
-        Optional<Conjunto> conj = conjuntoRepository.findById(p.getPpConjId());
+        Optional<Conjunto> conj = conjuntoRepositoryPort.buscarPorId(p.getPpConjId());
         if (conj.isPresent()) {
             conjNombre = conj.get().getConjNombre();
         }
@@ -125,8 +124,8 @@ public class PropiedadService {
     }
 
     private Integer findPersonaIdByUsuario(String username) {
-        return personaRepository.findByPerUsuario(username)
-                .map(Persona::getId)
+        return personaRepositoryPort.buscarPorUsuario(username)
+                .map(com.resimanager.backoffice.domain.model.Persona::getId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado: " + username));
     }
 }

@@ -1,23 +1,19 @@
 package com.resimanager.backoffice.service;
 
+import com.resimanager.backoffice.domain.model.Persona;
+import com.resimanager.backoffice.domain.model.ResultadoPaginado;
+import com.resimanager.backoffice.domain.model.enums.Estatus;
+import com.resimanager.backoffice.domain.port.out.AdministradoraRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.ConjuntoRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PerfPersAdministradoraRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PerfPersConjuntoRepositoryPort;
+import com.resimanager.backoffice.domain.port.out.PersonaRepositoryPort;
 import com.resimanager.backoffice.dto.UpdateUsuarioRequest;
 import com.resimanager.backoffice.dto.UsuarioDTO;
 import com.resimanager.backoffice.dto.UsuarioListResponse;
 import com.resimanager.backoffice.dto.UsuarioPerfilesResponse;
-import com.resimanager.backoffice.domain.model.Administradora;
-import com.resimanager.backoffice.domain.model.Conjunto;
-import com.resimanager.backoffice.domain.model.PerfPersAdministradora;
-import com.resimanager.backoffice.domain.model.PerfPersConjunto;
-import com.resimanager.backoffice.domain.model.Persona;
-import com.resimanager.backoffice.persistance.repository.AdministradoraRepository;
-import com.resimanager.backoffice.persistance.repository.ConjuntoRepository;
-import com.resimanager.backoffice.persistance.repository.PerfPersAdministradoraRepository;
-import com.resimanager.backoffice.persistance.repository.PerfPersConjuntoRepository;
-import com.resimanager.backoffice.persistance.repository.PersonaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,47 +29,47 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UsuarioService {
 
-    private final PersonaRepository personaRepository;
-    private final PerfPersAdministradoraRepository perfPersAdministradoraRepository;
-    private final PerfPersConjuntoRepository perfPersConjuntoRepository;
-    private final AdministradoraRepository administradoraRepository;
-    private final ConjuntoRepository conjuntoRepository;
+    private final PersonaRepositoryPort personaRepositoryPort;
+    private final PerfPersAdministradoraRepositoryPort perfPersAdministradoraRepositoryPort;
+    private final PerfPersConjuntoRepositoryPort perfPersConjuntoRepositoryPort;
+    private final AdministradoraRepositoryPort administradoraRepositoryPort;
+    private final ConjuntoRepositoryPort conjuntoRepositoryPort;
 
     public UsuarioListResponse getUsuarios(String estatus, String search, Integer page, Integer limit) {
         String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
-        String estatusParam = (estatus != null && !estatus.isBlank()) ? estatus.trim() : null;
+        Estatus estatusParam = (estatus != null && !estatus.isBlank()) ? Estatus.desdeCodigo(estatus.trim()) : null;
 
-        PageRequest pageable = PageRequest.of(page - 1, limit);
-        Page<Persona> result = personaRepository.findAllWithFilters(estatusParam, searchParam, pageable);
+        ResultadoPaginado<Persona> result = personaRepositoryPort.buscarConFiltros(estatusParam, searchParam, page, limit);
 
         return UsuarioListResponse.builder()
-                .data(result.getContent().stream().map(this::toDTO).toList())
-                .total(result.getTotalElements())
+                .data(result.datos().stream().map(this::toDTO).toList())
+                .total(result.total())
                 .page(page)
                 .limit(limit)
                 .build();
     }
 
     public UsuarioDTO getUsuarioById(Integer usuarioId) {
-        Persona persona = personaRepository.findById(usuarioId)
+        Persona persona = personaRepositoryPort.buscarPorId(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
         return toDTO(persona);
     }
 
     public UsuarioPerfilesResponse getUsuarioPerfiles(Integer usuarioId) {
-        Persona persona = personaRepository.findById(usuarioId)
+        Persona persona = personaRepositoryPort.buscarPorId(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-
-        // Perfiles en administradoras
-        List<PerfPersAdministradora> ppaList = perfPersAdministradoraRepository.findActiveByPersonaId(usuarioId);
-        Map<Integer, List<PerfPersAdministradora>> ppaByAdm = ppaList.stream()
-                .collect(Collectors.groupingBy(ppa -> ppa.getId().getPpaAdmid()));
 
         List<UsuarioPerfilesResponse.ContextoPerfilDTO> contextos = new java.util.ArrayList<>();
 
+        // Perfiles en administradoras
+        var ppaList = perfPersAdministradoraRepositoryPort.listarActivasPorPersonaId(usuarioId);
+        var ppaByAdm = ppaList.stream()
+                .collect(Collectors.groupingBy(ppa -> ppa.getId().getPpaAdmid()));
+
         if (!ppaByAdm.isEmpty()) {
-            List<Administradora> admins = administradoraRepository.findActiveByIds(List.copyOf(ppaByAdm.keySet()));
-            for (Administradora adm : admins) {
+            List<com.resimanager.backoffice.domain.model.Administradora> admins =
+                    administradoraRepositoryPort.buscarActivasPorIds(List.copyOf(ppaByAdm.keySet()));
+            for (var adm : admins) {
                 List<UsuarioPerfilesResponse.PerfilSimpleDTO> perfiles = ppaByAdm.get(adm.getId()).stream()
                         .map(ppa -> UsuarioPerfilesResponse.PerfilSimpleDTO.builder()
                                 .id(ppa.getPpaPrfid().getId())
@@ -90,13 +86,14 @@ public class UsuarioService {
         }
 
         // Perfiles en conjuntos
-        List<PerfPersConjunto> ppcList = perfPersConjuntoRepository.findActiveByPersonaId(usuarioId);
-        Map<Integer, List<PerfPersConjunto>> ppcByConj = ppcList.stream()
+        var ppcList = perfPersConjuntoRepositoryPort.listarActivasPorPersonaId(usuarioId);
+        var ppcByConj = ppcList.stream()
                 .collect(Collectors.groupingBy(ppc -> ppc.getId().getPpcConjid()));
 
         if (!ppcByConj.isEmpty()) {
-            List<Conjunto> conjuntos = conjuntoRepository.findActiveByIds(List.copyOf(ppcByConj.keySet()));
-            for (Conjunto conj : conjuntos) {
+            List<com.resimanager.backoffice.domain.model.Conjunto> conjuntos =
+                    conjuntoRepositoryPort.buscarActivosPorIds(List.copyOf(ppcByConj.keySet()));
+            for (var conj : conjuntos) {
                 List<UsuarioPerfilesResponse.PerfilSimpleDTO> perfiles = ppcByConj.get(conj.getId()).stream()
                         .map(ppc -> UsuarioPerfilesResponse.PerfilSimpleDTO.builder()
                                 .id(ppc.getPpcPrfid().getId())
@@ -120,10 +117,10 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioDTO updateUsuario(Integer id, UpdateUsuarioRequest request, String executorUsername, String estacion) {
-        Persona persona = personaRepository.findById(id)
+        Persona persona = personaRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
-        Persona ejecutor = personaRepository.findByPerUsuario(executorUsername)
+        Persona ejecutor = personaRepositoryPort.buscarPorUsuario(executorUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejecutor no encontrado"));
 
         if (request.nombre() != null && !request.nombre().isBlank()) {
@@ -146,15 +143,15 @@ public class UsuarioService {
         persona.setPerFchHorMod(OffsetDateTime.now());
         persona.setPerEstMod(estacion);
 
-        return toDTO(personaRepository.save(persona));
+        return toDTO(personaRepositoryPort.guardar(persona));
     }
 
     @Transactional
     public Map<String, String> deleteUsuario(Integer id, String executorUsername, String estacion) {
-        Persona persona = personaRepository.findById(id)
+        Persona persona = personaRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
-        Persona ejecutor = personaRepository.findByPerUsuario(executorUsername)
+        Persona ejecutor = personaRepositoryPort.buscarPorUsuario(executorUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejecutor no encontrado"));
 
         persona.setPerSts("I");
@@ -162,7 +159,7 @@ public class UsuarioService {
         persona.setPerFchHorMod(OffsetDateTime.now());
         persona.setPerEstMod(estacion);
 
-        personaRepository.save(persona);
+        personaRepositoryPort.guardar(persona);
         return Map.of("message", "Usuario inactivado correctamente");
     }
 

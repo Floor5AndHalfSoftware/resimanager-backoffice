@@ -96,9 +96,9 @@ Proyecto **Maven multimodular** (Arquitectura Hexagonal, ver `hexagonal-architec
 
 ```
 resimanager-backoffice/       # Parent POM
-├── resimanager-domain/       # Modelo de dominio rico (Java puro) + puertos in/out
-├── resimanager-application/  # servicios, DTOs, persistencia (temporal), excepciones, utils
-├── resimanager-infrastructure/ # (en construcción) adaptadores de salida
+├── resimanager-domain/       # Modelo de dominio (entidades JPA) + puertos in/out
+├── resimanager-application/  # servicios (usan puertos out), DTOs, repos JPA (temporal), utils
+├── resimanager-infrastructure/ # adaptadores de salida (impl de puertos out sobre repos)
 ├── resimanager-rest/         # controllers REST + handler
 └── resimanager-bootstrap/    # Application, seguridad HTTP, config, resources, jar ejecutable
 ```
