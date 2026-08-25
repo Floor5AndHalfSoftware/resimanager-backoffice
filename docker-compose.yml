@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: resimanager-postgres
+    environment:
+      POSTGRES_DB: resimanager
+      POSTGRES_USER: resimanager
+      POSTGRES_PASSWORD: resimanager
+    ports:
+      - "5432:5432"
+    volumes:
+      - resimanager-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resimanager -d resimanager"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  resimanager-pgdata:

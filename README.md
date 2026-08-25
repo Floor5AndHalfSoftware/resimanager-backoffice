@@ -56,14 +56,35 @@ Flyway crea el esquema automáticamente con 14 migraciones (V1.0.0.0 a V2.0.8):
 - Email: `admin@resimanager.com`
 - Password: `Admin2024!`
 
+### Desarrollo local (PostgreSQL vía Docker)
+
+El profile `local` usa **PostgreSQL** (no H2). Levanta la base con:
+
+```bash
+docker compose up -d
+```
+
+y ejecuta la app desde el módulo `resimanager-bootstrap` con las variables de `.env.local` (usuario/BD `resimanager`, `localhost:5432`). Flyway aplica las 19 migraciones automáticamente.
+
+> **Nota (bug preexistente de seeds):** en una base **vacía desde cero**, `V2.0.5` inserta `ModPerfil.mpid` explícitos sin avanzar la secuencia IDENTITY, por lo que `V2.0.8` choca con claves duplicadas. No afecta a Neon (ya migrada y validada). Si borras el volumen y recreas la base, corrige la secuencia una vez antes de arrancar:
+>
+> ```sql
+> SELECT setval(pg_get_serial_sequence('"ModPerfil"','mpid'),
+>               (SELECT COALESCE(MAX(mpid),0)+1 FROM "ModPerfil"), false);
+> ```
+
 ## Construcción y Ejecución
 
 ```bash
-# Compilar
-mvn clean package
+# Compilar/instalar (desde la raíz del multimódulo)
+mvn clean install -DskipTests
 
-# Ejecutar
-mvn spring-boot:run
+# Ejecutar (módulo bootstrap)
+mvn -pl resimanager-bootstrap spring-boot:run
+
+# Ejecutar con debugger (JDWP puerto 5005)
+mvn -pl resimanager-bootstrap spring-boot:run \
+  -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
 # Tests
 mvn test
@@ -73,20 +94,23 @@ docker build -t resimanager-backoffice .
 docker run -p 8080:8080 --env-file .env resimanager-backoffice
 ```
 
+> **Variables de entorno:** `spring-boot:run` lanza la JVM con working directory = la raíz del repo (`<workingDirectory>${project.parent.basedir}</workingDirectory>` en el POM de bootstrap), así que `spring-dotenv` carga el `.env` de la raíz (apunta a **Neon**). Para usar el **Postgres local** de `docker compose`, exporta `.env.local` antes:
+> ```bash
+> set -a; source .env.local; set +a
+> mvn -pl resimanager-bootstrap spring-boot:run
+> ```
+
 ## Estructura del Proyecto
 
+Proyecto **Maven multimodular** (Arquitectura Hexagonal, ver `hexagonal-architecture.md`):
+
 ```
-src/
-├── main/java/com/resimanager/backoffice/
-│   ├── config/           # Seguridad, CORS, OpenAPI, Cache
-│   ├── controller/       # 9 REST Controllers
-│   ├── dto/              # 28 Data Transfer Objects
-│   ├── exception/        # 4 clases de excepción
-│   ├── persistance/
-│   │   ├── entity/       # 40+ entidades JPA
-│   │   └── repository/   # 14 repositorios
-│   └── service/          # 11 servicios
-└── test/                 # Pendiente de implementar
+resimanager-backoffice/       # Parent POM
+├── resimanager-domain/       # Modelo de dominio (entidades JPA) + puertos in/out
+├── resimanager-application/  # servicios (usan puertos out), DTOs, repos JPA (temporal), utils
+├── resimanager-infrastructure/ # adaptadores de salida (impl de puertos out sobre repos)
+├── resimanager-rest/         # controllers REST + handler
+└── resimanager-bootstrap/    # Application, seguridad HTTP, config, resources, jar ejecutable
 ```
 
 ## Despliegue
