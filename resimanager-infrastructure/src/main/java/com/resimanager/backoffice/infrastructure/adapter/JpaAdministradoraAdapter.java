@@ -4,7 +4,7 @@ import com.resimanager.backoffice.domain.model.Administradora;
 import com.resimanager.backoffice.domain.model.ResultadoPaginado;
 import com.resimanager.backoffice.domain.model.enums.Estatus;
 import com.resimanager.backoffice.domain.port.out.AdministradoraRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.AdministradoraRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.AdministradoraRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;

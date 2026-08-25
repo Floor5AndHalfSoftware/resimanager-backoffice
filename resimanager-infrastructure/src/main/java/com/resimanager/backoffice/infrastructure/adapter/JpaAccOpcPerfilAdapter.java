@@ -2,7 +2,7 @@ package com.resimanager.backoffice.infrastructure.adapter;
 
 import com.resimanager.backoffice.domain.model.PermisoModulo;
 import com.resimanager.backoffice.domain.port.out.AccOpcPerfilRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.AccOpcPerfilRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.AccOpcPerfilRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,5 +22,10 @@ public class JpaAccOpcPerfilAdapter implements AccOpcPerfilRepositoryPort {
                         (String) row[1],
                         (String) row[2]))
                 .toList();
+    }
+
+    @Override
+    public boolean tienePermiso(Integer perfilId, String modulo, String accion) {
+        return repository.hasPermission(perfilId, modulo, accion);
     }
 }

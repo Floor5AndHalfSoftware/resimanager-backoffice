@@ -2,9 +2,9 @@ package com.resimanager.backoffice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.resimanager.backoffice.dto.*;
-import com.resimanager.backoffice.persistance.repository.PersonaRepository;
 import com.resimanager.backoffice.service.ContextoService;
 import com.resimanager.backoffice.service.JwtService;
+import com.resimanager.backoffice.service.UserService;
 import com.resimanager.backoffice.service.mapper.PersonaMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,7 +50,7 @@ public class LoginController {
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
     private final ContextoService contextoService;
-    private final PersonaRepository personaRepository;
+    private final UserService userService;
     private final PersonaMapper personaMapper;
     
     @Value("${app.security.cookie-secure}")
@@ -92,7 +92,7 @@ public class LoginController {
         
         if (authentication.isAuthenticated()) {
             // Get user data from database
-            var persona = personaRepository.findByPerUsuarioOrPerEMail(loginRequestJson.username(), loginRequestJson.username())
+            var persona = userService.getUserByUsername(loginRequestJson.username())
                     .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication"));
             
             // Build UserInfoDTO for JWT claims

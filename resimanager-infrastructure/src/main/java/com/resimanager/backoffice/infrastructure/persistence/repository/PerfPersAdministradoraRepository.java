@@ -1,4 +1,4 @@
-package com.resimanager.backoffice.persistance.repository;
+package com.resimanager.backoffice.infrastructure.persistence.repository;
 
 import com.resimanager.backoffice.domain.model.PerfPersAdministradora;
 import com.resimanager.backoffice.domain.model.PerfPersAdministradoraId;

@@ -39,12 +39,12 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 public class PropiedadController {
 
     private final PropiedadService propiedadService;
-    private final com.resimanager.backoffice.persistance.repository.ClaseDePropiedadRepository claseDePropiedadRepository;
+    private final com.resimanager.backoffice.domain.port.out.ClaseDePropiedadRepositoryPort claseDePropiedadRepositoryPort;
 
     @Operation(summary = "Listar clases de propiedad", description = "Para dropdown en formularios")
     @GetMapping("/clases")
-    public ResponseEntity<java.util.List<java.util.Map<String, Object>>> listarClases() {
-        return ResponseEntity.ok(claseDePropiedadRepository.findActivas());
+    public ResponseEntity<java.util.List<com.resimanager.backoffice.domain.model.ClaseDePropiedadOpcion>> listarClases() {
+        return ResponseEntity.ok(claseDePropiedadRepositoryPort.listarActivas());
     }
 
     @Operation(summary = "Listar propiedades", description = "Obtiene la lista de propiedades con filtros opcionales")

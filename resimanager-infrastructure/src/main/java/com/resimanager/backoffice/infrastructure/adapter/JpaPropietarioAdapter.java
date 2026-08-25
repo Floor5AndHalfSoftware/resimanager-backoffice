@@ -5,7 +5,7 @@ import com.resimanager.backoffice.domain.model.PropietarioId;
 import com.resimanager.backoffice.domain.model.ResultadoPaginado;
 import com.resimanager.backoffice.domain.model.enums.Estatus;
 import com.resimanager.backoffice.domain.port.out.PropietarioRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.PropietarioRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PropietarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

@@ -3,7 +3,7 @@ package com.resimanager.backoffice.infrastructure.adapter;
 import com.resimanager.backoffice.domain.model.ModPerfil;
 import com.resimanager.backoffice.domain.model.ModPerfilId;
 import com.resimanager.backoffice.domain.port.out.ModPerfilRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.ModPerfilRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.ModPerfilRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

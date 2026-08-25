@@ -2,7 +2,7 @@ package com.resimanager.backoffice.infrastructure.adapter;
 
 import com.resimanager.backoffice.domain.model.PersAdministradora;
 import com.resimanager.backoffice.domain.port.out.PersAdministradoraRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.PersAdministradoraRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PersAdministradoraRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

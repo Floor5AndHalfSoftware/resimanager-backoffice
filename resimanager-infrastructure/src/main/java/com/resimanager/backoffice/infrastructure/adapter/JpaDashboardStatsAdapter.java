@@ -2,11 +2,11 @@ package com.resimanager.backoffice.infrastructure.adapter;
 
 import com.resimanager.backoffice.domain.model.DashboardStats;
 import com.resimanager.backoffice.domain.port.out.DashboardStatsRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.AdministradoraRepository;
-import com.resimanager.backoffice.persistance.repository.ConjuntoRepository;
-import com.resimanager.backoffice.persistance.repository.PersonaRepository;
-import com.resimanager.backoffice.persistance.repository.PropiedadRepository;
-import com.resimanager.backoffice.persistance.repository.PropietarioRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.AdministradoraRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.ConjuntoRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PersonaRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PropiedadRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PropietarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -4,7 +4,7 @@ import com.resimanager.backoffice.domain.model.Persona;
 import com.resimanager.backoffice.domain.model.ResultadoPaginado;
 import com.resimanager.backoffice.domain.model.enums.Estatus;
 import com.resimanager.backoffice.domain.port.out.PersonaRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.PersonaRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PersonaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

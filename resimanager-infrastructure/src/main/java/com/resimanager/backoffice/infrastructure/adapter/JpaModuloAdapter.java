@@ -2,7 +2,7 @@ package com.resimanager.backoffice.infrastructure.adapter;
 
 import com.resimanager.backoffice.domain.model.Modulo;
 import com.resimanager.backoffice.domain.port.out.ModuloRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.ModuloRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.ModuloRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

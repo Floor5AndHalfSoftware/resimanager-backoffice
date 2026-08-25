@@ -1,6 +1,6 @@
 package com.resimanager.backoffice.service;
 
-import com.resimanager.backoffice.persistance.repository.AccOpcPerfilRepository;
+import com.resimanager.backoffice.domain.port.out.AccOpcPerfilRepositoryPort;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -24,7 +24,7 @@ import static com.resimanager.backoffice.utils.Constants.SUPER_SECRET_KEY;
 @Slf4j
 public class PermissionService {
 
-    private final AccOpcPerfilRepository accOpcPerfilRepository;
+    private final AccOpcPerfilRepositoryPort accOpcPerfilRepositoryPort;
 
     /**
      * Check if the current user has permission to access a module with a specific action
@@ -62,7 +62,7 @@ public class PermissionService {
             }
 
             // Check permission in database
-            boolean hasPermission = accOpcPerfilRepository.hasPermission(perfilId, modulo, accion);
+            boolean hasPermission = accOpcPerfilRepositoryPort.tienePermiso(perfilId, modulo, accion);
             
             log.debug("Permission check for user {}, profile {}, module {}, action {}: {}", 
                     auth.getName(), perfilId, modulo, accion, hasPermission);

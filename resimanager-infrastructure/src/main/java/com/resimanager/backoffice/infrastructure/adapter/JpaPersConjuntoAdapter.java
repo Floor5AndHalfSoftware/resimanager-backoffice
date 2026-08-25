@@ -2,7 +2,7 @@ package com.resimanager.backoffice.infrastructure.adapter;
 
 import com.resimanager.backoffice.domain.model.PersConjunto;
 import com.resimanager.backoffice.domain.port.out.PersConjuntoRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.PersConjuntoRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PersConjuntoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

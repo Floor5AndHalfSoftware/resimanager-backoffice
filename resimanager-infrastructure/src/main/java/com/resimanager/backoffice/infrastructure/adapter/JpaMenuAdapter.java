@@ -2,7 +2,7 @@ package com.resimanager.backoffice.infrastructure.adapter;
 
 import com.resimanager.backoffice.domain.model.MenuItem;
 import com.resimanager.backoffice.domain.port.out.MenuRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.MenuItemRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.MenuItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

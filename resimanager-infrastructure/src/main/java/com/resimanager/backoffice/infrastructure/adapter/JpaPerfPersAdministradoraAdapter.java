@@ -3,7 +3,7 @@ package com.resimanager.backoffice.infrastructure.adapter;
 import com.resimanager.backoffice.domain.model.PerfPersAdministradora;
 import com.resimanager.backoffice.domain.model.PerfPersAdministradoraId;
 import com.resimanager.backoffice.domain.port.out.PerfPersAdministradoraRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.PerfPersAdministradoraRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PerfPersAdministradoraRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;

@@ -4,7 +4,7 @@ import com.resimanager.backoffice.domain.model.Perfil;
 import com.resimanager.backoffice.domain.model.ResultadoPaginado;
 import com.resimanager.backoffice.domain.model.enums.Estatus;
 import com.resimanager.backoffice.domain.port.out.PerfilRepositoryPort;
-import com.resimanager.backoffice.persistance.repository.PerfilRepository;
+import com.resimanager.backoffice.infrastructure.persistence.repository.PerfilRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
