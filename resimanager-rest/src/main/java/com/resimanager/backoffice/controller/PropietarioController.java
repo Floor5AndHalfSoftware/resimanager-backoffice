@@ -1,8 +1,14 @@
 package com.resimanager.backoffice.controller;
 
+import com.resimanager.backoffice.domain.model.Propiedad;
+import com.resimanager.backoffice.domain.model.Propietario;
+import com.resimanager.backoffice.domain.model.ResultadoPaginado;
+import com.resimanager.backoffice.domain.model.enums.Estatus;
+import com.resimanager.backoffice.domain.port.in.PropiedadUseCase;
+import com.resimanager.backoffice.domain.port.in.PropietarioUseCase;
+import com.resimanager.backoffice.domain.port.in.UsuarioUseCase;
 import com.resimanager.backoffice.dto.PropietarioDTO;
 import com.resimanager.backoffice.dto.PropietarioListResponse;
-import com.resimanager.backoffice.service.PropietarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,13 +23,18 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 
@@ -36,7 +47,9 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @Tag(name = "Propietarios", description = "Gestión de propietarios (asignación persona-propiedad en conjunto)")
 public class PropietarioController {
 
-    private final PropietarioService propietarioService;
+    private final PropietarioUseCase propietarioUseCase;
+    private final PropiedadUseCase propiedadUseCase;
+    private final UsuarioUseCase usuarioUseCase;
 
     @Operation(summary = "Listar propietarios", description = "Obtiene la lista de propietarios con filtros opcionales")
     @GetMapping
@@ -47,54 +60,44 @@ public class PropietarioController {
             @Parameter(description = "Número de página (inicia en 1)") @RequestParam(required = false, defaultValue = "1") @Min(1) Integer page,
             @Parameter(description = "Registros por página") @RequestParam(required = false, defaultValue = "50") @Min(1) Integer limit
     ) {
-        log.debug("GET /propietarios - estatus: {}, conjuntoId: {}, search: {}, page: {}, limit: {}",
-                estatus, conjuntoId, search, page, limit);
-        return ResponseEntity.ok(propietarioService.getPropietarios(estatus, conjuntoId, search, page, limit));
+        Estatus estatusParam = (estatus != null && !estatus.isBlank()) ? Estatus.desdeCodigo(estatus.trim()) : null;
+        ResultadoPaginado<Propietario> result =
+                propietarioUseCase.obtenerPropietarios(estatusParam, conjuntoId, search, page, limit);
+
+        List<PropietarioDTO> data = result.datos().stream().map(this::toDTO).toList();
+        return ResponseEntity.ok(PropietarioListResponse.builder()
+                .data(data)
+                .total(result.total())
+                .page(result.pagina())
+                .limit(result.limite())
+                .build());
     }
 
     @Operation(summary = "Obtener propietario por ID compuesto")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Propietario encontrado"),
-            @ApiResponse(responseCode = "404", description = "Propietario no encontrado"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
     @GetMapping("/{conjId}/{perId}")
     public ResponseEntity<PropietarioDTO> getPropietario(
             @Parameter(description = "ID del conjunto") @PathVariable Integer conjId,
             @Parameter(description = "ID de la persona") @PathVariable Integer perId
     ) {
-        log.debug("GET /propietarios/{}/{}", conjId, perId);
-        return ResponseEntity.ok(propietarioService.getPropietarioById(conjId, perId));
+        Propietario propietario = propietarioUseCase.obtenerPropietario(conjId, perId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Propietario no encontrado"));
+        return ResponseEntity.ok(toDTO(propietario));
     }
 
     @Operation(summary = "Crear propietario", description = "Asigna una persona como propietaria de una propiedad en un conjunto")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Propietario creado exitosamente"),
-            @ApiResponse(responseCode = "409", description = "El propietario ya existe en este conjunto"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
     @PostMapping
     public ResponseEntity<PropietarioDTO> createPropietario(
             @Valid @RequestBody CreatePropietarioRequest request,
             HttpServletRequest httpRequest
     ) {
-        log.info("POST /propietarios - conjId: {}, perId: {}", request.conjId, request.perId);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        String estacion = httpRequest.getRemoteAddr();
-
-        PropietarioDTO result = propietarioService.createPropietario(
-                request.conjId, request.perId, request.propiedadId,
-                request.fechaDesde, username, estacion);
-        return ResponseEntity.ok(result);
+        Propietario propietario = propietarioUseCase.crearPropietario(request.conjId, request.perId,
+                request.propiedadId, LocalDate.parse(request.fechaDesde), null,
+                auth.getName(), httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(toDTO(propietario));
     }
 
     @Operation(summary = "Actualizar propietario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Propietario actualizado exitosamente"),
-            @ApiResponse(responseCode = "404", description = "Propietario no encontrado"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
     @PutMapping("/{conjId}/{perId}")
     public ResponseEntity<PropietarioDTO> updatePropietario(
             @Parameter(description = "ID del conjunto") @PathVariable Integer conjId,
@@ -102,38 +105,61 @@ public class PropietarioController {
             @Valid @RequestBody UpdatePropietarioRequest request,
             HttpServletRequest httpRequest
     ) {
-        log.info("PUT /propietarios/{}/{}", conjId, perId);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        String estacion = httpRequest.getRemoteAddr();
-
-        PropietarioDTO result = propietarioService.updatePropietario(
-                conjId, perId, request.propiedadId, request.fechaDesde,
-                request.fechaHasta, request.estatus, username, estacion);
-        return ResponseEntity.ok(result);
+        Estatus estatus = (request.estatus() != null && !request.estatus().isBlank())
+                ? Estatus.desdeCodigo(request.estatus()) : null;
+        Propietario propietario = propietarioUseCase.actualizarPropietario(conjId, perId,
+                request.propiedadId,
+                request.fechaDesde != null ? LocalDate.parse(request.fechaDesde) : null,
+                request.fechaHasta != null ? LocalDate.parse(request.fechaHasta) : null,
+                estatus, auth.getName(), httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(toDTO(propietario));
     }
 
     @Operation(summary = "Inactivar propietario", description = "Realiza un soft-delete cambiando el estatus a 'I'")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Propietario inactivado correctamente"),
-            @ApiResponse(responseCode = "404", description = "Propietario no encontrado"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
     @DeleteMapping("/{conjId}/{perId}")
     public ResponseEntity<Map<String, String>> deletePropietario(
             @Parameter(description = "ID del conjunto") @PathVariable Integer conjId,
             @Parameter(description = "ID de la persona") @PathVariable Integer perId,
             HttpServletRequest httpRequest
     ) {
-        log.info("DELETE /propietarios/{}/{}", conjId, perId);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        String estacion = httpRequest.getRemoteAddr();
-
-        return ResponseEntity.ok(propietarioService.deletePropietario(conjId, perId, username, estacion));
+        propietarioUseCase.inactivarPropietario(conjId, perId, auth.getName(), httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(Map.of("message", "Propietario inactivado correctamente"));
     }
 
-    // ==================== Inner Request DTOs ====================
+    private PropietarioDTO toDTO(Propietario p) {
+        String nombrePersona = null;
+        String apellidoPersona = null;
+        String documentoPersona = null;
+        String nombrePropiedad = null;
+
+        Optional<com.resimanager.backoffice.domain.model.Persona> persona =
+                usuarioUseCase.obtenerUsuario(p.getId().getPptPerid());
+        if (persona.isPresent()) {
+            nombrePersona = persona.get().getPerNombre();
+            apellidoPersona = persona.get().getPerApellido();
+            documentoPersona = persona.get().getPerDocIdent();
+        }
+
+        Optional<Propiedad> prop = propiedadUseCase.obtenerPropiedad(p.getPptID());
+        if (prop.isPresent()) {
+            nombrePropiedad = prop.get().getPpNumero();
+        }
+
+        return PropietarioDTO.builder()
+                .conjId(p.getId().getPptConjid())
+                .perId(p.getId().getPptPerid())
+                .personaNombre(nombrePersona)
+                .personaApellido(apellidoPersona)
+                .personaDocumento(documentoPersona)
+                .propiedadId(p.getPptID())
+                .propiedadNombre(nombrePropiedad)
+                .fechaDesde(p.getPptFchDesde() != null ? p.getPptFchDesde().toString() : null)
+                .fechaHasta(p.getPptFchHasta() != null ? p.getPptFchHasta().toString() : null)
+                .estatus(p.getPptSts())
+                .build();
+    }
 
     public record CreatePropietarioRequest(
             @NotNull Integer conjId,

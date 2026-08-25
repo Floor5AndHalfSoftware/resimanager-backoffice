@@ -1,7 +1,8 @@
 package com.resimanager.backoffice.controller;
 
+import com.resimanager.backoffice.domain.model.DashboardStats;
+import com.resimanager.backoffice.domain.port.in.DashboardUseCase;
 import com.resimanager.backoffice.dto.DashboardStatsResponse;
-import com.resimanager.backoffice.service.DashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +23,7 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @Tag(name = "Dashboard", description = "Estadísticas y resumen del dashboard")
 public class DashboardController {
 
-    private final DashboardService dashboardService;
+    private final DashboardUseCase dashboardUseCase;
 
     @Operation(
             summary = "Obtener estadísticas del dashboard",
@@ -30,7 +31,19 @@ public class DashboardController {
     )
     @GetMapping("/stats")
     public ResponseEntity<DashboardStatsResponse> getStats() {
-        log.debug("GET /dashboard/stats");
-        return ResponseEntity.ok(dashboardService.getStats());
+        DashboardStats s = dashboardUseCase.obtenerEstadisticas();
+        return ResponseEntity.ok(DashboardStatsResponse.builder()
+                .totalAdministradoras(s.totalAdministradoras())
+                .totalConjuntos(s.totalConjuntos())
+                .totalUsuarios(s.totalUsuarios())
+                .totalPropiedades(s.totalPropiedades())
+                .totalPropietarios(s.totalPropietarios())
+                .totalFacturas(s.totalFacturas())
+                .totalFacturasPagadas(s.totalFacturasPagadas())
+                .totalFacturasPendientes(s.totalFacturasPendientes())
+                .totalIncidencias(s.totalIncidencias())
+                .totalIncidenciasAbiertas(s.totalIncidenciasAbiertas())
+                .totalIncidenciasCerradas(s.totalIncidenciasCerradas())
+                .build());
     }
 }

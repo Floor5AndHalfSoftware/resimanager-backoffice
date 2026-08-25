@@ -4,116 +4,88 @@ import com.resimanager.backoffice.domain.model.ModPerfil;
 import com.resimanager.backoffice.domain.model.ModPerfilId;
 import com.resimanager.backoffice.domain.model.Modulo;
 import com.resimanager.backoffice.domain.model.Perfil;
+import com.resimanager.backoffice.domain.model.PerfilDetalle;
+import com.resimanager.backoffice.domain.model.PerfilResumen;
 import com.resimanager.backoffice.domain.model.PermisoModulo;
 import com.resimanager.backoffice.domain.model.Persona;
 import com.resimanager.backoffice.domain.model.ResultadoPaginado;
 import com.resimanager.backoffice.domain.model.enums.Estatus;
+import com.resimanager.backoffice.domain.port.in.PerfilUseCase;
 import com.resimanager.backoffice.domain.port.out.AccOpcPerfilRepositoryPort;
 import com.resimanager.backoffice.domain.port.out.ModPerfilRepositoryPort;
 import com.resimanager.backoffice.domain.port.out.ModuloRepositoryPort;
 import com.resimanager.backoffice.domain.port.out.PerfilRepositoryPort;
 import com.resimanager.backoffice.domain.port.out.PersonaRepositoryPort;
-import com.resimanager.backoffice.dto.AsignarModulosRequest;
-import com.resimanager.backoffice.dto.CreatePerfilRequest;
-import com.resimanager.backoffice.dto.ModuloDTO;
-import com.resimanager.backoffice.dto.PerfilDTO;
-import com.resimanager.backoffice.dto.PerfilDetalleDTO;
-import com.resimanager.backoffice.dto.PerfilListResponse;
-import com.resimanager.backoffice.dto.PermisoDTO;
-import com.resimanager.backoffice.dto.UpdatePerfilRequest;
 import com.resimanager.backoffice.exception.BadRequestException;
 import com.resimanager.backoffice.exception.ResourceNotFoundException;
-import com.resimanager.backoffice.service.mapper.ModuloMapper;
-import com.resimanager.backoffice.service.mapper.PerfilMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PerfilService {
+public class PerfilService implements PerfilUseCase {
 
     private final PerfilRepositoryPort perfilRepositoryPort;
     private final ModuloRepositoryPort moduloRepositoryPort;
     private final ModPerfilRepositoryPort modPerfilRepositoryPort;
     private final PersonaRepositoryPort personaRepositoryPort;
     private final AccOpcPerfilRepositoryPort accOpcPerfilRepositoryPort;
-    private final PerfilMapper perfilMapper;
-    private final ModuloMapper moduloMapper;
 
+    @Override
     @Transactional(readOnly = true)
-    public PerfilListResponse getPerfiles(String estatus, Integer nivel, String search, Integer page, Integer limit) {
-        Estatus estatusParam = (estatus != null && !estatus.isBlank()) ? Estatus.desdeCodigo(estatus.trim()) : null;
+    public ResultadoPaginado<PerfilResumen> obtenerPerfiles(Estatus estatus, Integer nivel, String busqueda,
+                                                            int pagina, int limite) {
+        ResultadoPaginado<Perfil> page = perfilRepositoryPort.buscarConFiltros(estatus, nivel, busqueda,
+                pagina > 0 ? pagina : 1, limite > 0 ? limite : 25);
 
-        ResultadoPaginado<Perfil> perfilesPage = perfilRepositoryPort.buscarConFiltros(estatusParam, nivel, search,
-                page != null && page > 0 ? page : 1, limit != null && limit > 0 ? limit : 25);
+        List<PerfilResumen> resumenes = page.datos().stream()
+                .map(perfil -> new PerfilResumen(perfil, perfilRepositoryPort.contarUsuariosAsignados(perfil.getId())))
+                .toList();
 
-        List<PerfilDTO> perfilesDTO = perfilesPage.datos().stream()
-                .map(perfil -> {
-                    Long usuariosAsignados = perfilRepositoryPort.contarUsuariosAsignados(perfil.getId());
-                    PerfilDTO base = perfilMapper.toDTO(perfil);
-                    return base.toBuilder().usuariosAsignados(usuariosAsignados).build();
-                })
-                .collect(Collectors.toList());
-
-        return PerfilListResponse.builder()
-                .data(perfilesDTO)
-                .total(perfilesPage.total())
-                .page(perfilesPage.pagina())
-                .limit(perfilesPage.limite())
-                .build();
+        return new ResultadoPaginado<>(resumenes, page.total(), page.pagina(), page.limite());
     }
 
+    @Override
     @Transactional(readOnly = true)
-    public PerfilDetalleDTO getPerfilById(Integer id) {
+    public Optional<Perfil> obtenerPerfil(Integer id) {
+        return perfilRepositoryPort.buscarPorId(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PerfilDetalle obtenerDetallePerfil(Integer id) {
         Perfil perfil = perfilRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado con ID: " + id));
 
         List<Modulo> modulos = moduloRepositoryPort.listarPorPerfilId(id);
-        List<ModuloDTO> modulosDTO = modulos.stream()
-                .map(moduloMapper::toDTO)
-                .collect(Collectors.toList());
-
         List<PermisoModulo> permisos = accOpcPerfilRepositoryPort.listarPermisosPorPerfilId(id);
-        List<PermisoDTO> permisosDTO = groupPermissionsByModule(permisos);
+        long usuariosAsignados = perfilRepositoryPort.contarUsuariosAsignados(id);
 
-        Long usuariosAsignados = perfilRepositoryPort.contarUsuariosAsignados(id);
-
-        return PerfilDetalleDTO.builder()
-                .id(perfil.getId())
-                .nombre(perfil.getPrfNombre())
-                .descripcion(perfil.getPrfDescrip())
-                .estatus(perfil.getPrfSts())
-                .nivel(perfil.getPrfNivel())
-                .modulos(modulosDTO)
-                .permisos(permisosDTO)
-                .usuariosAsignados(usuariosAsignados)
-                .fechaCreacion(perfil.getPrfFchHorCrea())
-                .build();
+        return new PerfilDetalle(perfil, modulos, permisos, usuariosAsignados);
     }
 
+    @Override
     @Transactional
-    public PerfilDTO createPerfil(CreatePerfilRequest request, String username, String estacion) {
-        if (perfilRepositoryPort.existePorNombre(request.nombre())) {
-            throw new BadRequestException("Ya existe un perfil con el nombre: " + request.nombre());
+    public Perfil crearPerfil(String nombre, String descripcion, Integer nivel,
+                              String ejecutor, String estacion) {
+        if (perfilRepositoryPort.existePorNombre(nombre)) {
+            throw new BadRequestException("Ya existe un perfil con el nombre: " + nombre);
         }
 
-        Persona usuario = personaRepositoryPort.buscarPorUsuario(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + username));
+        Persona usuario = personaRepositoryPort.buscarPorUsuario(ejecutor)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + ejecutor));
 
         Perfil perfil = new Perfil();
-        perfil.setPrfNombre(request.nombre());
-        perfil.setPrfDescrip(request.descripcion());
-        perfil.setPrfNivel(request.nivel());
+        perfil.setPrfNombre(nombre);
+        perfil.setPrfDescrip(descripcion);
+        perfil.setPrfNivel(nivel);
         perfil.setPrfSts("A");
         perfil.setPrfUsrcrea(usuario);
         perfil.setPrfFchHorCrea(OffsetDateTime.now());
@@ -122,40 +94,41 @@ public class PerfilService {
         perfil.setPrfFchHorMod(OffsetDateTime.now());
         perfil.setPrfEstMod(estacion);
 
-        perfil = perfilRepositoryPort.guardar(perfil);
-        return perfilMapper.toDTO(perfil);
+        return perfilRepositoryPort.guardar(perfil);
     }
 
+    @Override
     @Transactional
-    public PerfilDTO updatePerfil(Integer id, UpdatePerfilRequest request, String username, String estacion) {
+    public Perfil actualizarPerfil(Integer id, String nombre, String descripcion, Integer nivel,
+                                   Estatus estatus, String ejecutor, String estacion) {
         Perfil perfil = perfilRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado con ID: " + id));
 
-        Persona usuario = personaRepositoryPort.buscarPorUsuario(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + username));
+        Persona usuario = personaRepositoryPort.buscarPorUsuario(ejecutor)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + ejecutor));
 
         boolean updated = false;
 
-        if (request.nombre() != null && !request.nombre().equals(perfil.getPrfNombre())) {
-            if (perfilRepositoryPort.existePorNombreYDistintoId(request.nombre(), id)) {
-                throw new BadRequestException("Ya existe otro perfil con el nombre: " + request.nombre());
+        if (nombre != null && !nombre.equals(perfil.getPrfNombre())) {
+            if (perfilRepositoryPort.existePorNombreYDistintoId(nombre, id)) {
+                throw new BadRequestException("Ya existe otro perfil con el nombre: " + nombre);
             }
-            perfil.setPrfNombre(request.nombre());
+            perfil.setPrfNombre(nombre);
             updated = true;
         }
 
-        if (request.descripcion() != null) {
-            perfil.setPrfDescrip(request.descripcion());
+        if (descripcion != null) {
+            perfil.setPrfDescrip(descripcion);
             updated = true;
         }
 
-        if (request.estatus() != null && !request.estatus().equals(perfil.getPrfSts())) {
-            perfil.setPrfSts(request.estatus());
+        if (estatus != null && !estatus.codigo().equals(perfil.getPrfSts())) {
+            perfil.setPrfSts(estatus.codigo());
             updated = true;
         }
 
-        if (request.nivel() != null && !request.nivel().equals(perfil.getPrfNivel())) {
-            perfil.setPrfNivel(request.nivel());
+        if (nivel != null && !nivel.equals(perfil.getPrfNivel())) {
+            perfil.setPrfNivel(nivel);
             updated = true;
         }
 
@@ -166,16 +139,17 @@ public class PerfilService {
             perfil = perfilRepositoryPort.guardar(perfil);
         }
 
-        return perfilMapper.toDTO(perfil);
+        return perfil;
     }
 
+    @Override
     @Transactional
-    public Map<String, String> deletePerfil(Integer id, String username, String estacion) {
+    public void inactivarPerfil(Integer id, String ejecutor, String estacion) {
         Perfil perfil = perfilRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado con ID: " + id));
 
-        Persona usuario = personaRepositoryPort.buscarPorUsuario(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + username));
+        Persona usuario = personaRepositoryPort.buscarPorUsuario(ejecutor)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + ejecutor));
 
         perfil.setPrfSts("I");
         perfil.setPrfUsrmod(usuario);
@@ -183,25 +157,25 @@ public class PerfilService {
         perfil.setPrfEstMod(estacion);
 
         perfilRepositoryPort.guardar(perfil);
-        return Map.of("message", "Perfil inactivado correctamente");
     }
 
+    @Override
     @Transactional
-    public Map<String, Object> asignarModulos(Integer id, AsignarModulosRequest request, String username, String estacion) {
-        Perfil perfil = perfilRepositoryPort.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado con ID: " + id));
+    public int asignarModulos(Integer perfilId, List<Integer> moduloIds, String ejecutor, String estacion) {
+        Perfil perfil = perfilRepositoryPort.buscarPorId(perfilId)
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado con ID: " + perfilId));
 
-        Persona usuario = personaRepositoryPort.buscarPorUsuario(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + username));
+        Persona usuario = personaRepositoryPort.buscarPorUsuario(ejecutor)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + ejecutor));
 
-        List<Modulo> modulos = moduloRepositoryPort.buscarActivosPorIds(request.modulos());
-        if (modulos.size() != request.modulos().size()) {
+        List<Modulo> modulos = moduloRepositoryPort.buscarActivosPorIds(moduloIds);
+        if (modulos.size() != moduloIds.size()) {
             throw new BadRequestException("Uno o más módulos no existen o están inactivos");
         }
 
         int asignados = 0;
         for (Modulo modulo : modulos) {
-            ModPerfil existing = modPerfilRepositoryPort.buscarPorId(id, modulo.getModId()).orElse(null);
+            ModPerfil existing = modPerfilRepositoryPort.buscarPorId(perfilId, modulo.getModId()).orElse(null);
 
             if (existing != null) {
                 if ("I".equals(existing.getMPSts())) {
@@ -216,7 +190,7 @@ public class PerfilService {
                 ModPerfil modPerfil = new ModPerfil();
 
                 ModPerfilId modPerfilId = new ModPerfilId();
-                modPerfilId.setMpPrfid(id);
+                modPerfilId.setMpPrfid(perfilId);
                 modPerfilId.setMpModid(modulo.getModId());
                 modPerfil.setId(modPerfilId);
 
@@ -236,14 +210,12 @@ public class PerfilService {
             }
         }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("message", "Módulos asignados correctamente");
-        result.put("modulos_asignados", asignados);
-        return result;
+        return asignados;
     }
 
+    @Override
     @Transactional
-    public Map<String, String> revocarModulo(Integer perfilId, Integer moduloId, String username, String estacion) {
+    public void revocarModulo(Integer perfilId, Integer moduloId, String ejecutor, String estacion) {
         if (perfilRepositoryPort.buscarPorId(perfilId).isEmpty()) {
             throw new ResourceNotFoundException("Perfil no encontrado con ID: " + perfilId);
         }
@@ -253,21 +225,5 @@ public class PerfilService {
         }
 
         modPerfilRepositoryPort.eliminar(perfilId, moduloId);
-        return Map.of("message", "Módulo removido del perfil");
-    }
-
-    private List<PermisoDTO> groupPermissionsByModule(List<PermisoModulo> permisos) {
-        Map<Integer, PermisoDTO> permisosMap = new HashMap<>();
-
-        for (PermisoModulo permiso : permisos) {
-            permisosMap.merge(permiso.moduloId(),
-                new PermisoDTO(permiso.moduloId(), permiso.moduloNombre(), new ArrayList<>(List.of(permiso.accionNombre()))),
-                (existing, ignored) -> {
-                    existing.acciones().add(permiso.accionNombre());
-                    return existing;
-                });
-        }
-
-        return new ArrayList<>(permisosMap.values());
     }
 }

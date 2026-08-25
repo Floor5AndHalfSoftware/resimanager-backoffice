@@ -1,7 +1,13 @@
 package com.resimanager.backoffice.controller;
 
+import com.resimanager.backoffice.domain.model.Conjunto;
+import com.resimanager.backoffice.domain.model.Propiedad;
+import com.resimanager.backoffice.domain.model.ResultadoPaginado;
+import com.resimanager.backoffice.domain.model.enums.Estatus;
+import com.resimanager.backoffice.domain.port.in.ConjuntoUseCase;
+import com.resimanager.backoffice.domain.port.in.PropiedadUseCase;
+import com.resimanager.backoffice.domain.port.out.ClaseDePropiedadRepositoryPort;
 import com.resimanager.backoffice.dto.PropiedadDTO;
-import com.resimanager.backoffice.service.PropiedadService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -10,21 +16,19 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
@@ -38,12 +42,13 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @Tag(name = "Propiedades", description = "Gestión de propiedades/unidades en conjuntos")
 public class PropiedadController {
 
-    private final PropiedadService propiedadService;
-    private final com.resimanager.backoffice.domain.port.out.ClaseDePropiedadRepositoryPort claseDePropiedadRepositoryPort;
+    private final PropiedadUseCase propiedadUseCase;
+    private final ConjuntoUseCase conjuntoUseCase;
+    private final ClaseDePropiedadRepositoryPort claseDePropiedadRepositoryPort;
 
     @Operation(summary = "Listar clases de propiedad", description = "Para dropdown en formularios")
     @GetMapping("/clases")
-    public ResponseEntity<java.util.List<com.resimanager.backoffice.domain.model.ClaseDePropiedadOpcion>> listarClases() {
+    public ResponseEntity<List<com.resimanager.backoffice.domain.model.ClaseDePropiedadOpcion>> listarClases() {
         return ResponseEntity.ok(claseDePropiedadRepositoryPort.listarActivas());
     }
 
@@ -56,65 +61,47 @@ public class PropiedadController {
             @Parameter(description = "Número de página (inicia en 1)") @RequestParam(required = false, defaultValue = "1") @Min(1) Integer page,
             @Parameter(description = "Registros por página") @RequestParam(required = false, defaultValue = "50") @Min(1) Integer limit
     ) {
-        log.debug("GET /propiedades - estatus: {}, conjuntoId: {}, search: {}, page: {}, limit: {}",
-                estatus, conjuntoId, search, page, limit);
-        return ResponseEntity.ok(propiedadService.getPropiedades(estatus, conjuntoId, search, page, limit));
+        Estatus estatusParam = (estatus != null && !estatus.isBlank()) ? Estatus.desdeCodigo(estatus.trim()) : null;
+        ResultadoPaginado<Propiedad> result =
+                propiedadUseCase.obtenerPropiedades(estatusParam, conjuntoId, search, page, limit);
+
+        List<PropiedadDTO> data = result.datos().stream().map(this::toDTO).toList();
+        return ResponseEntity.ok(new PropiedadDTO.ListResponse(data, result.total(), result.pagina(), result.limite()));
     }
 
     @Operation(summary = "Obtener propiedad por ID")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Propiedad encontrada"),
-            @ApiResponse(responseCode = "404", description = "Propiedad no encontrada"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
     @GetMapping("/{id}")
     public ResponseEntity<PropiedadDTO> getPropiedad(@PathVariable Integer id) {
-        log.debug("GET /propiedades/{}", id);
-        return ResponseEntity.ok(propiedadService.getPropiedadById(id));
+        Propiedad prop = propiedadUseCase.obtenerPropiedad(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada"));
+        return ResponseEntity.ok(toDTO(prop));
     }
 
     @Operation(summary = "Crear propiedad")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Propiedad creada exitosamente"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
     @PostMapping
     public ResponseEntity<PropiedadDTO> createPropiedad(
             @Valid @RequestBody CreatePropiedadRequest request,
             HttpServletRequest httpRequest
     ) {
-        log.info("POST /propiedades - conjId: {}, numero: {}", request.conjId, request.numero);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        String estacion = httpRequest.getRemoteAddr();
-
-        PropiedadDTO result = propiedadService.createPropiedad(
-                request.conjId, request.cdpId, request.numero,
-                request.cantidad, request.coefParticipacion, username, estacion);
-        return ResponseEntity.ok(result);
+        Propiedad prop = propiedadUseCase.crearPropiedad(request.conjId, request.cdpId, request.numero,
+                request.cantidad, request.coefParticipacion, auth.getName(), httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(toDTO(prop));
     }
 
     @Operation(summary = "Actualizar propiedad")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Propiedad actualizada exitosamente"),
-            @ApiResponse(responseCode = "404", description = "Propiedad no encontrada"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
     @PutMapping("/{id}")
     public ResponseEntity<PropiedadDTO> updatePropiedad(
             @PathVariable Integer id,
             @Valid @RequestBody UpdatePropiedadRequest request,
             HttpServletRequest httpRequest
     ) {
-        log.info("PUT /propiedades/{}", id);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        String estacion = httpRequest.getRemoteAddr();
-
-        PropiedadDTO result = propiedadService.updatePropiedad(
-                id, request.cdpId, request.numero, request.cantidad,
-                request.coefParticipacion, request.estatus, username, estacion);
-        return ResponseEntity.ok(result);
+        Estatus estatus = (request.estatus() != null && !request.estatus().isBlank())
+                ? Estatus.desdeCodigo(request.estatus()) : null;
+        Propiedad prop = propiedadUseCase.actualizarPropiedad(id, request.cdpId, request.numero,
+                request.cantidad, request.coefParticipacion, estatus, auth.getName(), httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(toDTO(prop));
     }
 
     @Operation(summary = "Inactivar propiedad")
@@ -123,12 +110,28 @@ public class PropiedadController {
             @PathVariable Integer id,
             HttpServletRequest httpRequest
     ) {
-        log.info("DELETE /propiedades/{}", id);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        String estacion = httpRequest.getRemoteAddr();
+        propiedadUseCase.inactivarPropiedad(id, auth.getName(), httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(Map.of("message", "Propiedad inactivada correctamente"));
+    }
 
-        return ResponseEntity.ok(propiedadService.deletePropiedad(id, username, estacion));
+    private PropiedadDTO toDTO(Propiedad p) {
+        String conjNombre = null;
+        java.util.Optional<Conjunto> conj = conjuntoUseCase.obtenerConjunto(p.getPpConjId());
+        if (conj.isPresent()) {
+            conjNombre = conj.get().getConjNombre();
+        }
+
+        return PropiedadDTO.builder()
+                .ppid(p.getPpid())
+                .ppConjId(p.getPpConjId())
+                .conjuntoNombre(conjNombre)
+                .ppCdpId(p.getPpCdpId())
+                .ppNumero(p.getPpNumero())
+                .ppCantidad(p.getPpCantidad())
+                .ppCoefParticipacion(p.getPpCoefParticipacion())
+                .estatus(p.getPpSts())
+                .build();
     }
 
     public record CreatePropiedadRequest(

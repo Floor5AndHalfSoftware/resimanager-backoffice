@@ -1,8 +1,9 @@
 package com.resimanager.backoffice.domain.port.in;
 
 import com.resimanager.backoffice.domain.model.Administradora;
-import com.resimanager.backoffice.domain.model.PersAdministradora;
+import com.resimanager.backoffice.domain.model.ResultadoAsignacion;
 import com.resimanager.backoffice.domain.model.ResultadoPaginado;
+import com.resimanager.backoffice.domain.model.UsuariosContexto;
 import com.resimanager.backoffice.domain.model.enums.Estatus;
 
 import java.util.List;
@@ -26,10 +27,10 @@ public interface AdministradoraUseCase {
 
     void inactivarAdministradora(Integer id, String ejecutor, String estacion);
 
-    List<PersAdministradora> obtenerUsuariosAdministradora(Integer administradoraId);
+    UsuariosContexto obtenerUsuariosAdministradora(Integer administradoraId);
 
-    void asignarPerfilesAUsuario(Integer administradoraId, Integer usuarioId, List<Integer> perfilIds,
-                                 String ejecutor, String estacion);
+    ResultadoAsignacion asignarPerfilesAUsuario(Integer administradoraId, Integer usuarioId,
+                                                List<Integer> perfilIds, String ejecutor, String estacion);
 
     void removerPerfilDeUsuario(Integer administradoraId, Integer usuarioId, Integer perfilId,
                                 String ejecutor, String estacion);

@@ -1,7 +1,9 @@
 package com.resimanager.backoffice.controller;
 
+import com.resimanager.backoffice.domain.model.Modulo;
+import com.resimanager.backoffice.domain.port.in.ModuloUseCase;
 import com.resimanager.backoffice.dto.ModuloDTO;
-import com.resimanager.backoffice.service.ModuloService;
+import com.resimanager.backoffice.service.mapper.ModuloMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,7 +32,8 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @Tag(name = "Módulos", description = "Gestión de módulos del sistema")
 public class ModuloController {
 
-    private final ModuloService moduloService;
+    private final ModuloUseCase moduloUseCase;
+    private final ModuloMapper moduloMapper;
 
     @Operation(
             summary = "Listar módulos",
@@ -56,6 +59,11 @@ public class ModuloController {
             @RequestParam(required = false) Integer nivel
     ) {
         log.debug("GET /modulos - nivel: {}", nivel);
-        return ResponseEntity.ok(moduloService.getModulos(nivel));
+        List<Modulo> modulos = moduloUseCase.obtenerModulos(nivel);
+        List<ModuloDTO> dtos = modulos.stream()
+                .map(moduloMapper::toDTO)
+                .sorted((a, b) -> a.nombre().compareToIgnoreCase(b.nombre()))
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 }

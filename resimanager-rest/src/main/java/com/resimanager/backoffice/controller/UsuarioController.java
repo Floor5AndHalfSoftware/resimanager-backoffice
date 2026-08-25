@@ -1,10 +1,15 @@
 package com.resimanager.backoffice.controller;
 
+import com.resimanager.backoffice.domain.model.PerfilesUsuario;
+import com.resimanager.backoffice.domain.model.Persona;
+import com.resimanager.backoffice.domain.model.ResultadoPaginado;
+import com.resimanager.backoffice.domain.model.enums.Estatus;
+import com.resimanager.backoffice.domain.port.in.UsuarioUseCase;
 import com.resimanager.backoffice.dto.UpdateUsuarioRequest;
 import com.resimanager.backoffice.dto.UsuarioDTO;
 import com.resimanager.backoffice.dto.UsuarioListResponse;
 import com.resimanager.backoffice.dto.UsuarioPerfilesResponse;
-import com.resimanager.backoffice.service.UsuarioService;
+import com.resimanager.backoffice.service.mapper.PersonaMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
@@ -37,7 +43,8 @@ import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 @Tag(name = "Usuarios", description = "Gestión de usuarios del sistema")
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+    private final UsuarioUseCase usuarioUseCase;
+    private final PersonaMapper personaMapper;
 
     @Operation(summary = "Listar usuarios", description = "Obtiene la lista de usuarios con filtros opcionales")
     @GetMapping
@@ -54,8 +61,16 @@ public class UsuarioController {
             @Parameter(description = "Registros por página")
             @RequestParam(required = false, defaultValue = "50") Integer limit
     ) {
-        log.debug("GET /usuarios - estatus: {}, search: {}, page: {}, limit: {}", estatus, search, page, limit);
-        return ResponseEntity.ok(usuarioService.getUsuarios(estatus, search, page, limit));
+        Estatus estatusParam = (estatus != null && !estatus.isBlank()) ? Estatus.desdeCodigo(estatus.trim()) : null;
+        ResultadoPaginado<Persona> result = usuarioUseCase.obtenerUsuarios(estatusParam, search, page, limit);
+
+        List<UsuarioDTO> data = result.datos().stream().map(personaMapper::toDTO).toList();
+        return ResponseEntity.ok(UsuarioListResponse.builder()
+                .data(data)
+                .total(result.total())
+                .page(result.pagina())
+                .limit(result.limite())
+                .build());
     }
 
     @Operation(summary = "Obtener usuario por ID")
@@ -63,8 +78,9 @@ public class UsuarioController {
     public ResponseEntity<UsuarioDTO> getUsuario(
             @Parameter(description = "ID del usuario") @PathVariable Integer id
     ) {
-        log.debug("GET /usuarios/{}", id);
-        return ResponseEntity.ok(usuarioService.getUsuarioById(id));
+        Persona persona = usuarioUseCase.obtenerUsuario(id)
+                .orElseThrow(() -> new com.resimanager.backoffice.exception.ResourceNotFoundException("Usuario no encontrado"));
+        return ResponseEntity.ok(personaMapper.toDTO(persona));
     }
 
     @Operation(summary = "Actualizar usuario")
@@ -74,9 +90,12 @@ public class UsuarioController {
             @Valid @RequestBody UpdateUsuarioRequest request,
             HttpServletRequest httpRequest
     ) {
-        log.info("PUT /usuarios/{}", id);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return ResponseEntity.ok(usuarioService.updateUsuario(id, request, auth.getName(), httpRequest.getRemoteAddr()));
+        Estatus estatus = (request.estatus() != null && !request.estatus().isBlank())
+                ? Estatus.desdeCodigo(request.estatus()) : null;
+        Persona persona = usuarioUseCase.actualizarUsuario(id, request.nombre(), request.apellido(),
+                request.telefono(), request.email(), estatus, auth.getName(), httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(personaMapper.toDTO(persona));
     }
 
     @Operation(summary = "Inactivar usuario", description = "Realiza un soft-delete cambiando el estatus a 'I'")
@@ -85,9 +104,9 @@ public class UsuarioController {
             @Parameter(description = "ID del usuario") @PathVariable Integer id,
             HttpServletRequest httpRequest
     ) {
-        log.info("DELETE /usuarios/{}", id);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return ResponseEntity.ok(usuarioService.deleteUsuario(id, auth.getName(), httpRequest.getRemoteAddr()));
+        usuarioUseCase.inactivarUsuario(id, auth.getName(), httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(Map.of("message", "Usuario inactivado correctamente"));
     }
 
     @Operation(summary = "Perfiles de un usuario", description = "Obtiene los perfiles asignados al usuario agrupados por contexto (Administradora/Conjunto)")
@@ -95,7 +114,27 @@ public class UsuarioController {
     public ResponseEntity<UsuarioPerfilesResponse> getPerfilesUsuario(
             @Parameter(description = "ID del usuario") @PathVariable Integer id
     ) {
-        log.debug("GET /usuarios/{}/perfiles", id);
-        return ResponseEntity.ok(usuarioService.getUsuarioPerfiles(id));
+        PerfilesUsuario perfiles = usuarioUseCase.obtenerPerfilesDeUsuario(id);
+
+        List<UsuarioPerfilesResponse.ContextoPerfilDTO> contextos = perfiles.contextos().stream()
+                .map(c -> UsuarioPerfilesResponse.ContextoPerfilDTO.builder()
+                        .tipo(c.tipo())
+                        .entidad(UsuarioPerfilesResponse.EntidadDTO.builder()
+                                .id(c.entidadId())
+                                .nombre(c.entidadNombre())
+                                .build())
+                        .perfiles(c.perfiles().stream()
+                                .map(p -> UsuarioPerfilesResponse.PerfilSimpleDTO.builder()
+                                        .id(p.id())
+                                        .nombre(p.nombre())
+                                        .build())
+                                .toList())
+                        .build())
+                .toList();
+
+        return ResponseEntity.ok(UsuarioPerfilesResponse.builder()
+                .persona(personaMapper.toDTO(perfiles.persona()))
+                .contextos(contextos)
+                .build());
     }
 }

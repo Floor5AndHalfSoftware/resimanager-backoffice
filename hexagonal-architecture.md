@@ -66,7 +66,8 @@ resimanager-backoffice (parent POM, packaging pom, <modules>)
   - `@RestController`s en `com.resimanager.rest.api`.
   - DTOs de request/response en `com.resimanager.rest.dto`.
   - OpenAPI 3 + Scalar (springdoc).
-- **Regla**: no lógica de negocio; solo traducción a/desde DTOs. Inyectan puertos `in` (use cases), no servicios concretos.
+- **Regla**: no lógica de negocio; los controllers **inyectan los puertos `in`** (use cases) y traducen dominio → DTO con los mappers.
+- **Flujos pendientes de migrar a puertos** (usan services por ser presentación/seguridad): `ViewsController` (menú jerárquico), `ContextoController` (cambio de contexto + JWT) y `LoginController` (auth).
 - **Contrato**: los endpoints y DTOs existentes se **mantienen idénticos** (`/v1/**`, `/api/owners/**`).
 
 ---
