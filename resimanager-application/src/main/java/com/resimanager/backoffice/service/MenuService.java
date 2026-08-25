@@ -1,8 +1,8 @@
 package com.resimanager.backoffice.service;
 
 import com.resimanager.backoffice.dto.MenuDto;
-import com.resimanager.backoffice.persistance.entity.MenuItem;
-import com.resimanager.backoffice.persistance.entity.MenuItemId;
+import com.resimanager.backoffice.domain.model.MenuItem;
+import com.resimanager.backoffice.domain.model.MenuItemId;
 import com.resimanager.backoffice.persistance.repository.MenuItemRepository;
 import com.resimanager.backoffice.service.mapper.MnuToMnuDtoMapper;
 import lombok.extern.slf4j.Slf4j;

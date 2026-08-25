@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.persistance.repository;
 
-import com.resimanager.backoffice.persistance.entity.AccOpcPerfil;
-import com.resimanager.backoffice.persistance.entity.AccOpcPerfilId;
+import com.resimanager.backoffice.domain.model.AccOpcPerfil;
+import com.resimanager.backoffice.domain.model.AccOpcPerfilId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

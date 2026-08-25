@@ -37,16 +37,16 @@ resimanager-backoffice (parent POM, packaging pom, <modules>)
 
 ## Domain Layer (núcleo, `resimanager-domain`)
 
-- **Cero dependencias de producción**: Java puro, sin Spring, sin `jakarta.persistence`, sin Lombok en el modelo de negocio.
-- **Modelo de negocio rico** (`com.resimanager.domain.model`): entidades con comportamiento e invariantes, no anémicas.
-  - Encapsular estado: validar en constructores, exponer métodos que preserven invariantes.
-  - Ejemplos: `Persona.actualizarDatos()`, `Usuario.cambiarEstatus()`, validaciones de contexto.
-  - Modelo: `Persona`, `Administradora`, `Conjunto`, `Perfil`, `Modulo`, `MenuItem`, `Opcion`, `Accion`, `Propiedad`, `Propietario`, `User` y las relaciones (`PersAdministradora`, `PersConjunto`, `PerfPersAdministradora`, `PerfPersConjunto`, `ModPerfil`, `OpcPerfil`, `AccOpcPerfil`).
+- **Modelo de negocio = entidades JPA** (decisión pragmática): el modelo de dominio son las entidades JPA (`@Entity`, Lombok) **enriquecidas con comportamiento e invariantes** (métodos de negocio sobre los datos). Se descarta tener un modelo paralelo + capa de traducción JPA↔dominio.
+  - `com.resimanager.domain.model`: `Persona`, `Administradora`, `Conjunto`, `Perfil`, `Modulo`, `MenuItem`, `Menu`, `Opcion`, `Accion`, `AccOpcion`, `Propiedad`, `Propietario`, relaciones (`PersAdministradora`, `PersConjunto`, `PerfPersAdministradora`, `PerfPersConjunto`, `ModPerfil`, ...) y value objects no persistidos (`ResultadoPaginado`, `ContextoDisponible`, `ContextoActivo`, `AuthUser`, `DashboardStats`).
+  - La lógica de negocio se expresa con métodos de dominio; los datos se persisten tal cual (sin DTO anémico paralelo).
 - **Puertos**:
   - `port.in/` — puertos de entrada (interfaces de caso de uso): `UsuarioUseCase`, `PerfilUseCase`, `ModuloUseCase`, `ContextoUseCase`, `AdministradoraUseCase`, `ConjuntoUseCase`, `PropietarioUseCase`, `AuthUseCase`, `MenuUseCase`, `DashboardUseCase`.
-  - `port.out/` — puertos de salida (interfaces de repositorio/gateway): `PersonaRepositoryPort`, `PerfilRepositoryPort`, `ModuloRepositoryPort`, `MenuRepositoryPort`, `AdministradoraRepositoryPort`, `ConjuntoRepositoryPort`, `PropietarioRepositoryPort`, `PropiedadRepositoryPort`, repos de relación, `PasswordEncoderPort`, `JwtPort`.
-- **Excepciones**: excepciones de negocio (`DomainException`, `ServiceException`) en `com.resimanager.domain.exception`.
-- **Enums**: clasificaciones fijas (estatus `A`/`I`, tipos de contexto `ADMINISTRADORA`/`CONJUNTO`).
+  - `port.out/` — puertos de salida (interfaces de repositorio/gateway): `PersonaRepositoryPort`, `PerfilRepositoryPort`, `ModuloRepositoryPort`, `MenuRepositoryPort`, `AdministradoraRepositoryPort`, `ConjuntoRepositoryPort`, `PropietarioRepositoryPort`, `PropiedadRepositoryPort`, repos de relación (`PersAdministradoraRepositoryPort`, `PersConjuntoRepositoryPort`, `PerfPersAdministradoraRepositoryPort`, `PerfPersConjuntoRepositoryPort`, `ModPerfilRepositoryPort`), `PasswordEncoderPort`, `JwtPort`, `DashboardStatsRepositoryPort`.
+- **Excepciones**: `DomainException` en `com.resimanager.domain.exception`.
+- **Enums**: `Estatus` (A/I) y `TipoContexto` (ADMINISTRADORA/CONJUNTO) en `com.resimanager.domain.model.enums`.
+
+> **Trade-off documentado:** a diferencia de la referencia (dominio puro), aquí el dominio depende de `jakarta.persistence` y Lombok porque el modelo es directamente el modelo de persistencia. La regla de dependencias (solo hacia el centro) se mantiene intacta; la regla "cero anotaciones" se relaja a "la lógica de negocio vive en el dominio, no en adaptadores".
 
 ---
 

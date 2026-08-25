@@ -2,10 +2,10 @@ package com.resimanager.backoffice.service;
 
 import com.resimanager.backoffice.dto.PropietarioDTO;
 import com.resimanager.backoffice.dto.PropietarioListResponse;
-import com.resimanager.backoffice.persistance.entity.Persona;
-import com.resimanager.backoffice.persistance.entity.Propiedad;
-import com.resimanager.backoffice.persistance.entity.Propietario;
-import com.resimanager.backoffice.persistance.entity.PropietarioId;
+import com.resimanager.backoffice.domain.model.Persona;
+import com.resimanager.backoffice.domain.model.Propiedad;
+import com.resimanager.backoffice.domain.model.Propietario;
+import com.resimanager.backoffice.domain.model.PropietarioId;
 import com.resimanager.backoffice.persistance.repository.PersonaRepository;
 import com.resimanager.backoffice.persistance.repository.PropiedadRepository;
 import com.resimanager.backoffice.persistance.repository.PropietarioRepository;

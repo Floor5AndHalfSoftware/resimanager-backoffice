@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.service;
 
 import com.resimanager.backoffice.dto.ModuloDTO;
-import com.resimanager.backoffice.persistance.entity.Modulo;
+import com.resimanager.backoffice.domain.model.Modulo;
 import com.resimanager.backoffice.persistance.repository.ModuloRepository;
 import com.resimanager.backoffice.service.mapper.ModuloMapper;
 import lombok.RequiredArgsConstructor;

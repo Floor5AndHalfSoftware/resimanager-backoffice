@@ -1,55 +1,79 @@
 package com.resimanager.backoffice.domain.model;
 
-import com.resimanager.backoffice.domain.exception.DomainException;
-import com.resimanager.backoffice.domain.model.enums.Estatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
-/**
- * Perfil de acceso del sistema.
- * Define el conjunto de módulos a los que un usuario tiene acceso dentro de un contexto.
- */
-public record Perfil(
-        Integer id,
-        String nombre,
-        String descripcion,
-        Integer nivel,
-        Estatus estatus,
-        AuditInfo audit
-) {
+@Getter
+@Setter
+@Entity
+@Table(name = "\"Perfil\"")
+public class Perfil {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "prfid", nullable = false)
+    private Integer id;
 
-    public Perfil {
-        Objects.requireNonNull(nombre, "nombre es obligatorio");
-        Objects.requireNonNull(nivel, "nivel es obligatorio");
-        Objects.requireNonNull(estatus, "estatus es obligatorio");
-        Objects.requireNonNull(audit, "auditoría es obligatoria");
-        if (nombre.isBlank()) {
-            throw new DomainException("nombre es obligatorio");
-        }
-        if (nivel < 1) {
-            throw new DomainException("el nivel del perfil debe ser mayor o igual a 1");
-        }
-    }
+    @Size(max = 80)
+    @NotNull
+    @Column(name = "prf_nombre", nullable = false, length = 80)
+    private String prfNombre;
 
-    public static Perfil crear(Integer id, String nombre, String descripcion, Integer nivel,
-                               String ejecutor, String estacion, OffsetDateTime ahora) {
-        return new Perfil(id, nombre, descripcion, nivel, Estatus.ACTIVO,
-                AuditInfo.deCreacion(ejecutor, estacion, ahora));
-    }
+    @Size(max = 120)
+    @Column(name = "prf_descrip", length = 120)
+    private String prfDescrip;
 
-    public Perfil actualizarDatos(String nombre, String descripcion, Integer nivel,
-                                  String ejecutor, String estacion, OffsetDateTime ahora) {
-        return new Perfil(id, nombre, descripcion, nivel, estatus,
-                audit.modificadoPor(ejecutor, estacion, ahora));
-    }
+    @Size(max = 1)
+    @NotNull
+    @Column(name = "prf_sts", nullable = false, length = 1)
+    private String prfSts;
 
-    public Perfil cambiarEstatus(Estatus nuevoEstatus, String ejecutor, String estacion, OffsetDateTime ahora) {
-        return new Perfil(id, nombre, descripcion, nivel, nuevoEstatus,
-                audit.modificadoPor(ejecutor, estacion, ahora));
-    }
+    @NotNull
+    @Column(name = "prf_nivel", nullable = false)
+    private Integer prfNivel;
 
-    public boolean estaActivo() {
-        return estatus.esActivo();
-    }
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "prf_usr_crea", nullable = false)
+    private Persona prfUsrcrea;
+
+    @NotNull
+    @Column(name = "prf_fch_hor_crea", nullable = false)
+    private OffsetDateTime prfFchHorCrea;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "prf_est_crea", nullable = false, length = 40)
+    private String prfEstCrea;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "prf_usr_mod", nullable = false)
+    private Persona prfUsrmod;
+
+    @NotNull
+    @Column(name = "prf_fch_hor_mod", nullable = false)
+    private OffsetDateTime prfFchHorMod;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "prf_est_mod", nullable = false, length = 40)
+    private String prfEstMod;
+
 }

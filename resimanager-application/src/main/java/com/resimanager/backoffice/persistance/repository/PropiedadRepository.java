@@ -1,6 +1,6 @@
 package com.resimanager.backoffice.persistance.repository;
 
-import com.resimanager.backoffice.persistance.entity.Propiedad;
+import com.resimanager.backoffice.domain.model.Propiedad;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

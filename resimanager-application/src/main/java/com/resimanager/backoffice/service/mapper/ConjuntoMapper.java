@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.service.mapper;
 
 import com.resimanager.backoffice.dto.ConjuntoDTO;
-import com.resimanager.backoffice.persistance.entity.Conjunto;
+import com.resimanager.backoffice.domain.model.Conjunto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

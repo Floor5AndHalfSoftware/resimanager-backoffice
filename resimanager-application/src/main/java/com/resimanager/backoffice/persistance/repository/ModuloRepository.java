@@ -1,6 +1,6 @@
 package com.resimanager.backoffice.persistance.repository;
 
-import com.resimanager.backoffice.persistance.entity.Modulo;
+import com.resimanager.backoffice.domain.model.Modulo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

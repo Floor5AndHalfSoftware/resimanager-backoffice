@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.domain.port.in;
 
-import com.resimanager.backoffice.domain.model.PerfilPersonaAdministradora;
-import com.resimanager.backoffice.domain.model.PerfilPersonaConjunto;
+import com.resimanager.backoffice.domain.model.PerfPersAdministradora;
+import com.resimanager.backoffice.domain.model.PerfPersConjunto;
 import com.resimanager.backoffice.domain.model.Persona;
 import com.resimanager.backoffice.domain.model.ResultadoPaginado;
 import com.resimanager.backoffice.domain.model.enums.Estatus;
@@ -18,9 +18,9 @@ public interface UsuarioUseCase {
 
     Optional<Persona> obtenerUsuario(Integer usuarioId);
 
-    List<PerfilPersonaAdministradora> obtenerPerfilesEnAdministradoras(Integer personaId);
+    List<PerfPersAdministradora> obtenerPerfilesEnAdministradoras(Integer personaId);
 
-    List<PerfilPersonaConjunto> obtenerPerfilesEnConjuntos(Integer personaId);
+    List<PerfPersConjunto> obtenerPerfilesEnConjuntos(Integer personaId);
 
     Persona actualizarUsuario(Integer id, String nombre, String apellido, String telefono,
                               String email, Estatus estatus, String ejecutor, String estacion);

@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.service;
 
 import com.resimanager.backoffice.exception.ServiceException;
-import com.resimanager.backoffice.persistance.entity.Persona;
+import com.resimanager.backoffice.domain.model.Persona;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.resimanager.backoffice.dto.AuthDto;

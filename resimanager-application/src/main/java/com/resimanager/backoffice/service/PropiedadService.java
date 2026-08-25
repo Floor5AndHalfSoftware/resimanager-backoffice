@@ -1,9 +1,9 @@
 package com.resimanager.backoffice.service;
 
 import com.resimanager.backoffice.dto.PropiedadDTO;
-import com.resimanager.backoffice.persistance.entity.Conjunto;
-import com.resimanager.backoffice.persistance.entity.Persona;
-import com.resimanager.backoffice.persistance.entity.Propiedad;
+import com.resimanager.backoffice.domain.model.Conjunto;
+import com.resimanager.backoffice.domain.model.Persona;
+import com.resimanager.backoffice.domain.model.Propiedad;
 import com.resimanager.backoffice.persistance.repository.ConjuntoRepository;
 import com.resimanager.backoffice.persistance.repository.PersonaRepository;
 import com.resimanager.backoffice.persistance.repository.PropiedadRepository;

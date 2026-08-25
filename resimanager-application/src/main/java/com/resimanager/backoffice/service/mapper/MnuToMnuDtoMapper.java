@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.service.mapper;
 
 import com.resimanager.backoffice.dto.MenuDto;
-import com.resimanager.backoffice.persistance.entity.MenuItem;
+import com.resimanager.backoffice.domain.model.MenuItem;
 
 import java.util.function.Function;
 

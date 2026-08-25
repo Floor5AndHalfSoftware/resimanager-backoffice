@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.service.mapper;
 
 import com.resimanager.backoffice.dto.ModuloDTO;
-import com.resimanager.backoffice.persistance.entity.Modulo;
+import com.resimanager.backoffice.domain.model.Modulo;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

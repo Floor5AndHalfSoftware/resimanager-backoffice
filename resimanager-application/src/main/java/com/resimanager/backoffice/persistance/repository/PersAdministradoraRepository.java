@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.persistance.repository;
 
-import com.resimanager.backoffice.persistance.entity.PersAdministradora;
-import com.resimanager.backoffice.persistance.entity.PersAdministradoraId;
+import com.resimanager.backoffice.domain.model.PersAdministradora;
+import com.resimanager.backoffice.domain.model.PersAdministradoraId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

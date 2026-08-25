@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.service.mapper;
 
 import com.resimanager.backoffice.dto.MenuItemDTO;
-import com.resimanager.backoffice.persistance.entity.MenuItem;
+import com.resimanager.backoffice.domain.model.MenuItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Named;
 
@@ -11,19 +11,19 @@ import java.util.Collections;
 public interface MenuItemMapper {
 
     @Named("menuItemId")
-    default Integer menuItemId(com.resimanager.backoffice.persistance.entity.MenuItemId id) {
+    default Integer menuItemId(com.resimanager.backoffice.domain.model.MenuItemId id) {
         if (id == null) return null;
         return id.getMItID();
     }
 
     @Named("moduloNombre")
-    default String moduloNombre(com.resimanager.backoffice.persistance.entity.Modulo modulo) {
+    default String moduloNombre(com.resimanager.backoffice.domain.model.Modulo modulo) {
         if (modulo == null) return null;
         return modulo.getModNombre();
     }
 
     @Named("accionNombre")
-    default String accionNombre(com.resimanager.backoffice.persistance.entity.Accion accion) {
+    default String accionNombre(com.resimanager.backoffice.domain.model.Accion accion) {
         if (accion == null) return null;
         return accion.getAccNombre();
     }

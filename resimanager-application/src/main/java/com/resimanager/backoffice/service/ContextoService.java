@@ -5,7 +5,7 @@ import com.resimanager.backoffice.dto.ConjuntoDTO;
 import com.resimanager.backoffice.dto.ContextoActualDTO;
 import com.resimanager.backoffice.dto.ContextoDTO;
 import com.resimanager.backoffice.dto.PerfilDTO;
-import com.resimanager.backoffice.persistance.entity.*;
+import com.resimanager.backoffice.domain.model.*;
 import com.resimanager.backoffice.persistance.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,7 @@
 package com.resimanager.backoffice.domain.port.in;
 
 import com.resimanager.backoffice.domain.model.Conjunto;
-import com.resimanager.backoffice.domain.model.PersonaConjunto;
+import com.resimanager.backoffice.domain.model.PersConjunto;
 import com.resimanager.backoffice.domain.model.ResultadoPaginado;
 import com.resimanager.backoffice.domain.model.enums.Estatus;
 
@@ -25,7 +25,7 @@ public interface ConjuntoUseCase {
 
     void inactivarConjunto(Integer id, String ejecutor, String estacion);
 
-    List<PersonaConjunto> obtenerUsuariosConjunto(Integer conjuntoId);
+    List<PersConjunto> obtenerUsuariosConjunto(Integer conjuntoId);
 
     void asignarPerfilesAUsuario(Integer conjuntoId, Integer usuarioId, List<Integer> perfilIds,
                                  String ejecutor, String estacion);

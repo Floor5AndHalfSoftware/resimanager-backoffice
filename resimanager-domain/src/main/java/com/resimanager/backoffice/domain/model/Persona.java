@@ -1,68 +1,99 @@
 package com.resimanager.backoffice.domain.model;
 
-import com.resimanager.backoffice.domain.exception.DomainException;
-import com.resimanager.backoffice.domain.model.enums.Estatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
-/**
- * Persona usuaria del sistema (operador).
- * Es el agregado raíz de la gestión de usuarios: encapsula sus datos, su estatus
- * y las operaciones que preservan sus invariantes.
- */
-public record Persona(
-        Integer id,
-        String docIdent,
-        String nombre,
-        String apellido,
-        String telefono,
-        String email,
-        String usuario,
-        String passwordHash,
-        Estatus estatus,
-        AuditInfo audit
-) {
+@Getter
+@Setter
+@Entity
+@Table(name = "\"Persona\"")
+public class Persona {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "perid", nullable = false)
+    private Integer id;
 
-    public Persona {
-        Objects.requireNonNull(docIdent, "documento de identidad es obligatorio");
-        Objects.requireNonNull(nombre, "nombre es obligatorio");
-        Objects.requireNonNull(apellido, "apellido es obligatorio");
-        Objects.requireNonNull(estatus, "estatus es obligatorio");
-        Objects.requireNonNull(audit, "auditoría es obligatoria");
-        if (docIdent.isBlank() || nombre.isBlank() || apellido.isBlank()) {
-            throw new DomainException("documento, nombre y apellido son obligatorios");
-        }
-    }
+    @Size(max = 20)
+    @NotNull
+    @Column(name = "per_doc_ident", nullable = false, length = 20)
+    private String perDocIdent;
 
-    public static Persona crear(Integer id, String docIdent, String nombre, String apellido,
-                                String telefono, String email, String usuario, String passwordHash,
-                                String ejecutor, String estacion, OffsetDateTime ahora) {
-        return new Persona(id, docIdent, nombre, apellido, telefono, email, usuario, passwordHash,
-                Estatus.ACTIVO, AuditInfo.deCreacion(ejecutor, estacion, ahora));
-    }
+    @Size(max = 80)
+    @NotNull
+    @Column(name = "per_nombre", nullable = false, length = 80)
+    private String perNombre;
 
-    public Persona actualizarDatos(String nombre, String apellido, String telefono, String email,
-                                   String ejecutor, String estacion, OffsetDateTime ahora) {
-        return new Persona(id, docIdent, nombre, apellido, telefono, email, usuario, passwordHash,
-                estatus, audit.modificadoPor(ejecutor, estacion, ahora));
-    }
+    @Size(max = 80)
+    @NotNull
+    @Column(name = "per_apellido", nullable = false, length = 80)
+    private String perApellido;
 
-    public Persona cambiarEstatus(Estatus nuevoEstatus, String ejecutor, String estacion, OffsetDateTime ahora) {
-        Objects.requireNonNull(nuevoEstatus, "nuevo estatus es obligatorio");
-        return new Persona(id, docIdent, nombre, apellido, telefono, email, usuario, passwordHash,
-                nuevoEstatus, audit.modificadoPor(ejecutor, estacion, ahora));
-    }
+    @Size(max = 15)
+    @NotNull
+    @Column(name = "per_tlf_cel", nullable = false, length = 15)
+    private String perTlfCel;
 
-    public Persona inactivar(String ejecutor, String estacion, OffsetDateTime ahora) {
-        return cambiarEstatus(Estatus.INACTIVO, ejecutor, estacion, ahora);
-    }
+    @Size(max = 80)
+    @NotNull
+    @Column(name = "per_email", nullable = false, length = 80)
+    private String perEMail;
 
-    public boolean estaActiva() {
-        return estatus.esActivo();
-    }
+    @Size(max = 80)
+    @Column(name = "per_usuario", length = 80)
+    private String perUsuario;
 
-    public String nombreCompleto() {
-        return nombre + " " + apellido;
-    }
+    @Size(max = 80)
+    @Column(name = "per_clave", length = 80)
+    private String perClave;
+
+    @Size(max = 1)
+    @NotNull
+    @Column(name = "per_sts", nullable = false, length = 1)
+    private String perSts;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "per_usr_crea", nullable = false)
+    private Persona perUsrcrea;
+
+    @NotNull
+    @Column(name = "per_fch_hor_crea", nullable = false)
+    private OffsetDateTime perFchHorCrea;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "per_est_crea", nullable = false, length = 40)
+    private String perEstCrea;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "per_usr_mod", nullable = false)
+    private Persona perUsrmod;
+
+    @NotNull
+    @Column(name = "per_fch_hor_mod", nullable = false)
+    private OffsetDateTime perFchHorMod;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "per_est_mod", nullable = false, length = 40)
+    private String perEstMod;
+
 }

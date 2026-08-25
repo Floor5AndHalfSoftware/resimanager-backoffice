@@ -1,38 +1,75 @@
 package com.resimanager.backoffice.domain.model;
 
-import com.resimanager.backoffice.domain.exception.DomainException;
-import com.resimanager.backoffice.domain.model.enums.Estatus;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
+import java.util.List;
 
-/**
- * Módulo funcional del sistema.
- * Los módulos se asignan a perfiles y organizan el menú de navegación.
- */
-public record Modulo(
-        Integer id,
-        String nombre,
-        String descripcion,
-        Integer nivel,
-        Estatus estatus,
-        AuditInfo audit
-) {
+@Getter
+@Setter
+@Entity
+@Table(name = "modulo")
+public class Modulo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "modid", nullable = false)
+    private Integer modId;
 
-    public Modulo {
-        Objects.requireNonNull(nombre, "nombre es obligatorio");
-        Objects.requireNonNull(nivel, "nivel es obligatorio");
-        Objects.requireNonNull(estatus, "estatus es obligatorio");
-        Objects.requireNonNull(audit, "auditoría es obligatoria");
-        if (nombre.isBlank()) {
-            throw new DomainException("nombre es obligatorio");
-        }
-        if (nivel < 1) {
-            throw new DomainException("el nivel del módulo debe ser mayor o igual a 1");
-        }
-    }
+    @Size(max = 80)
+    @NotNull
+    @Column(name = "mod_nombre", nullable = false, length = 80)
+    private String modNombre;
 
-    public boolean estaActivo() {
-        return estatus.esActivo();
-    }
+    @Size(max = 120)
+    @Column(name = "mod_descrip", length = 120)
+    private String modDescrip;
+
+    @NotNull
+    @Column(name = "mod_nivel", nullable = false)
+    private Integer modNivel;
+
+    @Size(max = 1)
+    @NotNull
+    @Column(name = "mod_sts", nullable = false, length = 1)
+    private String modSts;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "mod_usr_crea", nullable = false)
+    private Persona modUsrcrea;
+
+    @NotNull
+    @Column(name = "mod_fch_hor_crea", nullable = false)
+    private OffsetDateTime modFchHorCrea;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "mod_est_crea", nullable = false, length = 40)
+    private String modEstCrea;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "mod_usr_mod", nullable = false)
+    private Persona modUsrmod;
+
+    @NotNull
+    @Column(name = "mod_fch_hor_mod", nullable = false)
+    private OffsetDateTime modFchHorMod;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "mod_est_mod", nullable = false, length = 40)
+    private String modEstMod;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "modulo")
+    private List<MenuItem> menuItems;
+
 }

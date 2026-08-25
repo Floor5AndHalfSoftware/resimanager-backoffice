@@ -1,53 +1,88 @@
 package com.resimanager.backoffice.domain.model;
 
-import com.resimanager.backoffice.domain.exception.DomainException;
-import com.resimanager.backoffice.domain.model.enums.Estatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
-/**
- * Administradora (empresa administradora de condominios).
- * Un contexto de trabajo posible para un usuario del sistema.
- */
-public record Administradora(
-        Integer id,
-        String docIdent,
-        String nombre,
-        String telefono,
-        String email,
-        Estatus estatus,
-        Integer personaContactoId,
-        AuditInfo audit
-) {
+@Getter
+@Setter
+@Entity
+@Table(name = "\"Administradora\"")
+public class Administradora {
+    @Id
+    @Column(name = "admid", nullable = false)
+    private Integer id;
 
-    public Administradora {
-        Objects.requireNonNull(estatus, "estatus es obligatorio");
-        Objects.requireNonNull(audit, "auditoría es obligatoria");
-        if (nombre != null && nombre.isBlank()) {
-            throw new DomainException("nombre no puede estar en blanco");
-        }
-    }
+    @Size(max = 50)
+    @Column(name = "adm_doc_ident", length = 50)
+    private String admDocIdent;
 
-    public static Administradora crear(Integer id, String docIdent, String nombre, String telefono,
-                                       String email, Integer personaContactoId,
-                                       String ejecutor, String estacion, OffsetDateTime ahora) {
-        return new Administradora(id, docIdent, nombre, telefono, email, Estatus.ACTIVO,
-                personaContactoId, AuditInfo.deCreacion(ejecutor, estacion, ahora));
-    }
+    @Size(max = 250)
+    @Column(name = "adm_nombre", length = 250)
+    private String admNombre;
 
-    public Administradora actualizarDatos(String docIdent, String nombre, String telefono, String email,
-                                          String ejecutor, String estacion, OffsetDateTime ahora) {
-        return new Administradora(id, docIdent, nombre, telefono, email, estatus, personaContactoId,
-                audit.modificadoPor(ejecutor, estacion, ahora));
-    }
+    @Size(max = 15)
+    @Column(name = "adm_telefono", length = 15)
+    private String admTelefono;
 
-    public Administradora cambiarEstatus(Estatus nuevoEstatus, String ejecutor, String estacion, OffsetDateTime ahora) {
-        return new Administradora(id, docIdent, nombre, telefono, email, nuevoEstatus, personaContactoId,
-                audit.modificadoPor(ejecutor, estacion, ahora));
-    }
+    @Size(max = 250)
+    @Column(name = "adm_email", length = 250)
+    private String admEMail;
 
-    public boolean estaActiva() {
-        return estatus.esActivo();
-    }
+    @Size(max = 1)
+    @NotNull
+    @Column(name = "adm_sts", nullable = false, length = 1)
+    private String admSts;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "adm_pers_contacto", nullable = false)
+    private Persona admPersContacto;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "adm_usr_crea", nullable = false)
+    private Persona admUsrCrea;
+
+    @NotNull
+    @Column(name = "adm_fch_hor_crea", nullable = false)
+    private OffsetDateTime admFchHorCrea;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "adm_est_crea", nullable = false, length = 40)
+    private String admEstCrea;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "adm_usr_mod", nullable = false)
+    private Persona admUsrMod;
+
+    @NotNull
+    @Column(name = "adm_fch_hor_mod", nullable = false)
+    private OffsetDateTime admFchHorMod;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "adm_est_mod", nullable = false, length = 40)
+    private String admEstMod;
+
 }

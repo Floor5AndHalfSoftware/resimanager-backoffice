@@ -1,39 +1,57 @@
 package com.resimanager.backoffice.domain.model;
 
-import com.resimanager.backoffice.domain.exception.DomainException;
-import com.resimanager.backoffice.domain.model.enums.Estatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
-/**
- * Vinculación de una persona como propietario de una propiedad.
- * Tiene un período de vigencia ({@code fchDesde} a {@code fchHasta}).
- */
-public record Propietario(
-        Integer conjuntoId,
-        Integer personaId,
-        Integer propiedadId,
-        LocalDate fchDesde,
-        LocalDate fchHasta,
-        Estatus estatus,
-        AuditInfo audit
-) {
+@Getter
+@Setter
+@Entity
+@Table(name = "\"Propietario\"")
+public class Propietario {
+    @EmbeddedId
+    private PropietarioId id;
 
-    public Propietario {
-        Objects.requireNonNull(conjuntoId, "conjunto es obligatorio");
-        Objects.requireNonNull(personaId, "persona es obligatorio");
-        Objects.requireNonNull(propiedadId, "propiedad es obligatoria");
-        Objects.requireNonNull(fchDesde, "fecha desde es obligatoria");
-        Objects.requireNonNull(estatus, "estatus es obligatorio");
-        Objects.requireNonNull(audit, "auditoría es obligatoria");
-        if (fchHasta != null && fchHasta.isBefore(fchDesde)) {
-            throw new DomainException("la fecha hasta no puede ser anterior a la fecha desde");
-        }
-    }
+    @NotNull
+    @Column(name = "PptID", nullable = false)
+    private Integer pptID;
 
-    public boolean estaActivo() {
-        return estatus.esActivo();
-    }
+    @NotNull
+    @Column(name = "PptFchDesde", nullable = false)
+    private LocalDate pptFchDesde;
+
+    @Column(name = "PptFchHasta")
+    private LocalDate pptFchHasta;
+
+    @Size(max = 1)
+    @NotNull
+    @Column(name = "PptSts", nullable = false, length = 1)
+    private String pptSts;
+
+    @NotNull
+    @Column(name = "PptFchHorCrea", nullable = false)
+    private OffsetDateTime pptFchHorCrea;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "PptEstCrea", nullable = false, length = 40)
+    private String pptEstCrea;
+
+    @NotNull
+    @Column(name = "PptFchHorMod", nullable = false)
+    private OffsetDateTime pptFchHorMod;
+
+    @Size(max = 40)
+    @NotNull
+    @Column(name = "PptEstMod", nullable = false, length = 40)
+    private String pptEstMod;
+
 }
