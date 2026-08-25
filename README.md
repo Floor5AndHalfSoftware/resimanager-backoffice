@@ -75,18 +75,15 @@ docker run -p 8080:8080 --env-file .env resimanager-backoffice
 
 ## Estructura del Proyecto
 
+Proyecto **Maven multimodular** (Arquitectura Hexagonal, ver `hexagonal-architecture.md`):
+
 ```
-src/
-├── main/java/com/resimanager/backoffice/
-│   ├── config/           # Seguridad, CORS, OpenAPI, Cache
-│   ├── controller/       # 9 REST Controllers
-│   ├── dto/              # 28 Data Transfer Objects
-│   ├── exception/        # 4 clases de excepción
-│   ├── persistance/
-│   │   ├── entity/       # 40+ entidades JPA
-│   │   └── repository/   # 14 repositorios
-│   └── service/          # 11 servicios
-└── test/                 # Pendiente de implementar
+resimanager-backoffice/       # Parent POM
+├── resimanager-domain/       # (en construcción) modelo de dominio + puertos
+├── resimanager-application/  # servicios, DTOs, persistencia (temporal), excepciones, utils
+├── resimanager-infrastructure/ # (en construcción) adaptadores de salida
+├── resimanager-rest/         # controllers REST + handler
+└── resimanager-bootstrap/    # Application, seguridad HTTP, config, resources, jar ejecutable
 ```
 
 ## Despliegue
