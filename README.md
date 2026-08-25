@@ -76,11 +76,15 @@ y ejecuta la app desde el módulo `resimanager-bootstrap` con las variables de `
 ## Construcción y Ejecución
 
 ```bash
-# Compilar
-mvn clean package
+# Compilar/instalar (desde la raíz del multimódulo)
+mvn clean install -DskipTests
 
 # Ejecutar (módulo bootstrap)
 mvn -pl resimanager-bootstrap spring-boot:run
+
+# Ejecutar con debugger (JDWP puerto 5005)
+mvn -pl resimanager-bootstrap spring-boot:run \
+  -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
 # Tests
 mvn test
@@ -89,6 +93,12 @@ mvn test
 docker build -t resimanager-backoffice .
 docker run -p 8080:8080 --env-file .env resimanager-backoffice
 ```
+
+> **Variables de entorno:** `spring-boot:run` lanza la JVM con working directory = la raíz del repo (`<workingDirectory>${project.parent.basedir}</workingDirectory>` en el POM de bootstrap), así que `spring-dotenv` carga el `.env` de la raíz (apunta a **Neon**). Para usar el **Postgres local** de `docker compose`, exporta `.env.local` antes:
+> ```bash
+> set -a; source .env.local; set +a
+> mvn -pl resimanager-bootstrap spring-boot:run
+> ```
 
 ## Estructura del Proyecto
 
