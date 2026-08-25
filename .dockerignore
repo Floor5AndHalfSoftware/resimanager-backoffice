@@ -1,0 +1,8 @@
+**/target/
+.git/
+.idea/
+.zed/
+logs/
+.env*
+graphify-out/
+*.log
