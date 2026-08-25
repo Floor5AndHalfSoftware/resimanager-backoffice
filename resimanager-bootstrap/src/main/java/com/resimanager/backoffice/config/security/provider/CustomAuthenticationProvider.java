@@ -1,7 +1,9 @@
 package com.resimanager.backoffice.config.security.provider;
 
+import com.resimanager.backoffice.domain.model.AuthUser;
+import com.resimanager.backoffice.domain.port.in.AuthUseCase;
+import com.resimanager.backoffice.domain.port.out.PasswordEncoderPort;
 import com.resimanager.backoffice.exception.ServiceException;
-import com.resimanager.backoffice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
@@ -12,8 +14,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -27,14 +27,14 @@ import static com.resimanager.backoffice.utils.Constants.LOGIN_ATTEMPTS_CACHE;
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoderPort passwordEncoderPort;
 
     @Autowired
     @Qualifier("cacheManagerLogin")
     private CacheManager cacheManagerLogin;
 
     @Autowired
-    private UserService userService;
+    private AuthUseCase authUseCase;
 
     @Override
     public Authentication authenticate(Authentication authentication) {
@@ -44,36 +44,31 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         checkIfNumberOfPossibleAttemptsReached(attemps);
 
-        var user = userService.loadUserByUsername(username);
+        AuthUser user = authUseCase.cargarUsuarioAutenticable(username);
 
-        if (user != null) {
-            var apiPass = new String(Base64.getDecoder().decode((String) authentication.getCredentials()));
-            var dbPass = user.password();
+        var apiPass = new String(Base64.getDecoder().decode((String) authentication.getCredentials()));
+        var dbPass = user.passwordHash();
 
-            if (username.equals(user.username()) && passwordEncoder.matches(apiPass, dbPass)) {
-                Objects.requireNonNull(cacheManagerLogin.getCache(LOGIN_ATTEMPTS_CACHE)).evict(username);
+        if (username.equals(user.username()) && passwordEncoderPort.coincide(apiPass, dbPass)) {
+            Objects.requireNonNull(cacheManagerLogin.getCache(LOGIN_ATTEMPTS_CACHE)).evict(username);
 
-                final List<GrantedAuthority> authorities = new ArrayList<>();
-                user.authorities().forEach(authority -> authorities.add(new SimpleGrantedAuthority(authority)));
+            final List<GrantedAuthority> authorities = new ArrayList<>();
+            user.authorities().forEach(authority -> authorities.add(new SimpleGrantedAuthority(authority)));
 
-                return new UsernamePasswordAuthenticationToken(user.username(), user.password(), authorities);
-            } else {
-
-                if (Objects.isNull(attemps)) {
-                    Objects.requireNonNull(cacheManagerLogin.getCache(LOGIN_ATTEMPTS_CACHE)).put(username, 1);
-                    throw new BadCredentialsException("Incorrect username or password!");
-                }
-
-                attempsValue = (Integer) Objects.requireNonNull(attemps.get());
-                if (attempsValue < 5) {
-                    Objects.requireNonNull(cacheManagerLogin.getCache(LOGIN_ATTEMPTS_CACHE)).put(username, attempsValue + 1);
-                    throw new BadCredentialsException("Incorrect username or password!");
-                }
-
-                throw new BadCredentialsException("Number of possible attempts reached!");
-            }
+            return new UsernamePasswordAuthenticationToken(user.username(), user.passwordHash(), authorities);
         } else {
-            throw new ServiceException("User not found!", 404);
+            if (Objects.isNull(attemps)) {
+                Objects.requireNonNull(cacheManagerLogin.getCache(LOGIN_ATTEMPTS_CACHE)).put(username, 1);
+                throw new BadCredentialsException("Incorrect username or password!");
+            }
+
+            attempsValue = (Integer) Objects.requireNonNull(attemps.get());
+            if (attempsValue < 5) {
+                Objects.requireNonNull(cacheManagerLogin.getCache(LOGIN_ATTEMPTS_CACHE)).put(username, attempsValue + 1);
+                throw new BadCredentialsException("Incorrect username or password!");
+            }
+
+            throw new BadCredentialsException("Number of possible attempts reached!");
         }
     }
 
@@ -90,5 +85,4 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     public boolean supports(Class<?> aClass) {
         return true;
     }
-
 }

@@ -1,10 +1,11 @@
 package com.resimanager.backoffice.service;
 
+import com.resimanager.backoffice.domain.model.AuthUser;
 import com.resimanager.backoffice.domain.model.Persona;
+import com.resimanager.backoffice.domain.port.in.AuthUseCase;
 import com.resimanager.backoffice.domain.port.out.PersonaRepositoryPort;
 import com.resimanager.backoffice.exception.ServiceException;
-import com.resimanager.backoffice.dto.AuthDto;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -14,17 +15,18 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
-public class UserService {
+public class UserService implements AuthUseCase {
 
     private final PersonaRepositoryPort personaRepositoryPort;
     private final ContextoService contextoService;
 
-    public AuthDto loadUserByUsername(String username) {
+    @Override
+    public AuthUser cargarUsuarioAutenticable(String usuarioOEmail) {
         try {
-            var persona = personaRepositoryPort.buscarPorUsuarioOEmail(username, username)
-                    .orElseThrow(() -> new ServiceException("User not found: " + username, 404));
+            Persona persona = personaRepositoryPort.buscarPorUsuarioOEmail(usuarioOEmail, usuarioOEmail)
+                    .orElseThrow(() -> new ServiceException("User not found: " + usuarioOEmail, 404));
 
             if (!"A".equals(persona.getPerSts())) {
                 throw new ServiceException("User account is inactive", 403);
@@ -33,12 +35,7 @@ public class UserService {
             List<String> roles = contextoService.getRolesFromProfiles(persona.getId());
             Set<String> authorities = new HashSet<>(roles);
 
-            return AuthDto.builder()
-                    .userId(persona.getId())
-                    .username(persona.getPerUsuario())
-                    .password(persona.getPerClave())
-                    .authorities(authorities)
-                    .build();
+            return new AuthUser(persona.getId(), persona.getPerUsuario(), persona.getPerClave(), authorities);
 
         } catch (ServiceException e) {
             throw e;

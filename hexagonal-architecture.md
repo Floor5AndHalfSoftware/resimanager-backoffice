@@ -76,18 +76,21 @@ resimanager-backoffice (parent POM, packaging pom, <modules>)
 
 - **Dependencias**: `domain` + `application`.
 - **Adaptadores**: implementan los puertos `out` como beans Spring, envolviendo los repositorios Spring Data:
-  - `infrastructure/adapter`: `JpaPersonaAdapter`, `JpaPerfilAdapter`, `JpaModuloAdapter`, `JpaAdministradoraAdapter`, `JpaConjuntoAdapter`, `JpaPropietarioAdapter`, `JpaPropiedadAdapter`, `JpaPersAdministradoraAdapter`, `JpaPersConjuntoAdapter`, `JpaPerfPersAdministradoraAdapter`, `JpaPerfPersConjuntoAdapter`, `JpaModPerfilAdapter`, `JpaAccOpcPerfilAdapter`, `JpaMenuAdapter`, `JpaDashboardStatsAdapter`.
+  - `infrastructure/adapter`: `JpaPersonaAdapter`, `JpaPerfilAdapter`, `JpaModuloAdapter`, `JpaAdministradoraAdapter`, `JpaConjuntoAdapter`, `JpaPropietarioAdapter`, `JpaPropiedadAdapter`, `JpaPersAdministradoraAdapter`, `JpaPersConjuntoAdapter`, `JpaPerfPersAdministradoraAdapter`, `JpaPerfPersConjuntoAdapter`, `JpaModPerfilAdapter`, `JpaAccOpcPerfilAdapter`, `JpaMenuAdapter`, `JpaDashboardStatsAdapter`, `JpaClaseDePropiedadAdapter`.
+  - `BCryptPasswordEncoderAdapter` implementa `PasswordEncoderPort` (hashing).
   - Traducción de paginación (`Page` → `ResultadoPaginado`), `Estatus` → código y las consultas `MAX+1` (IDs manuales) viven aquí.
 - **Sin lógica de negocio**: solo delegación técnica.
-- Los repositorios Spring Data permanecen temporalmente en `application/persistance/repository`; se moverán a esta capa en la fase de limpieza.
+- Los repositorios Spring Data viven en esta capa (`infrastructure.persistence.repository`).
 
 ---
 
 ## Bootstrap Layer (más externa, `resimanager-bootstrap`)
 
 - **Dependencias**: todas las demás.
-- **Responsabilidad**: `Application` (main), wiring de dependencias (beans Spring que unen puertos `in` con adaptadores), `SecurityConfig` (filter chain, whitelist), `JWTAuthorizationFilter`, CORS, `ApplicationStartupListener`, `OpenApi30Config`.
-- La seguridad HTTP es un concern de esta capa; el hashing y el JWT en sí son adaptadores de `infrastructure`.
+- **Responsabilidad**: `Application` (main), `SecurityConfig` (filter chain, whitelist), `JWTAuthorizationFilter`, `CustomAuthenticationProvider` (usa `AuthUseCase` + `PasswordEncoderPort`), CORS, `ApplicationStartupListener`, `OpenApi30Config`.
+- El wiring se resuelve por escaneo de componentes de Spring sobre el paquete base `com.resimanager`.
+- **Auth completado**: `UserService` implementa `AuthUseCase.cargarUsuarioAutenticable` (→ `AuthUser` de dominio); el hashing es `BCryptPasswordEncoderAdapter` (infrastructure); `JwtService` implementa `JwtPort`.
+- La seguridad HTTP es un concern de esta capa.
 
 ---
 
