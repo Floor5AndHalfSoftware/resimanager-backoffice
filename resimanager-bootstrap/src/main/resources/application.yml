@@ -55,7 +55,11 @@ spring:
     clean-on-validation-error: false
     out-of-order: false
     postgresql:
-      transactional-lock: false
+      # Lock transaccional (pg_advisory_xact_lock): obligatorio cuando la BD vive tras
+      # un pooler tipo PgBouncer (Neon "-pooler"). Con lock de sesion el unlock falla
+      # ("Unable to release PostgreSQL advisory lock"). Ninguna migracion usa sentencias
+      # no transaccionales (p. ej. CREATE INDEX CONCURRENTLY), que exigirian el lock de sesion.
+      transactional-lock: true
   
   web:
     resources:
