@@ -5,6 +5,7 @@ import com.resimanager.backoffice.dto.ContextoActualDTO;
 import com.resimanager.backoffice.dto.UserInfoDTO;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -13,16 +14,22 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.resimanager.backoffice.utils.Constants.ISSUER_INFO;
 import static com.resimanager.backoffice.utils.Constants.SUPER_SECRET_KEY;
-import static com.resimanager.backoffice.utils.Constants.TOKEN_EXPIRATION_TIME_IN_MINUTES;
 
 @Component
 public class JwtService implements JwtPort {
+
+    private final long accessTokenTtlMinutes;
+
+    public JwtService(@Value("${app.security.access-token-ttl-minutes:30}") long accessTokenTtlMinutes) {
+        this.accessTokenTtlMinutes = accessTokenTtlMinutes;
+    }
 
     private static SecretKey getSigningKey() {
         try {
@@ -35,12 +42,17 @@ public class JwtService implements JwtPort {
         }
     }
 
+    private Calendar expiracionAccessToken() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + (int) accessTokenTtlMinutes);
+        return cal;
+    }
+
     @Override
     public String generarToken(String username, Integer userId, String nombre, String apellido,
                                String email, String documento, Set<String> roles) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + TOKEN_EXPIRATION_TIME_IN_MINUTES);
+        Calendar cal = expiracionAccessToken();
 
         SecretKey key = getSigningKey();
         var preToken = Jwts.builder()
@@ -49,6 +61,7 @@ public class JwtService implements JwtPort {
                 .subject(username)
                 .expiration(cal.getTime())
                 .signWith(key);
+        preToken.claim("tokenType", "access");
         preToken.claim("roles", roles);
         if (userId != null) preToken.claim("userId", userId);
         if (nombre != null) preToken.claim("nombre", nombre);
@@ -75,27 +88,27 @@ public class JwtService implements JwtPort {
     }
 
     public String generateToken(Authentication auth) {
-        var cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + TOKEN_EXPIRATION_TIME_IN_MINUTES);
-
-        return buildToken(auth, cal);
+        return buildToken(auth, expiracionAccessToken());
     }
-    
+
     public String generateTokenWithUserInfo(Authentication auth, UserInfoDTO userInfo) {
-        var cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + TOKEN_EXPIRATION_TIME_IN_MINUTES);
-
-        return buildTokenWithUserInfo(auth, userInfo, null, cal);
+        return buildTokenWithUserInfo(userInfo, null, authorities(auth), expiracionAccessToken());
     }
-    
-    public String generateTokenWithContext(Authentication auth, UserInfoDTO userInfo, ContextoActualDTO contexto) {
-        var cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.set(Calendar.MINUTE, cal.get(Calendar.MINUTE) + TOKEN_EXPIRATION_TIME_IN_MINUTES);
 
-        return buildTokenWithUserInfo(auth, userInfo, contexto, cal);
+    public String generateTokenWithContext(Authentication auth, UserInfoDTO userInfo, ContextoActualDTO contexto) {
+        return buildTokenWithUserInfo(userInfo, contexto, authorities(auth), expiracionAccessToken());
+    }
+
+    /**
+     * Genera un access token a partir de datos ya resueltos (sin {@link Authentication}),
+     * usado al renovar la sesión con un refresh token.
+     */
+    public String generarTokenConContexto(UserInfoDTO userInfo, ContextoActualDTO contexto, Collection<String> roles) {
+        return buildTokenWithUserInfo(userInfo, contexto, roles, expiracionAccessToken());
+    }
+
+    private static Collection<String> authorities(Authentication auth) {
+        return auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
     }
 
     private static String buildToken(Authentication auth, Calendar cal) {
@@ -106,42 +119,42 @@ public class JwtService implements JwtPort {
                 .subject(auth.getName())
                 .expiration(cal.getTime())
                 .signWith(key);
+        preToken.claim("tokenType", "access");
         preToken.claim("roles", auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
         return preToken.compact();
     }
-    
-    private static String buildTokenWithUserInfo(Authentication auth, UserInfoDTO userInfo, ContextoActualDTO contexto, Calendar cal) {
+
+    private static String buildTokenWithUserInfo(UserInfoDTO userInfo, ContextoActualDTO contexto,
+                                                 Collection<String> roles, Calendar cal) {
         SecretKey key = getSigningKey();
         var preToken = Jwts.builder()
                 .issuedAt(new Date())
                 .issuer(ISSUER_INFO)
-                .subject(auth.getName())
+                .subject(userInfo.usuario())
                 .expiration(cal.getTime())
                 .signWith(key);
-        
-        // Add roles
-        preToken.claim("roles", auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList()));
-        
+
+        preToken.claim("tokenType", "access");
+        preToken.claim("roles", roles);
+
         // Add user info
         if (userInfo != null) {
-            preToken.claim("userId", userInfo.id());
-            preToken.claim("nombre", userInfo.nombre());
-            preToken.claim("apellido", userInfo.apellido());
-            preToken.claim("email", userInfo.email());
-            preToken.claim("documento", userInfo.documento());
+            if (userInfo.id() != null) preToken.claim("userId", userInfo.id());
+            if (userInfo.nombre() != null) preToken.claim("nombre", userInfo.nombre());
+            if (userInfo.apellido() != null) preToken.claim("apellido", userInfo.apellido());
+            if (userInfo.email() != null) preToken.claim("email", userInfo.email());
+            if (userInfo.documento() != null) preToken.claim("documento", userInfo.documento());
         }
-        
+
         // Add context info
         if (contexto != null) {
-            preToken.claim("contextoTipo", contexto.tipo());
-            preToken.claim("contextoEntidadId", contexto.entidadId());
-            preToken.claim("contextoEntidadNombre", contexto.entidadNombre());
-            preToken.claim("contextoPerfilId", contexto.perfilId());
-            preToken.claim("contextoPerfilNombre", contexto.perfilNombre());
+            if (contexto.tipo() != null) preToken.claim("contextoTipo", contexto.tipo());
+            if (contexto.entidadId() != null) preToken.claim("contextoEntidadId", contexto.entidadId());
+            if (contexto.entidadNombre() != null) preToken.claim("contextoEntidadNombre", contexto.entidadNombre());
+            if (contexto.perfilId() != null) preToken.claim("contextoPerfilId", contexto.perfilId());
+            if (contexto.perfilNombre() != null) preToken.claim("contextoPerfilNombre", contexto.perfilNombre());
         }
-        
+
         return preToken.compact();
     }
 }

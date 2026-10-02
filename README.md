@@ -83,8 +83,7 @@ mvn clean install -DskipTests
 mvn -pl resimanager-bootstrap spring-boot:run
 
 # Ejecutar con debugger (JDWP puerto 5005)
-mvn -pl resimanager-bootstrap spring-boot:run \
-  -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+mvn -pl resimanager-bootstrap spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
 # Tests
 mvn test

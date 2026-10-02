@@ -27,6 +27,8 @@ import java.util.List;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
 import static com.resimanager.backoffice.utils.Constants.LOGIN_PATH;
+import static com.resimanager.backoffice.utils.Constants.LOGOUT_PATH;
+import static com.resimanager.backoffice.utils.Constants.REFRESH_PATH;
 
 @Configuration
 @EnableWebSecurity
@@ -45,7 +47,9 @@ public class SecurityConfig {
             "/console/**",
             "/error",
             "/favicon.ico",
-            API_VERSION_PATH + LOGIN_PATH
+            API_VERSION_PATH + LOGIN_PATH,
+            API_VERSION_PATH + REFRESH_PATH,
+            API_VERSION_PATH + LOGOUT_PATH
     };
 
     @Bean
