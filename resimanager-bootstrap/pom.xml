@@ -66,17 +66,19 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.7</version>
+            <version>42.7.13</version>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>9.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>webjars-locator-core</artifactId>
-            <version>0.48</version>
         </dependency>
         <dependency>
             <groupId>io.github.classgraph</groupId>
@@ -118,7 +120,7 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>9.0.0</version>
+                <version>11.7.2</version>
                 <configuration>
                     <url>${env.DB_URL}</url>
                     <driver>${env.DB_DRIVER}</driver>

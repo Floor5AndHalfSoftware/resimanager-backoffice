@@ -18,16 +18,16 @@ API REST del sistema de gestión de condominios, residencias y conjuntos residen
 | Tecnología | Versión |
 |------------|---------|
 | Java | 21 |
-| Spring Boot | 3.1.4 |
+| Spring Boot | 3.5.16 |
 | Spring Security | 6.x (JWT + cookies HttpOnly) |
 | Spring Data JPA / Hibernate | 6.x |
-| Flyway | 9.0.0 |
+| Flyway | 11.7.2 |
 | JJWT | 0.12.6 |
 | MapStruct | 1.5.3 |
 | Lombok | 1.18.30 |
 | springdoc + Scalar | 2.8.17 |
 | PostgreSQL | 15+/16 |
-| H2 (test) | 2.2.224 |
+| H2 (test) | 2.3.232 |
 | Caffeine | — (rate limiting de login) |
 
 ## Arquitectura hexagonal (Maven multimodular)
