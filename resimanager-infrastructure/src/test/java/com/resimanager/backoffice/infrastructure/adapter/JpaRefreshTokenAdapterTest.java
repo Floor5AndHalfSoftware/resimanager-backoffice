@@ -78,6 +78,26 @@ class JpaRefreshTokenAdapterTest {
     }
 
     @Test
+    void revocaTodosLosTokensDeUnaPersona() {
+        RefreshToken a = nuevoToken("hash-p1-a", UUID.randomUUID(), AHORA.plusDays(7));
+        a.setPersonaId(1);
+        RefreshToken b = nuevoToken("hash-p1-b", UUID.randomUUID(), AHORA.plusDays(7));
+        b.setPersonaId(1);
+        RefreshToken c = nuevoToken("hash-p2", UUID.randomUUID(), AHORA.plusDays(7));
+        c.setPersonaId(2);
+        adapter.guardar(a);
+        adapter.guardar(b);
+        adapter.guardar(c);
+
+        int afectados = adapter.revocarTodasPorPersona(1);
+
+        assertThat(afectados).isEqualTo(2);
+        assertThat(adapter.buscarPorHash("hash-p1-a").get().estaRevocado()).isTrue();
+        assertThat(adapter.buscarPorHash("hash-p1-b").get().estaRevocado()).isTrue();
+        assertThat(adapter.buscarPorHash("hash-p2").get().estaRevocado()).isFalse();
+    }
+
+    @Test
     void eliminaSoloLosExpirados() {
         adapter.guardar(nuevoToken("hash-vigente", UUID.randomUUID(), AHORA.plusDays(1)));
         adapter.guardar(nuevoToken("hash-vencido", UUID.randomUUID(), AHORA.minusDays(1)));

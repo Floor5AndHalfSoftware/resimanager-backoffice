@@ -44,6 +44,11 @@ public class GeneralControllerExceptionHandler {
                 log.error(Arrays.toString(serviceException.getStackTrace()));
                 return new ResponseEntity<>(httpErrorInfoJson, HttpStatus.NOT_FOUND);
             }
+            case 429 -> {
+                httpErrorInfoJson = FormatUtils.httpErrorInfoFormatted(HttpStatus.TOO_MANY_REQUESTS, request, serviceException);
+                log.error(httpErrorInfoJson.toString());
+                return new ResponseEntity<>(httpErrorInfoJson, HttpStatus.TOO_MANY_REQUESTS);
+            }
             default -> {
                 httpErrorInfoJson = FormatUtils.httpErrorInfoFormatted(HttpStatus.INTERNAL_SERVER_ERROR, request, serviceException);
                 log.error(httpErrorInfoJson.toString());

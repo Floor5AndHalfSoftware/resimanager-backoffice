@@ -43,8 +43,8 @@ resimanager-backoffice/        # Parent POM (packaging pom)
 └── resimanager-bootstrap/     # Application, SecurityConfig, filtros, config, resources, jar ejecutable
 ```
 
-- Puertos `in` (casos de uso): `UsuarioUseCase`, `PerfilUseCase`, `ModuloUseCase`, `ContextoUseCase`, `AdministradoraUseCase`, `ConjuntoUseCase`, `PropietarioUseCase`, `PropiedadUseCase`, `AuthUseCase`, `MenuUseCase`, `DashboardUseCase`, `RefreshTokenUseCase`.
-- Puertos `out`: repositorios por agregado (`PersonaRepositoryPort`, `PerfilRepositoryPort`, `RefreshTokenRepositoryPort`, ...), `PasswordEncoderPort`, `JwtPort`, `DashboardStatsRepositoryPort`.
+- Puertos `in` (casos de uso): `UsuarioUseCase`, `PerfilUseCase`, `ModuloUseCase`, `ContextoUseCase`, `AdministradoraUseCase`, `ConjuntoUseCase`, `PropietarioUseCase`, `PropiedadUseCase`, `AuthUseCase`, `MenuUseCase`, `DashboardUseCase`, `RefreshTokenUseCase`, `PasswordRecoveryUseCase`.
+- Puertos `out`: repositorios por agregado (`PersonaRepositoryPort`, `PerfilRepositoryPort`, `RefreshTokenRepositoryPort`, `PasswordResetTokenRepositoryPort`, ...), `PasswordEncoderPort`, `EmailSenderPort`, `JwtPort`, `DashboardStatsRepositoryPort`.
 - **Modelo de dominio = entidades JPA** (decisión pragmática): el dominio depende de `jakarta.persistence` y Lombok; la lógica de negocio vive en el dominio, no en adaptadores.
 
 ## Seguridad y sesión
@@ -57,13 +57,14 @@ resimanager-backoffice/        # Parent POM (packaging pom)
   - **Logout** revoca la familia de forma real en servidor y limpia las cookies.
 - **Contraseñas con BCrypt** (strength 10); el login recibe la contraseña en **Base64** y la compara con BCrypt.
 - **Rate limiting** de login con caché **Caffeine** (`loginAttempts`): máximo 5 intentos por usuario.
+- **Recuperación de contraseña**: `POST /v1/auth/forgot-password` (siempre `200`, anti-enumeración; envía enlace por **SMTP** si la cuenta existe) y `POST /v1/auth/reset-password` (token opaco de un solo uso, política de contraseña, cierra todas las sesiones). Token hasheado (SHA-256) en `password_reset_token`.
 - Cookies: `Path=/`, HttpOnly, `Secure`/`SameSite` configurables por `SECURITY_COOKIE_SECURE` (dev `false`/`Lax`, prod `true`/`None`).
 
 ## API (base `/v1`)
 
 | Categoría | Endpoints |
 |-----------|-----------|
-| Autenticación | `POST /v1/login`, `POST /v1/refresh`, `POST /v1/logout` |
+| Autenticación | `POST /v1/login`, `POST /v1/refresh`, `POST /v1/logout`, `POST /v1/auth/forgot-password`, `POST /v1/auth/reset-password` |
 | Contexto | `POST /v1/contexto/cambiar` |
 | Menú | `GET /v1/menu/perfil` (header `X-Perfil-Id`) |
 | Dashboard | `GET /v1/dashboard/stats` |
@@ -76,7 +77,7 @@ resimanager-backoffice/        # Parent POM (packaging pom)
 | Propietarios | `GET /v1/propietarios`, `POST`, `GET/{conjId}/{perId}`, `PUT/{conjId}/{perId}`, `DELETE/{conjId}/{perId}` |
 
 - **Paginación**: `{ data: [...], total, page, limit }` con `page` (1) y `limit` (25–50 según endpoint).
-- **Códigos**: 200, 201, 204, 400, 401, 403, 404, 409, 422, 500.
+- **Códigos**: 200, 201, 204, 400, 401, 403, 404, 409, 422, 429, 500.
 - **OpenAPI/Scalar**: `/scalar`, `/v3/api-docs`, `/swagger-ui.html`.
 
 ## Permisos (RBAC)
@@ -89,8 +90,8 @@ Jerarquía: `Módulo → Opción → Acción → Perfil`.
 
 ## Base de datos y migraciones
 
-- **PostgreSQL**; esquema gestionado por **Flyway** (`spring.flyway`), hasta `V2.0.17`.
-- Migraciones relevantes: `V2.0.1` core, `V2.0.2` seguridad, `V2.0.3` relaciones, `V2.0.4` invitaciones, `V2.0.5` datos base, `V2.0.6` datos de prueba, `V2.0.7` contexto admin, `V2.0.8` permisos por perfil, `V2.0.9` nivel de perfil, `V2.0.10`–`V2.0.13` menú, `V2.0.16` `Propietario`, **`V2.0.17` `refresh_token`**.
+- **PostgreSQL**; esquema gestionado por **Flyway** (`spring.flyway`), hasta `V2.0.18`.
+- Migraciones relevantes: `V2.0.1` core, `V2.0.2` seguridad, `V2.0.3` relaciones, `V2.0.4` invitaciones, `V2.0.5` datos base, `V2.0.6` datos de prueba, `V2.0.7` contexto admin, `V2.0.8` permisos por perfil, `V2.0.9` nivel de perfil, `V2.0.10`–`V2.0.13` menú, `V2.0.16` `Propietario`, `V2.0.17` `refresh_token`, **`V2.0.18` `password_reset_token`**.
 - **Neon pooler**: configurar `spring.flyway.postgresql.transactional-lock: true` (evita `Unable to release PostgreSQL advisory lock`; ninguna migración usa sentencias no transaccionales como `CREATE INDEX CONCURRENTLY`).
 - **Bug preexistente de seeds**: en una base **vacía desde cero**, `V2.0.5` inserta `ModPerfil.mpid` explícitos sin avanzar la secuencia IDENTITY, por lo que `V2.0.8` choca con claves duplicadas. No afecta a Neon (ya migrada). Si recreas el volumen, corrige la secuencia una vez:
   ```sql
@@ -107,10 +108,10 @@ Datos de prueba: `cmartinez` (Administrador General), `mrodriguez` (Admin de Con
 ```bash
 mvn test
 ```
-25 tests (se fija `maven-surefire-plugin` 3.2.5; `spring-boot-starter-test` + `h2` en los módulos con tests):
-- **application (13):** `JwtService` (TTL, `tokenType`, contexto), `RefreshTokenGenerator`, `RefreshTokenService` (rotación/reutilización/expiración).
-- **infrastructure (4):** `JpaRefreshTokenAdapter` con H2 (`@DataJpaTest`).
-- **rest (4):** `RefreshController` (200/401) y logout→refresh `401`.
+44 tests (se fija `maven-surefire-plugin` 3.2.5; `spring-boot-starter-test` + `h2` en los módulos con tests):
+- **application (21):** `JwtService`, `RefreshTokenGenerator`, `RefreshTokenService` (rotación/reutilización/expiración) y `PasswordRecoveryService` (anti-enumeración, límite, token válido/inválido/expirado/usado, política).
+- **infrastructure (10):** `JpaRefreshTokenAdapter`, `JpaPasswordResetTokenAdapter` (H2) y `SmtpEmailSenderAdapter`.
+- **rest (9):** `RefreshController`, logout→refresh `401` y `PasswordRecoveryControllerTest` (200/400/429).
 - **bootstrap (4):** `JWTAuthorizationFilter` (refresh opaco rechazado; access por header/cookie).
 
 ## Configuración (variables de entorno)
@@ -175,4 +176,4 @@ mvn -pl resimanager-bootstrap spring-boot:run
 
 Backend **~92%**. Completos: autenticación/sesión con refresh, contexto multi-tenant, menú dinámico, CRUDs (usuarios, perfiles, administradoras, conjuntos, propiedades, propietarios), dashboard (conteos reales + facturas/incidencias mock) y tests.
 
-**Pendientes:** sistema de invitaciones (solo migración `V2.0.4`), CRUD de módulos/opciones/acciones + permisos granulares + middleware de autorización, auditoría (`log_operacion` + triggers), datos reales de facturas/incidencias, recuperación de contraseña.
+**Pendientes:** sistema de invitaciones (solo migración `V2.0.4`), CRUD de módulos/opciones/acciones + permisos granulares + middleware de autorización, auditoría (`log_operacion` + triggers), datos reales de facturas/incidencias.

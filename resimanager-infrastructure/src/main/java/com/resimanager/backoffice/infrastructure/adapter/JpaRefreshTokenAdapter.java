@@ -46,6 +46,12 @@ public class JpaRefreshTokenAdapter implements RefreshTokenRepositoryPort {
 
     @Override
     @Transactional
+    public int revocarTodasPorPersona(Integer personaId) {
+        return repository.revocarPorPersona(personaId, OffsetDateTime.now());
+    }
+
+    @Override
+    @Transactional
     public int eliminarExpirados(OffsetDateTime momento) {
         return repository.deleteByExpiraBefore(momento);
     }

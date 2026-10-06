@@ -23,5 +23,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Inte
             + "t.fchHorMod = :momento WHERE t.familyId = :familyId AND t.revocado = 'N'")
     int revocarFamilia(@Param("familyId") UUID familyId, @Param("momento") OffsetDateTime momento);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query("UPDATE RefreshToken t SET t.revocado = 'S', t.estMod = 'REFRESH-REVOKE-ALL', "
+            + "t.fchHorMod = :momento WHERE t.personaId = :personaId AND t.revocado = 'N'")
+    int revocarPorPersona(@Param("personaId") Integer personaId, @Param("momento") OffsetDateTime momento);
+
     int deleteByExpiraBefore(OffsetDateTime momento);
 }

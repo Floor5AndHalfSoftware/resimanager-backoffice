@@ -158,6 +158,18 @@ class RefreshTokenServiceTest {
         }
 
         @Override
+        public int revocarTodasPorPersona(Integer personaId) {
+            int afectados = 0;
+            for (RefreshToken token : porHash.values()) {
+                if (personaId.equals(token.getPersonaId()) && !"S".equals(token.getRevocado())) {
+                    token.setRevocado("S");
+                    afectados++;
+                }
+            }
+            return afectados;
+        }
+
+        @Override
         public int eliminarExpirados(OffsetDateTime momento) {
             int antes = porHash.size();
             porHash.entrySet().removeIf(e -> e.getValue().getExpira().isBefore(momento));

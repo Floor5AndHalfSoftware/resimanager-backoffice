@@ -21,6 +21,9 @@ public interface RefreshTokenRepositoryPort {
     /** Revoca un token concreto por su id. */
     void revocarPorId(Integer id);
 
+    /** Revoca todos los refresh tokens vigentes de una persona (todas sus sesiones). Devuelve cuántos afectó. */
+    int revocarTodasPorPersona(Integer personaId);
+
     /** Elimina los tokens ya expirados. Devuelve cuántos eliminó. */
     int eliminarExpirados(OffsetDateTime momento);
 }

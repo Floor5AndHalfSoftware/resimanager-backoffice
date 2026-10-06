@@ -26,9 +26,11 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.resimanager.backoffice.utils.Constants.API_VERSION_PATH;
+import static com.resimanager.backoffice.utils.Constants.FORGOT_PASSWORD_PATH;
 import static com.resimanager.backoffice.utils.Constants.LOGIN_PATH;
 import static com.resimanager.backoffice.utils.Constants.LOGOUT_PATH;
 import static com.resimanager.backoffice.utils.Constants.REFRESH_PATH;
+import static com.resimanager.backoffice.utils.Constants.RESET_PASSWORD_PATH;
 
 @Configuration
 @EnableWebSecurity
@@ -49,7 +51,9 @@ public class SecurityConfig {
             "/favicon.ico",
             API_VERSION_PATH + LOGIN_PATH,
             API_VERSION_PATH + REFRESH_PATH,
-            API_VERSION_PATH + LOGOUT_PATH
+            API_VERSION_PATH + LOGOUT_PATH,
+            API_VERSION_PATH + FORGOT_PASSWORD_PATH,
+            API_VERSION_PATH + RESET_PASSWORD_PATH
     };
 
     @Bean

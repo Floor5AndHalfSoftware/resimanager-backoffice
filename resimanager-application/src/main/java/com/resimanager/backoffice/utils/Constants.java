@@ -9,6 +9,8 @@ public class Constants {
     public static final String LOGIN_URL = API_VERSION_PATH + AUTH_PATH + LOGIN_PATH;
     public static final String REFRESH_PATH = "/refresh";
     public static final String LOGOUT_PATH = "/logout";
+    public static final String FORGOT_PASSWORD_PATH = "/auth/forgot-password";
+    public static final String RESET_PASSWORD_PATH = "/auth/reset-password";
 
     //Session cookies
     public static final String ACCESS_COOKIE_NAME = "jwt";
