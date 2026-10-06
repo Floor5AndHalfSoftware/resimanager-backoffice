@@ -59,7 +59,6 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     generate-ddl: false
     open-in-view: false
-    database-platform: ${JPA_DIALECT}
     show-sql: ${JPA_SHOW_SQL}
   
   sql:
@@ -105,6 +104,11 @@ scalar:
   tagSorter: alpha
 
 management:
+  health:
+    mail:
+      # El MailHealthIndicator hace una conexion SMTP real en cada health check;
+      # sin credenciales devuelve 503. Se excluye con MANAGEMENT_HEALTH_MAIL_ENABLED=false.
+      enabled: ${MANAGEMENT_HEALTH_MAIL_ENABLED:true}
   endpoints:
     web:
       exposure:

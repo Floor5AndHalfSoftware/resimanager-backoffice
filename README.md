@@ -127,7 +127,6 @@ DB_USERNAME=<user>
 DB_PASSWORD=<password>
 
 JPA_DDL_AUTO=none
-JPA_DIALECT=org.hibernate.dialect.PostgreSQLDialect
 JPA_SHOW_SQL=false
 
 FLYWAY_ENABLED=true
@@ -136,6 +135,22 @@ SQL_INIT_MODE=never
 SECURITY_COOKIE_SECURE=true          # false en desarrollo HTTP
 ACCESS_TOKEN_TTL_MINUTES=30
 REFRESH_TOKEN_TTL_SECONDS=604800
+
+# Recuperación de contraseña
+FRONTEND_BASE_URL=http://localhost:5000
+PASSWORD_RESET_TTL_MINUTES=30
+PASSWORD_MIN_LENGTH=8
+
+# Email SMTP (recuperación de contraseña)
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_FROM=
+MAIL_ENABLED=true
+
+# Health: excluir el mail (evita 503 por SMTP)
+MANAGEMENT_HEALTH_MAIL_ENABLED=false
 ```
 
 ## Construcción y ejecución

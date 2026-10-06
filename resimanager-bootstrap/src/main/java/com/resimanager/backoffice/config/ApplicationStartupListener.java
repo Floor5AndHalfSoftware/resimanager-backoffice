@@ -2,9 +2,9 @@ package com.resimanager.backoffice.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringBootVersion;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -23,12 +23,15 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
     @Value("${spring.profiles.active:default}")
     private String activeProfile;
 
-    private final Environment environment;
     private final DataSource dataSource;
 
-    public ApplicationStartupListener(Environment environment, DataSource dataSource) {
-        this.environment = environment;
+    public ApplicationStartupListener(DataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    private static String springBootVersion() {
+        String version = SpringBootVersion.getVersion();
+        return version != null ? version : "unknown";
     }
 
     @Override
@@ -49,7 +52,7 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
                     "  Application:        ResiManager - Sistema de Gestión de Condominios\n" +
                     "  Version:            1.0-SNAPSHOT\n" +
                     "  Profile:            " + activeProfile + "\n" +
-                    "  Spring Boot:        " + environment.getProperty("spring-boot.version", "3.1.4") + "\n" +
+                    "  Spring Boot:        " + springBootVersion() + "\n" +
                     "==============================================================================\n" +
                     "  Access URLs:\n" +
                     "  ------------------------------------------------------------------------------\n" +
